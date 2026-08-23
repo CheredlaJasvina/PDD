@@ -554,34 +554,94 @@ h3 {
   box-shadow: 0 0 8px var(--color-spoiled);
 }
 
+/* Mobile Header and Sidebar Drawer */
+.mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 190;
+}
+
+.hamburger-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: var(--transition-smooth);
+}
+
+.hamburger-btn:hover {
+  background: var(--glass-bg);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 195;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Responsive Rules */
 @media (max-width: 1024px) {
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
   .app-container {
     flex-direction: column;
   }
+
   .sidebar {
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
+    position: fixed;
+    top: 0;
+    left: -280px; /* Hidden by default */
+    width: 280px;
+    height: 100vh;
+    z-index: 200;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
   }
-  .logo-container {
-    margin-bottom: 0;
+
+  .sidebar.open {
+    left: 0;
   }
-  .nav-menu {
-    flex-direction: row;
-    gap: 1rem;
-    flex: initial;
-  }
-  .user-widget {
-    display: none;
-  }
+
   .main-content {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    height: auto; /* Allow natural page scroll */
+    min-height: calc(100vh - 70px);
   }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 }
+

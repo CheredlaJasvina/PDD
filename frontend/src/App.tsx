@@ -124,6 +124,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   const [pantryStatusFilter, setPantryStatusFilter] = useState<string>('all');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
@@ -362,8 +363,26 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Mobile top bar */}
+      <div className="mobile-header">
+        <button className="hamburger-btn" onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}>
+          ☰
+        </button>
+        <div className="logo-container" style={{ margin: 0 }}>
+          <div className="logo-icon">🍏</div>
+          <span className="logo-text">FreshRadar</span>
+        </div>
+        <div style={{ width: '36px' }}></div>
+      </div>
+
+      {/* Sidebar Overlay */}
+      <div 
+        className={`sidebar-overlay ${isMobileSidebarOpen ? 'open' : ''}`} 
+        onClick={() => setIsMobileSidebarOpen(false)}
+      />
+
       {/* Dynamic Sidebar Navigation */}
-      <aside className="sidebar" style={{ minWidth: '280px' }}>
+      <aside className={`sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
         <div className="logo-container">
           <div className="logo-icon">🍏</div>
           <span className="logo-text">FreshRadar</span>
@@ -428,7 +447,10 @@ function App() {
                             border: isActive ? '1px solid var(--color-fresh)' : '1px solid transparent',
                             transition: 'var(--transition-smooth)'
                           }}
-                          onClick={() => setActiveTab(screen.id)}
+                          onClick={() => {
+                            setActiveTab(screen.id);
+                            setIsMobileSidebarOpen(false);
+                          }}
                         >
                           <span>{screen.icon}</span>
                           <span>{screen.name}</span>
@@ -442,10 +464,10 @@ function App() {
           })}
 
           <ul className="nav-menu" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem', listStyle: 'none', paddingLeft: 0 }}>
-            <li className="nav-item" onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+            <li className="nav-item" onClick={() => { toggleTheme(); setIsMobileSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem' }}>
               <span className="nav-icon">{theme === 'light' ? '🌙' : '☀️'}</span> {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
             </li>
-            <li className="nav-item" onClick={handleLogout} style={{ color: 'var(--color-spoiled)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <li className="nav-item" onClick={() => { handleLogout(); setIsMobileSidebarOpen(false); }} style={{ color: 'var(--color-spoiled)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem', marginTop: '0.25rem' }}>
               <span className="nav-icon">🚪</span> Sign Out
             </li>
           </ul>
