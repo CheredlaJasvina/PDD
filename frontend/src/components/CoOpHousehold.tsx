@@ -20,7 +20,7 @@ export const CoOpHousehold: React.FC = () => {
 
   const fetchHousehold = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/household');
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/household');
       const data = await response.json();
       if (data.success) {
         setHousehold(data.household);
@@ -40,7 +40,7 @@ export const CoOpHousehold: React.FC = () => {
     e.preventDefault();
     if (!joinCode) return;
     try {
-      const response = await fetch('http://localhost:5000/api/household/join', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/household/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: joinCode })
@@ -59,7 +59,7 @@ export const CoOpHousehold: React.FC = () => {
     e.preventDefault();
     if (!newChore.trim()) return;
     try {
-      const response = await fetch('http://localhost:5000/api/household/chores', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/household/chores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task: newChore, assignee: choreAssignee })
@@ -76,7 +76,7 @@ export const CoOpHousehold: React.FC = () => {
 
   const handleToggleChore = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/household/chores/${id}/toggle`, {
+      const response = await fetch(`https://pdd-9fqv.onrender.com/api/household/chores/${id}/toggle`, {
         method: 'PUT'
       });
       const data = await response.json();

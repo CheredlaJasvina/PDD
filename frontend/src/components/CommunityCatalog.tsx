@@ -21,8 +21,8 @@ export const CommunityCatalog: React.FC = () => {
 
   const fetchCommunityData = async () => {
     try {
-      const donRes = await fetch('http://localhost:5000/api/donations');
-      const catRes = await fetch('http://localhost:5000/api/catalog');
+      const donRes = await fetch('https://pdd-9fqv.onrender.com/api/donations');
+      const catRes = await fetch('https://pdd-9fqv.onrender.com/api/catalog');
       
       const donData = await donRes.json();
       const catData = await catRes.json();
@@ -52,7 +52,7 @@ export const CommunityCatalog: React.FC = () => {
     e.preventDefault();
     if (!donationName.trim()) return;
     try {
-      const response = await fetch('http://localhost:5000/api/donations', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/donations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: donationName, quantity: donationQty, daysLeft: donationExpiry })
@@ -70,7 +70,7 @@ export const CommunityCatalog: React.FC = () => {
 
   const handleRequestItem = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/donations/${id}/request`, {
+      const response = await fetch(`https://pdd-9fqv.onrender.com/api/donations/${id}/request`, {
         method: 'PUT'
       });
       const data = await response.json();
@@ -90,7 +90,7 @@ export const CommunityCatalog: React.FC = () => {
     e.preventDefault();
     if (!customName.trim()) return;
     try {
-      const response = await fetch('http://localhost:5000/api/catalog', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/catalog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: customName, category: 'cooked food', calories: customCalories, protein: customProtein, carbs: customCarbs, fat: customFat, vitamins: ['C'], storageAdvice: 'Keep frozen.' })

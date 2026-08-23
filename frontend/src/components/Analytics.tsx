@@ -14,8 +14,8 @@ export const Analytics: React.FC = () => {
     setError(null);
     try {
       const [analyticsRes, wasteRes] = await Promise.all([
-        fetch('http://localhost:5000/api/analytics'),
-        fetch('http://localhost:5000/api/waste-summary')
+        fetch('https://pdd-9fqv.onrender.com/api/analytics'),
+        fetch('https://pdd-9fqv.onrender.com/api/waste-summary')
       ]);
       const analyticsData = await analyticsRes.json();
       const wasteData = await wasteRes.json();

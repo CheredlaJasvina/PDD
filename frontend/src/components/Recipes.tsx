@@ -19,7 +19,7 @@ export const Recipes: React.FC<RecipesProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:5000/api/recipes');
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/recipes');
       const data = await response.json();
       if (data.success) {
         setRecipes(data.recipes);

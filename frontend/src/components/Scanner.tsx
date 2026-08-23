@@ -59,7 +59,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
   const handleSaveScannedItem = async (item: FoodItem) => {
     setIsSavingItem(true);
     try {
-      const response = await fetch('http://localhost:5000/api/inventory', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
@@ -199,7 +199,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('http://localhost:5000/api/scan', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/scan', {
         method: 'POST',
         body: formData,
       });

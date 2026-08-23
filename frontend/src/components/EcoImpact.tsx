@@ -16,7 +16,7 @@ export const EcoImpact: React.FC = () => {
 
   const fetchEcoData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/eco');
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/eco');
       const data = await response.json();
       if (data.success) {
         setEco(data.eco);

@@ -45,7 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   String _activeRoute = "dashboard"; // dashboard, scanner, inventory, recipes, eco, household, community, settings
   String _pantryStatusFilter = "all";
   Map<String, dynamic>? _loggedInUser;
-  String _backendUrl = "http://10.0.2.2:5000/api"; // Default Android emulator endpoint
+  String _backendUrl = "https://pdd-9fqv.onrender.com/api"; // Default Render deployment endpoint
   
   List<dynamic> _inventory = [];
   bool _isLoading = true;

@@ -151,7 +151,7 @@ function App() {
 
   const fetchInventory = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/inventory');
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory');
       const data = await response.json();
       setInventory(data);
     } catch (error) {
@@ -161,7 +161,7 @@ function App() {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/me');
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/me');
       const data = await response.json();
       if (data.success && data.user) {
         setLoggedInUser(data.user);
@@ -188,7 +188,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:5000/api/auth/logout', { method: 'POST' });
+      await fetch('https://pdd-9fqv.onrender.com/api/auth/logout', { method: 'POST' });
     } catch (err) {
       console.error('Logout request failed:', err);
     }
@@ -199,7 +199,7 @@ function App() {
   // Update item consumed/wasted state
   const handleUpdateItemState = async (id: string, state: 'Used' | 'Eaten' | 'Wasted') => {
     try {
-      const response = await fetch(`http://localhost:5000/api/inventory/${id}/status`, {
+      const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ state })
@@ -217,7 +217,7 @@ function App() {
   // Delete item permanently
   const handleDeleteItem = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/inventory/${id}`, {
+      const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -238,7 +238,7 @@ function App() {
   // Add manual item fallback
   const handleAddManual = async (manualData: any) => {
     try {
-      const response = await fetch('http://localhost:5000/api/manual', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -261,7 +261,7 @@ function App() {
     if (!loggedInUser) return;
     try {
       const updatedUser = { ...loggedInUser, ...updates };
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedUser)
