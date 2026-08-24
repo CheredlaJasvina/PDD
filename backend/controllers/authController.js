@@ -74,7 +74,8 @@ exports.signup = async (req, res) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = fallbackDb.getCurrentUser();
+    const email = req.headers['x-user-email'];
+    const user = email ? fallbackDb.getUserByEmail(email) : fallbackDb.getCurrentUser();
     if (user) {
       res.json({ success: true, user });
     } else {

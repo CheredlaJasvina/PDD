@@ -152,7 +152,11 @@ function App() {
 
   const fetchInventory = async () => {
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory');
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
+        headers: { 'x-user-email': email }
+      });
       const data = await response.json();
       setInventory(data);
     } catch (error) {
@@ -162,10 +166,15 @@ function App() {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/me');
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/me', {
+        headers: { 'x-user-email': email }
+      });
       const data = await response.json();
       if (data.success && data.user) {
         setLoggedInUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
       }
     } catch (error) {
       console.error('Error checking user session:', error);
@@ -175,7 +184,15 @@ function App() {
   useEffect(() => {
     const bootstrapSession = async () => {
       setIsLoading(true);
-      await fetchCurrentUser();
+      const cachedUserStr = localStorage.getItem('user');
+      if (cachedUserStr) {
+        try {
+          const cachedUser = JSON.parse(cachedUserStr);
+          setLoggedInUser(cachedUser);
+        } catch (e) {
+          console.error(e);
+        }
+      }
       await fetchInventory();
       setIsLoading(false);
     };
@@ -183,16 +200,23 @@ function App() {
   }, []);
 
   const handleLoginSuccess = (user: User, _token: string) => {
+    localStorage.setItem('user', JSON.stringify(user));
     setLoggedInUser(user);
     fetchInventory();
   };
 
   const handleLogout = async () => {
     try {
-      await fetch('https://pdd-9fqv.onrender.com/api/auth/logout', { method: 'POST' });
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      await fetch('https://pdd-9fqv.onrender.com/api/auth/logout', { 
+        method: 'POST',
+        headers: { 'x-user-email': email }
+      });
     } catch (err) {
       console.error('Logout request failed:', err);
     }
+    localStorage.removeItem('user');
     setLoggedInUser(null);
     setActiveTab('dashboard');
   };
@@ -200,9 +224,14 @@ function App() {
   // Update item consumed/wasted state
   const handleUpdateItemState = async (id: string, state: 'Used' | 'Eaten' | 'Wasted') => {
     try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': email
+        },
         body: JSON.stringify({ state })
       });
       const data = await response.json();
@@ -218,8 +247,11 @@ function App() {
   // Delete item permanently
   const handleDeleteItem = async (id: string) => {
     try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'x-user-email': email }
       });
       const data = await response.json();
       if (data.success) {
@@ -239,9 +271,14 @@ function App() {
   // Add manual item fallback
   const handleAddManual = async (manualData: any) => {
     try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch('https://pdd-9fqv.onrender.com/api/manual', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': email
+        },
         body: JSON.stringify({
           ...manualData,
           dietaryPreferences: loggedInUser?.dietaryPreferences || []
@@ -261,15 +298,21 @@ function App() {
   const handleUpdatePreferences = async (updates: Partial<User>) => {
     if (!loggedInUser) return;
     try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const updatedUser = { ...loggedInUser, ...updates };
       const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': email
+        },
         body: JSON.stringify(updatedUser)
       });
       const data = await response.json();
       if (data.success) {
         setLoggedInUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
       }
     } catch (error) {
       console.error('Error saving settings profile:', error);

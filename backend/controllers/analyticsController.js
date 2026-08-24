@@ -3,13 +3,16 @@ const UserPreference = require('../models/UserPreference');
 const dbStatus = require('../config/db');
 const fallbackDb = require('../models/fallbackDb');
 
-const getActiveUserEmail = () => {
+const getActiveUserEmail = (req) => {
+  if (req && req.headers && req.headers['x-user-email']) {
+    return req.headers['x-user-email'];
+  }
   const user = fallbackDb.getCurrentUser();
   return user ? user.email : 'jasvina@foodfreshness.com';
 };
 
-const getDB = () => {
-  const email = getActiveUserEmail();
+const getDB = (req) => {
+  const email = getActiveUserEmail(req);
   return dbStatus.getDbStatus() ? {
     find: async (query) => FoodItem.find({ ...query, owner: email }),
     getPreferences: async () => {
@@ -25,7 +28,7 @@ const getDB = () => {
 
 exports.getWastageAnalytics = async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDB(req);
     const allItems = await db.find();
     const prefs = await db.getPreferences();
     const members = prefs.membersCount || 2;

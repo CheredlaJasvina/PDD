@@ -185,6 +185,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _fetchSession();
   }
 
+  Map<String, String> _getHeaders() {
+    final email = _loggedInUser != null ? _loggedInUser!["email"] as String? ?? "" : "";
+    return {
+      "Content-Type": "application/json",
+      "x-user-email": email,
+    };
+  }
+
   Future<void> _fetchSession() async {
     setState(() {
       _isLoading = true;
@@ -192,7 +200,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
 
     try {
-      final sessionRes = await http.get(Uri.parse("$_backendUrl/auth/me")).timeout(const Duration(seconds: 3));
+      final sessionRes = await http.get(
+        Uri.parse("$_backendUrl/auth/me"),
+        headers: _getHeaders(),
+      ).timeout(const Duration(seconds: 3));
       final Map<String, dynamic> sessionData = jsonDecode(sessionRes.body);
 
       if (sessionRes.statusCode == 200 && sessionData["success"] == true) {
@@ -216,7 +227,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   Future<void> _fetchInventory() async {
     try {
-      final res = await http.get(Uri.parse("$_backendUrl/inventory")).timeout(const Duration(seconds: 3));
+      final res = await http.get(
+        Uri.parse("$_backendUrl/inventory"),
+        headers: _getHeaders(),
+      ).timeout(const Duration(seconds: 3));
       if (res.statusCode == 200) {
         setState(() {
           _inventory = jsonDecode(res.body);
@@ -235,7 +249,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     try {
       final res = await http.put(
         Uri.parse("$_backendUrl/inventory/$id/status"),
-        headers: {"Content-Type": "application/json"},
+        headers: _getHeaders(),
         body: jsonEncode({"state": state})
       );
       if (res.statusCode == 200) {
@@ -251,7 +265,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   Future<void> _deleteItem(String id) async {
     try {
-      final res = await http.delete(Uri.parse("$_backendUrl/inventory/$id"));
+      final res = await http.delete(
+        Uri.parse("$_backendUrl/inventory/$id"),
+        headers: _getHeaders(),
+      );
       if (res.statusCode == 200) {
         _fetchInventory();
       }
@@ -266,7 +283,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     try {
       final res = await http.post(
         Uri.parse("$_backendUrl/manual"),
-        headers: {"Content-Type": "application/json"},
+        headers: _getHeaders(),
         body: jsonEncode(data)
       );
       if (res.statusCode == 200) {
@@ -304,7 +321,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final updated = {..._loggedInUser!, ...updates};
       final res = await http.put(
         Uri.parse("$_backendUrl/auth/profile"),
-        headers: {"Content-Type": "application/json"},
+        headers: _getHeaders(),
         body: jsonEncode(updated)
       );
       if (res.statusCode == 200) {
@@ -330,7 +347,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   Future<void> _handleLogout() async {
     try {
-      await http.post(Uri.parse("$_backendUrl/auth/logout"));
+      await http.post(
+        Uri.parse("$_backendUrl/auth/logout"),
+        headers: _getHeaders(),
+      );
     } catch (e) {
       // Silently fail offline
     }
@@ -1410,6 +1430,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
               ),
             ])),
           ])),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),

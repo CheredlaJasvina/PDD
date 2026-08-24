@@ -215,6 +215,10 @@ module.exports = {
     return { success: true, user: newUser };
   },
   getCurrentUser: () => currentUser,
+  getUserByEmail: (email) => {
+    if (!email) return null;
+    return users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  },
   updateCurrentUserProfile: (profileData) => {
     currentUser = { ...currentUser, ...profileData };
     // Sync back to users array

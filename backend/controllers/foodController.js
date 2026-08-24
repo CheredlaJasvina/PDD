@@ -72,14 +72,17 @@ const getFoodImageUrl = (foodName, category) => {
 };
 
 // Helper to get currently active user email
-const getActiveUserEmail = () => {
+const getActiveUserEmail = (req) => {
+  if (req && req.headers && req.headers['x-user-email']) {
+    return req.headers['x-user-email'];
+  }
   const user = fallbackDb.getCurrentUser();
   return user ? user.email : 'jasvina@foodfreshness.com';
 };
 
 // Helper to determine active DB service
-const getDB = () => {
-  const email = getActiveUserEmail();
+const getDB = (req) => {
+  const email = getActiveUserEmail(req);
   return dbStatus.getDbStatus() ? {
     find: async (query) => FoodItem.find({ ...query, owner: email }),
     create: async (data) => new FoodItem({ ...data, owner: email }).save(),
@@ -112,7 +115,7 @@ const getDB = () => {
 // Get active inventory
 exports.getInventory = async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDB(req);
     const items = await db.find({ state: 'Tracked' });
     // Filter active items from local db if needed
     const activeItems = items.filter(item => item.state === 'Tracked');
@@ -125,7 +128,7 @@ exports.getInventory = async (req, res) => {
 // Scan food item (Groq Vision API with local python fallback)
 exports.scanFoodItem = async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDB(req);
     const prefs = await db.getPreferences();
 
     if (!req.file) {
@@ -342,7 +345,7 @@ exports.scanFoodItem = async (req, res) => {
 exports.addManualItem = async (req, res) => {
   try {
     const { name, category, shelfLifeDays, isCooked, calories, dietaryPreferences } = req.body;
-    const db = getDB();
+    const db = getDB(req);
 
     const addedDate = new Date();
     const predictedSpoilageDate = new Date(Date.now() + Number(shelfLifeDays || 5) * 24 * 60 * 60 * 1000);
@@ -396,7 +399,7 @@ exports.updateItemState = async (req, res) => {
   try {
     const { id } = req.params;
     const { state } = req.body; // 'Used', 'Eaten', 'Wasted'
-    const db = getDB();
+    const db = getDB(req);
 
     const updated = await db.findByIdAndUpdate(id, { state });
     if (!updated) {
@@ -413,7 +416,7 @@ exports.updateItemState = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const db = getDB();
+    const db = getDB(req);
 
     const deleted = await db.findByIdAndDelete(id);
     if (!deleted) {
@@ -429,7 +432,7 @@ exports.deleteItem = async (req, res) => {
 // Get user preferences and gamification metrics
 exports.getSettings = async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDB(req);
     const prefs = await db.getPreferences();
     res.json(prefs);
   } catch (error) {
@@ -440,7 +443,7 @@ exports.getSettings = async (req, res) => {
 // Update user preferences
 exports.updateSettings = async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDB(req);
     const updated = await db.updatePreferences(req.body);
     res.json({ success: true, settings: updated });
   } catch (error) {
@@ -451,7 +454,7 @@ exports.updateSettings = async (req, res) => {
 // Save a scanned food item to inventory
 exports.saveFoodItem = async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDB(req);
     const saved = await db.create(req.body);
     res.json({ success: true, item: saved });
   } catch (error) {
