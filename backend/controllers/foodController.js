@@ -98,7 +98,7 @@ const getDB = (req) => {
     updatePreferences: async (updates) => UserPreference.findOneAndUpdate({ owner: email }, { ...updates, owner: email }, { new: true, upsert: true, setDefaultsOnInsert: true })
   } : {
     find: async (query) => {
-      const all = fallbackDb.getFoodItems();
+      const all = fallbackDb.getFoodItemsByUser(email);
       if (query && query.state) {
         return all.filter(item => item.state === query.state);
       }
@@ -107,7 +107,7 @@ const getDB = (req) => {
     create: async (data) => fallbackDb.addFoodItem(data),
     findByIdAndUpdate: async (id, update) => fallbackDb.updateFoodItemState(id, update.state),
     findByIdAndDelete: async (id) => fallbackDb.deleteFoodItem(id),
-    getPreferences: async () => fallbackDb.getUserPreference(),
+    getPreferences: async () => fallbackDb.getUserPreferenceByEmail(email),
     updatePreferences: async (updates) => fallbackDb.updateUserPreference(updates)
   };
 };

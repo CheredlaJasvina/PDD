@@ -23,8 +23,14 @@ const getDB = (req) => {
       return pref;
     }
   } : {
-    find: async (query) => fallbackDb.getInventory(),
-    getPreferences: async () => fallbackDb.getUserPreference()
+    find: async (query) => {
+      const all = fallbackDb.getFoodItemsByUser(email);
+      if (query && query.state) {
+        return all.filter(item => item.state === query.state);
+      }
+      return all;
+    },
+    getPreferences: async () => fallbackDb.getUserPreferenceByEmail(email)
   };
 };
 
@@ -376,7 +382,7 @@ exports.getSmartSuggestions = async (req, res) => {
     const inventory = await db.find({ state: 'Tracked' });
 
     // 1. Filter: Restrict recommendations strictly to RAW (uncooked) items in the inventory
-    const rawItems = inventory.filter(item => !item.isCooked && item.state === 'Tracked');
+    const rawItems = inventory.filter(item => !item.isCooked && item.category !== 'cooked food' && item.state === 'Tracked');
 
     // Sort raw items by remaining freshness (ascending) so items nearing expiry appear first
     rawItems.sort((a, b) => a.originalFreshness - b.originalFreshness);

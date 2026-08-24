@@ -438,6 +438,27 @@ module.exports = {
     currentUser = null;
     return true;
   },
+  getFoodItemsByUser: (email) => {
+    if (!email) return [];
+    return [...foodItems, ...historicalItems].filter(item => item.owner.toLowerCase() === email.toLowerCase());
+  },
+  getInventoryByUser: (email) => {
+    if (!email) return [];
+    return foodItems.filter(item => item.state === 'Tracked' && item.owner.toLowerCase() === email.toLowerCase());
+  },
+  getUserPreferenceByEmail: (email) => {
+    if (!email) return {
+      dietaryPreferences: [], audienceMode: 'Regular', servings: 2, membersCount: 2,
+      notificationPref: { advanceNoticeDays: 2, emailAlerts: true, inAppAlerts: true },
+      healthScore: 85, streakCount: 0, unlockedBadges: []
+    };
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    return user || {
+      dietaryPreferences: [], audienceMode: 'Regular', servings: 2, membersCount: 2,
+      notificationPref: { advanceNoticeDays: 2, emailAlerts: true, inAppAlerts: true },
+      healthScore: 85, streakCount: 0, unlockedBadges: []
+    };
+  },
   generateOTP: (email) => {
     const code = Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry

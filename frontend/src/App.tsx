@@ -412,7 +412,7 @@ function App() {
           ☰
         </button>
         <div className="logo-container" style={{ margin: 0 }}>
-          <div className="logo-icon">🍏</div>
+          <div className="logo-icon">📡</div>
           <span className="logo-text">FreshRadar</span>
         </div>
         <div style={{ width: '36px' }}></div>
@@ -427,7 +427,7 @@ function App() {
       {/* Dynamic Sidebar Navigation */}
       <aside className={`sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
         <div className="logo-container">
-          <div className="logo-icon">🍏</div>
+          <div className="logo-icon">📡</div>
           <span className="logo-text">FreshRadar</span>
         </div>
 
