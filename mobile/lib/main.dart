@@ -641,11 +641,23 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
 
   Future<void> _submitSignup() async {
     setState(() => _error = null);
+    
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = "Name is required.");
+      return;
+    }
+    final nameRegExp = RegExp(r'^[a-zA-Z\s.\-]+$');
+    if (!nameRegExp.hasMatch(name)) {
+      setState(() => _error = "Please enter a valid name (alphabetic characters only).");
+      return;
+    }
+
     try {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/signup"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": _emailCtrl.text, "password": _passCtrl.text, "name": _nameCtrl.text})
+        body: jsonEncode({"email": _emailCtrl.text, "password": _passCtrl.text, "name": name})
       );
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {

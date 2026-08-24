@@ -37,11 +37,23 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    
+    const cleanName = name.trim();
+    if (!cleanName) {
+      setErrorMsg('Name is required.');
+      return;
+    }
+    const nameRegex = /^[A-Za-z\s.\-]+$/;
+    if (!nameRegex.test(cleanName)) {
+      setErrorMsg('Please enter a valid name (alphabetic characters only).');
+      return;
+    }
+
     try {
       const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name })
+        body: JSON.stringify({ email, password, name: cleanName })
       });
       const data = await response.json();
       if (response.ok && data.success) {
