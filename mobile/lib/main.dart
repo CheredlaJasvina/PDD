@@ -470,8 +470,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 children: [
                   UserAccountsDrawerHeader(
                     decoration: const BoxDecoration(color: Color(0xFF0F1420)),
-                    accountName: Text(_loggedInUser!["name"] ?? "User"),
-                    accountEmail: Text(_loggedInUser!["email"] ?? ""),
+                    accountName: Text(
+                      _loggedInUser!["name"] ?? "User",
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    accountEmail: Text(
+                      _loggedInUser!["email"] ?? "",
+                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
                     currentAccountPicture: CircleAvatar(
                       backgroundColor: const Color(0xFF00E676),
                       child: Text(
