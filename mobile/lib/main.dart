@@ -388,6 +388,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           onScanComplete: (scans) => _fetchInventory(),
           onAddManual: _addManualItem,
           backendUrl: _backendUrl,
+          email: _loggedInUser != null ? _loggedInUser!["email"] as String? ?? "" : "",
         );
       case "inventory":
         return InventoryScreen(
@@ -1089,12 +1090,14 @@ class ScannerScreen extends StatefulWidget {
   final Function(dynamic) onScanComplete;
   final Function(Map<String, dynamic>) onAddManual;
   final String backendUrl;
+  final String email;
 
   const ScannerScreen({
     super.key,
     required this.onScanComplete,
     required this.onAddManual,
     required this.backendUrl,
+    required this.email,
   });
 
   @override
@@ -1209,6 +1212,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
       final uri     = Uri.parse("${widget.backendUrl}/scan");
       final request = http.MultipartRequest("POST", uri);
+      request.headers["x-user-email"] = widget.email;
       request.files.add(await http.MultipartFile.fromPath("image", xFile.path));
 
       final streamed  = await request.send().timeout(const Duration(seconds: 30));
