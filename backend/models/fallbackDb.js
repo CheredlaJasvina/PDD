@@ -47,7 +47,8 @@ let foodItems = [
     nutrition: { calories: 95, protein: 0.5, carbs: 25, fat: 0.3, ingredients: "Apple", vitamins: ["Vitamin C", "Vitamin B6"], healthNotes: "High in fiber. Promotes heart health." },
     ocrInfo: { brand: "Apple Farms", expiryDate: null, hasOcrMatch: false },
     storageGuidance: "Store in a cool dry place. Keep separated from citrus fruits.",
-    safetyAdvisory: "Safe to eat. No spoilage indicators detected."
+    safetyAdvisory: "Safe to eat. No spoilage indicators detected.",
+    owner: "jasvina@foodfreshness.com"
   },
   {
     _id: "mock-item-2",
@@ -64,7 +65,8 @@ let foodItems = [
     nutrition: { calories: 150, protein: 8, carbs: 12, fat: 8, ingredients: "Pasteurized Cow Milk", vitamins: ["Vitamin D", "Calcium"], healthNotes: "Great calcium source." },
     ocrInfo: { brand: "DairyFresh", expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), hasOcrMatch: true },
     storageGuidance: "Refrigerate below 4°C. Keep closed tightly.",
-    safetyAdvisory: "Consume soon. Perfect for baking/pancakes."
+    safetyAdvisory: "Consume soon. Perfect for baking/pancakes.",
+    owner: "jasvina@foodfreshness.com"
   },
   {
     _id: "mock-item-3",
@@ -81,14 +83,15 @@ let foodItems = [
     nutrition: { calories: 450, protein: 20, carbs: 60, fat: 15, ingredients: "Pasta, beef, tomato, cheese", vitamins: ["Iron"], healthNotes: "High protein meal." },
     ocrInfo: { brand: "Home Cooked", expiryDate: null, hasOcrMatch: false },
     storageGuidance: "Discard. Left cooked pasta out for too long.",
-    safetyAdvisory: "WARNING: Spoiled item. Avoid consumption to prevent food poisoning. Recommended for safe disposal or composting."
+    safetyAdvisory: "WARNING: Spoiled item. Avoid consumption to prevent food poisoning. Recommended for safe disposal or composting.",
+    owner: "jasvina@foodfreshness.com"
   }
 ];
 
 let historicalItems = [
-  { _id: "h-1", name: "Fresh Bananas", category: "fruits", status: "Fresh", state: "Eaten", addedDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), originalFreshness: 90, isCooked: false },
-  { _id: "h-2", name: "Leftover Pizza", category: "cooked food", status: "Slightly Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), originalFreshness: 60, isCooked: true },
-  { _id: "h-3", name: "Cottage Cheese", category: "packaged food", status: "Fresh", state: "Used", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), originalFreshness: 95, isCooked: false }
+  { _id: "h-1", name: "Fresh Bananas", category: "fruits", status: "Fresh", state: "Eaten", addedDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), originalFreshness: 90, isCooked: false, owner: "jasvina@foodfreshness.com" },
+  { _id: "h-2", name: "Leftover Pizza", category: "cooked food", status: "Slightly Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), originalFreshness: 60, isCooked: true, owner: "jasvina@foodfreshness.com" },
+  { _id: "h-3", name: "Cottage Cheese", category: "packaged food", status: "Fresh", state: "Used", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), originalFreshness: 95, isCooked: false, owner: "jasvina@foodfreshness.com" }
 ];
 
 // Extended Modules Database
@@ -111,21 +114,50 @@ let neighborDonations = [
   { _id: "d-2", donor: "David K.", name: "Wheat Bread loaf", quantity: "1 pack", daysLeft: 1, distance: "1.5 km", status: "Requested" }
 ];
 
-let ecoMetrics = {
-  co2SavedKg: 24.8,
-  moneySaved: 140.0,
-  foodHealthLevel: "Level 3 waste warden",
-  ecoMilestones: [
-    { title: "CO2 Savior 🌿", desc: "Saved 20kg of carbon emissions.", unlocked: true },
-    { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
-  ],
-  comparisonStats: { communityAvgKg: 15.2, userSavingPct: 63 }
+let userEcoMetrics = {
+  "jasvina@foodfreshness.com": {
+    co2SavedKg: 24.8,
+    moneySaved: 140.0,
+    foodHealthLevel: "Level 3 waste warden",
+    ecoMilestones: [
+      { title: "CO2 Savior 🌿", desc: "Saved 20kg of carbon emissions.", unlocked: true },
+      { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
+    ],
+    comparisonStats: { communityAvgKg: 15.2, userSavingPct: 63 }
+  }
 };
 
-let notificationLogs = [
-  { id: "n-1", title: "Stage 2 Urgent Warning", msg: "Organic Whole Milk spoils in 24 hours. Plan consumption.", timestamp: new Date(), read: false },
-  { id: "n-2", title: "Streak Achievement", msg: "Scanning Streak 5 days unlocked! Badge awarded.", timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), read: true }
-];
+const getEcoMetricsForUser = (email) => {
+  if (!email) return { co2SavedKg: 0, moneySaved: 0, foodHealthLevel: "Level 1 fresh starter", ecoMilestones: [], comparisonStats: { communityAvgKg: 15.2, userSavingPct: 0 } };
+  if (!userEcoMetrics[email]) {
+    userEcoMetrics[email] = {
+      co2SavedKg: 0.0,
+      moneySaved: 0.0,
+      foodHealthLevel: "Level 1 fresh starter",
+      ecoMilestones: [
+        { title: "CO2 Savior 🌿", desc: "Saved 20kg of carbon emissions.", unlocked: false },
+        { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
+      ],
+      comparisonStats: { communityAvgKg: 15.2, userSavingPct: 0 }
+    };
+  }
+  return userEcoMetrics[email];
+};
+
+let userNotificationLogs = {
+  "jasvina@foodfreshness.com": [
+    { id: "n-1", title: "Stage 2 Urgent Warning", msg: "Organic Whole Milk spoils in 24 hours. Plan consumption.", timestamp: new Date(), read: false },
+    { id: "n-2", title: "Streak Achievement", msg: "Scanning Streak 5 days unlocked! Badge awarded.", timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), read: true }
+  ]
+};
+
+const getNotificationsForUser = (email) => {
+  if (!email) return [];
+  if (!userNotificationLogs[email]) {
+    userNotificationLogs[email] = [];
+  }
+  return userNotificationLogs[email];
+};
 
 // Catalog database search profiles
 const FOOD_CATALOG = [
@@ -174,8 +206,8 @@ module.exports = {
       membersCount: 2,
       notificationPref: { advanceNoticeDays: 2, emailAlerts: true, inAppAlerts: true },
       healthScore: 100,
-      streakCount: 1,
-      unlockedBadges: ["Fresh Starter"],
+      streakCount: 0,
+      unlockedBadges: [],
       ...userData
     };
     users.push(newUser);
@@ -211,7 +243,18 @@ module.exports = {
 
   // Waste summary: per-item stats for weekly/monthly waste tracking
   getWasteSummary: () => {
-    const allItems = [...foodItems, ...historicalItems];
+    if (!currentUser) {
+      return {
+        weeklyWastedCount: 0,
+        monthlyWastedCount: 0,
+        weeklyWastedItems: [],
+        monthlyWastedItems: [],
+        categoryBreakdown: {},
+        buyAdvice: [],
+        membersCount: 2
+      };
+    }
+    const allItems = [...foodItems, ...historicalItems].filter(i => i.owner === currentUser.email);
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
@@ -264,23 +307,35 @@ module.exports = {
   },
 
 
-  getFoodItems: () => [...foodItems, ...historicalItems],
-  getInventory: () => foodItems.filter(item => item.state === 'Tracked'),
+  getFoodItems: () => {
+    if (!currentUser) return [];
+    return [...foodItems, ...historicalItems].filter(item => item.owner === currentUser.email);
+  },
+  getInventory: () => {
+    if (!currentUser) return [];
+    return foodItems.filter(item => item.state === 'Tracked' && item.owner === currentUser.email);
+  },
   addFoodItem: (item) => {
-    const newItem = { _id: `mock-item-${Date.now()}`, addedDate: new Date(), ...item };
+    const newItem = { 
+      _id: `mock-item-${Date.now()}`, 
+      addedDate: new Date(), 
+      owner: currentUser ? currentUser.email : 'jasvina@foodfreshness.com',
+      ...item 
+    };
     foodItems.push(newItem);
     return newItem;
   },
   updateFoodItemState: (id, state) => {
-    const itemIndex = foodItems.findIndex(i => i._id === id);
+    const itemIndex = foodItems.findIndex(i => i._id === id && i.owner === (currentUser ? currentUser.email : ''));
     if (itemIndex > -1) {
       foodItems[itemIndex].state = state;
       // Increment CO2 and savings indicators
       if (state === 'Eaten' || state === 'Used') {
         currentUser.healthScore = Math.min(100, currentUser.healthScore + 2);
         currentUser.streakCount += 1;
-        ecoMetrics.co2SavedKg += 0.4;
-        ecoMetrics.moneySaved += 4.5;
+        const eco = getEcoMetricsForUser(currentUser.email);
+        eco.co2SavedKg += 0.4;
+        eco.moneySaved += 4.5;
         if (currentUser.streakCount >= 7 && !currentUser.unlockedBadges.includes('Consistency King')) {
           currentUser.unlockedBadges.push('Consistency King');
         }
@@ -294,7 +349,7 @@ module.exports = {
   },
   deleteFoodItem: (id) => {
     const initialLen = foodItems.length;
-    foodItems = foodItems.filter(i => i._id !== id);
+    foodItems = foodItems.filter(i => !(i._id === id && i.owner === (currentUser ? currentUser.email : '')));
     return foodItems.length < initialLen;
   },
 
@@ -352,13 +407,21 @@ module.exports = {
   },
 
   // Eco impact logs
-  getEcoMetrics: () => ecoMetrics,
+  getEcoMetrics: () => {
+    const email = currentUser ? currentUser.email : 'jasvina@foodfreshness.com';
+    return getEcoMetricsForUser(email);
+  },
 
   // Notification logs
-  getNotifications: () => notificationLogs,
+  getNotifications: () => {
+    const email = currentUser ? currentUser.email : 'jasvina@foodfreshness.com';
+    return getNotificationsForUser(email);
+  },
   markNotificationsRead: () => {
-    notificationLogs.forEach(n => n.read = true);
-    return notificationLogs;
+    const email = currentUser ? currentUser.email : 'jasvina@foodfreshness.com';
+    const logs = getNotificationsForUser(email);
+    logs.forEach(n => n.read = true);
+    return logs;
   },
 
   // Food Search
