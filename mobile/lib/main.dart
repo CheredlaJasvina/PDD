@@ -439,7 +439,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         title: Row(
           children: [
             const Text(
-              "📡 FreshRadar",
+              "🍏 FreshRadar",
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, letterSpacing: -0.5),
             ),
             const SizedBox(width: 8),
