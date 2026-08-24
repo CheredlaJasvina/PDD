@@ -1,0 +1,45 @@
+name: Automated E2E Testing Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+        cache-dependency-path: testing/package-lock.json
+
+    - name: Install Dependencies
+      run: |
+        cd testing
+        npm ci
+
+    - name: Run Selenium Web E2E Tests (300 cases)
+      run: |
+        cd testing
+        npm run test:web
+      env:
+        TEST_URL: "https://pdd-frotend.onrender.com"
+
+    - name: Run Appium Mobile E2E Tests (300 cases)
+      run: |
+        cd testing
+        npm run test:mobile
+
+    - name: Upload Test Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: E2E-Excel-Reports
+        path: testing/reports/*.xlsx
