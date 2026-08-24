@@ -22,7 +22,8 @@ const UserPreferenceSchema = new mongoose.Schema({
   unlockedBadges: { 
     type: [String], 
     default: ['Fresh Starter', 'Waste Warrior'] 
-  }
+  },
+  owner: { type: String, required: true, unique: true }
 });
 
 module.exports = mongoose.model('UserPreference', UserPreferenceSchema);

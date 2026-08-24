@@ -71,21 +71,28 @@ const getFoodImageUrl = (foodName, category) => {
   return categoryImages[category] || categoryImages['fruits'];
 };
 
+// Helper to get currently active user email
+const getActiveUserEmail = () => {
+  const user = fallbackDb.getCurrentUser();
+  return user ? user.email : 'jasvina@foodfreshness.com';
+};
+
 // Helper to determine active DB service
 const getDB = () => {
+  const email = getActiveUserEmail();
   return dbStatus.getDbStatus() ? {
-    find: async (query) => FoodItem.find(query),
-    create: async (data) => new FoodItem(data).save(),
-    findByIdAndUpdate: async (id, update) => FoodItem.findByIdAndUpdate(id, update, { new: true }),
-    findByIdAndDelete: async (id) => FoodItem.findByIdAndDelete(id),
+    find: async (query) => FoodItem.find({ ...query, owner: email }),
+    create: async (data) => new FoodItem({ ...data, owner: email }).save(),
+    findByIdAndUpdate: async (id, update) => FoodItem.findOneAndUpdate({ _id: id, owner: email }, update, { new: true }),
+    findByIdAndDelete: async (id) => FoodItem.findOneAndDelete({ _id: id, owner: email }),
     getPreferences: async () => {
-      let pref = await UserPreference.findOne();
+      let pref = await UserPreference.findOne({ owner: email });
       if (!pref) {
-        pref = await new UserPreference().save();
+        pref = await new UserPreference({ owner: email }).save();
       }
       return pref;
     },
-    updatePreferences: async (updates) => UserPreference.findOneAndUpdate({}, updates, { new: true, upsert: true })
+    updatePreferences: async (updates) => UserPreference.findOneAndUpdate({ owner: email }, { ...updates, owner: email }, { new: true, upsert: true, setDefaultsOnInsert: true })
   } : {
     find: async (query) => {
       const all = fallbackDb.getFoodItems();

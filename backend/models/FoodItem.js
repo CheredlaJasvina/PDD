@@ -35,7 +35,8 @@ const FoodItemSchema = new mongoose.Schema({
     hasOcrMatch: { type: Boolean, default: false }
   },
   storageGuidance: { type: String, default: '' },
-  safetyAdvisory: { type: String, default: '' }
+  safetyAdvisory: { type: String, default: '' },
+  owner: { type: String, required: true }
 });
 
 module.exports = mongoose.model('FoodItem', FoodItemSchema);
