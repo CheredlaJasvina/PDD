@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Recipe, UserPreference } from '../types';
+import { Recipe, User } from '../types';
 
 interface RecipesProps {
-  preferences: UserPreference;
-  onUpdatePreferences: (updates: Partial<UserPreference>) => void;
+  preferences: User;
+  onUpdatePreferences: (updates: Partial<User>) => void;
 }
 
 export const Recipes: React.FC<RecipesProps> = ({
@@ -19,7 +19,10 @@ export const Recipes: React.FC<RecipesProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/recipes');
+      const email = preferences ? preferences.email : '';
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/recipes', {
+        headers: { 'x-user-email': email }
+      });
       const data = await response.json();
       if (data.success) {
         setRecipes(data.recipes);

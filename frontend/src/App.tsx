@@ -411,9 +411,26 @@ function App() {
         <button className="hamburger-btn" onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}>
           ☰
         </button>
-        <div className="logo-container" style={{ margin: 0 }}>
-          <div className="logo-icon">🍏</div>
-          <span className="logo-text">FreshRadar</span>
+        <div className="logo-container" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+          <svg viewBox="0 0 120 120" width="36" height="36" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
+            <rect x="5" y="5" width="110" height="110" rx="28" fill="#0E1B18" stroke="#00E676" strokeWidth="1.5" strokeOpacity="0.5"/>
+            <circle cx="35" cy="35" r="25" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.3"/>
+            <circle cx="35" cy="35" r="35" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.2"/>
+            <circle cx="35" cy="35" r="45" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.1"/>
+            <path d="M 60 40 C 53 40, 48 37, 43 40 C 33 46, 33 66, 38 78 C 43 90, 53 95, 60 90 C 67 95, 77 90, 82 78 C 84 72, 85 71, 80 68 C 74 65, 74 55, 80 52 C 85 49, 84 48, 82 46 C 77 40, 72 40, 67 40 C 63 37, 60 40, 60 40 Z" fill="none" stroke="#00E676" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="70" cy="65" r="2" fill="#00E676"/>
+            <path d="M 60 40 C 60 32, 65 28, 65 28" fill="none" stroke="#00E676" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M 65 28 C 72 26, 76 30, 70 34 C 66 36, 64 32, 65 28 Z" fill="#FFE200"/>
+          </svg>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1.1 }}>
+              <span style={{ color: '#FFFFFF' }}>Fresh</span>
+              <span style={{ color: '#00E676' }}>Radar</span>
+            </div>
+            <span style={{ fontSize: '0.5rem', fontWeight: 600, color: '#8A99AD', letterSpacing: '0.5px', textTransform: 'uppercase', marginTop: '2px' }}>
+              Smart Food Freshness Tracking
+            </span>
+          </div>
         </div>
         <div style={{ width: '36px' }}></div>
       </div>
@@ -426,9 +443,26 @@ function App() {
 
       {/* Dynamic Sidebar Navigation */}
       <aside className={`sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
-        <div className="logo-container">
-          <div className="logo-icon">🍏</div>
-          <span className="logo-text">FreshRadar</span>
+        <div className="logo-container" style={{ display: 'flex', alignItems: 'center' }}>
+          <svg viewBox="0 0 120 120" width="40" height="40" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
+            <rect x="5" y="5" width="110" height="110" rx="28" fill="#0E1B18" stroke="#00E676" strokeWidth="1.5" strokeOpacity="0.5"/>
+            <circle cx="35" cy="35" r="25" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.3"/>
+            <circle cx="35" cy="35" r="35" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.2"/>
+            <circle cx="35" cy="35" r="45" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.1"/>
+            <path d="M 60 40 C 53 40, 48 37, 43 40 C 33 46, 33 66, 38 78 C 43 90, 53 95, 60 90 C 67 95, 77 90, 82 78 C 84 72, 85 71, 80 68 C 74 65, 74 55, 80 52 C 85 49, 84 48, 82 46 C 77 40, 72 40, 67 40 C 63 37, 60 40, 60 40 Z" fill="none" stroke="#00E676" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="70" cy="65" r="2" fill="#00E676"/>
+            <path d="M 60 40 C 60 32, 65 28, 65 28" fill="none" stroke="#00E676" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M 65 28 C 72 26, 76 30, 70 34 C 66 36, 64 32, 65 28 Z" fill="#FFE200"/>
+          </svg>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1.1 }}>
+              <span style={{ color: '#FFFFFF' }}>Fresh</span>
+              <span style={{ color: '#00E676' }}>Radar</span>
+            </div>
+            <span style={{ fontSize: '0.55rem', fontWeight: 600, color: '#8A99AD', letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: '2px' }}>
+              Smart Food Freshness Tracking
+            </span>
+          </div>
         </div>
 
         <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem', marginTop: '1rem' }}>

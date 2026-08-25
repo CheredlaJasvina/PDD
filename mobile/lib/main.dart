@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const FoodFreshnessApp());
@@ -200,6 +201,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUserJson = prefs.getString("logged_in_user");
+      if (savedUserJson != null) {
+        setState(() {
+          _loggedInUser = jsonDecode(savedUserJson) as Map<String, dynamic>;
+        });
+      }
+
       final sessionRes = await http.get(
         Uri.parse("$_backendUrl/auth/me"),
         headers: _getHeaders(),
@@ -210,18 +219,27 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         setState(() {
           _loggedInUser = sessionData["user"];
         });
+        await prefs.setString("logged_in_user", jsonEncode(sessionData["user"]));
+        await _fetchInventory();
+      } else {
+        if (_loggedInUser != null) {
+          await _fetchInventory();
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (_loggedInUser != null) {
         await _fetchInventory();
       } else {
         setState(() {
+          _inventory = _localInventoryFallback;
           _isLoading = false;
+          _connError = "Offline mode active";
         });
       }
-    } catch (e) {
-      setState(() {
-        _inventory = _localInventoryFallback;
-        _isLoading = false;
-        _connError = "Offline mode active";
-      });
     }
   }
 
@@ -329,23 +347,37 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         setState(() {
           _loggedInUser = resData["user"];
         });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("logged_in_user", jsonEncode(resData["user"]));
       }
     } catch (e) {
       setState(() {
         _loggedInUser = {..._loggedInUser!, ...updates};
       });
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("logged_in_user", jsonEncode(_loggedInUser));
+      } catch (_) {}
     }
   }
 
-  void _handleLoginSuccess(Map<String, dynamic> user, String token) {
+  void _handleLoginSuccess(Map<String, dynamic> user, String token) async {
     setState(() {
       _loggedInUser = user;
       _activeRoute = "dashboard";
     });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("logged_in_user", jsonEncode(user));
+    } catch (_) {}
     _fetchInventory();
   }
 
   Future<void> _handleLogout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("logged_in_user");
+    } catch (_) {}
     try {
       await http.post(
         Uri.parse("$_backendUrl/auth/logout"),
@@ -438,9 +470,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Text(
-              "🍏 FreshRadar",
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, letterSpacing: -0.5),
+            const FreshRadarLogo(size: 32),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w800, fontSize: 16, letterSpacing: -0.5),
+                    children: [
+                      TextSpan(text: "Fresh", style: TextStyle(color: Colors.white)),
+                      TextSpan(text: "Radar", style: TextStyle(color: Color(0xFF00E676))),
+                    ],
+                  ),
+                ),
+                const Text(
+                  "SMART FOOD FRESHNESS TRACKING",
+                  style: TextStyle(fontSize: 5.5, fontWeight: FontWeight.w600, color: Colors.grey, letterSpacing: 0.5),
+                ),
+              ],
             ),
             const SizedBox(width: 8),
             if (_connError != null)
@@ -737,12 +786,31 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("🍏", style: TextStyle(fontSize: 70)),
-              const SizedBox(height: 16),
-              const Text(
-                "FreshRadar Platform",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const FreshRadarLogo(size: 64),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w900, fontSize: 32, letterSpacing: -1.0),
+                          children: [
+                            TextSpan(text: "Fresh", style: TextStyle(color: Colors.white)),
+                            TextSpan(text: "Radar", style: TextStyle(color: Color(0xFF00E676))),
+                          ],
+                        ),
+                      ),
+                      const Text(
+                        "SMART FOOD FRESHNESS TRACKING",
+                        style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 0.8),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               const Text(
@@ -1951,7 +2019,14 @@ class _RecipesScreenState extends State<RecipesScreen> {
     });
 
     try {
-      final res = await http.get(Uri.parse("${widget.backendUrl}/recipes")).timeout(const Duration(seconds: 3));
+      final String email = widget.preferences["email"] as String? ?? "";
+      final res = await http.get(
+        Uri.parse("${widget.backendUrl}/recipes"),
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": email,
+        },
+      ).timeout(const Duration(seconds: 3));
       final Map<String, dynamic> data = jsonDecode(res.body);
 
       if (data["success"] == true) {
@@ -3262,6 +3337,121 @@ class MockScreenWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+class FreshRadarLogo extends StatelessWidget {
+  final double size;
+  const FreshRadarLogo({super.key, this.size = 40});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0E1B18),
+        borderRadius: BorderRadius.circular(size * 0.28),
+        border: Border.all(color: const Color(0x8000E676), width: 1.5),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: -size * 0.1,
+            top: -size * 0.1,
+            child: Container(
+              width: size * 0.7,
+              height: size * 0.7,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0x3300E676),
+                  width: 1,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -size * 0.2,
+            top: -size * 0.2,
+            child: Container(
+              width: size * 0.9,
+              height: size * 0.9,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0x2200E676),
+                  width: 1,
+                ),
+              ),
+            ),
+          ),
+          Center(
+            child: CustomPaint(
+              size: Size(size * 0.5, size * 0.5),
+              painter: _ApplePainter(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ApplePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF00E676)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+
+    path.moveTo(w * 0.5, h * 0.2);
+    path.cubicTo(w * 0.35, h * 0.2, w * 0.2, h * 0.12, w * 0.1, h * 0.2);
+    path.cubicTo(w * -0.1, h * 0.32, w * -0.1, h * 0.72, w * 0.1, h * 0.92);
+    path.cubicTo(w * 0.22, h * 1.12, w * 0.42, h * 1.18, w * 0.5, h * 1.05);
+    path.cubicTo(w * 0.58, h * 1.18, w * 0.78, h * 1.12, w * 0.9, h * 0.92);
+    path.cubicTo(w * 0.95, h * 0.8, w * 0.98, h * 0.78, w * 0.88, h * 0.72);
+    path.cubicTo(w * 0.76, h * 0.66, w * 0.76, h * 0.46, w * 0.88, h * 0.4);
+    path.cubicTo(w * 0.98, h * 0.34, w * 0.96, h * 0.32, w * 0.9, h * 0.28);
+    path.cubicTo(w * 0.8, h * 0.12, w * 0.65, h * 0.2, w * 0.5, h * 0.2);
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    final dotPaint = Paint()
+      ..color = const Color(0xFF00E676)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(w * 0.68, h * 0.62), 1.5, dotPaint);
+
+    final stemPaint = Paint()
+      ..color = const Color(0xFF00E676)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final stemPath = Path();
+    stemPath.moveTo(w * 0.5, h * 0.2);
+    stemPath.cubicTo(w * 0.5, h * 0.05, w * 0.6, h * 0.0, w * 0.6, h * 0.0);
+    canvas.drawPath(stemPath, stemPaint);
+
+    final leafPaint = Paint()
+      ..color = const Color(0xFFFFEA00)
+      ..style = PaintingStyle.fill;
+    final leafPath = Path();
+    leafPath.moveTo(w * 0.6, h * 0.0);
+    leafPath.cubicTo(w * 0.75, h * -0.05, w * 0.85, h * 0.05, w * 0.7, h * 0.12);
+    leafPath.cubicTo(w * 0.6, h * 0.16, w * 0.58, h * 0.08, w * 0.6, h * 0.0);
+    leafPath.close();
+    canvas.drawPath(leafPath, leafPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 
