@@ -45,7 +45,7 @@ async function runSeleniumTests() {
     console.warn('Could not launch Chrome WebDriver. Generating simulation/mock E2E run report instead.');
   }
 
-  const targetUrl = process.env.TEST_URL || 'https://pdd-9fqv.onrender.com';
+  const targetUrl = process.env.TEST_URL || 'https://pdd-frotend.onrender.com';
 
   if (driver) {
     try {
