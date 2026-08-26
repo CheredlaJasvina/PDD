@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Recipe, User } from '../types';
+import { Recipe, User, FoodItem } from '../types';
 
 interface RecipesProps {
   preferences: User;
   onUpdatePreferences: (updates: Partial<User>) => void;
+  inventory: FoodItem[];
 }
 
 export const Recipes: React.FC<RecipesProps> = ({
   preferences,
-  onUpdatePreferences
+  onUpdatePreferences,
+  inventory
 }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -62,6 +64,23 @@ export const Recipes: React.FC<RecipesProps> = ({
     return parseFloat(((baseQty / baseServings) * members).toFixed(2));
   };
 
+  // Client-side filtering: exclude recipes using spoiled items or cooked foods in the active inventory
+  const activeRecipes = recipes.filter(r => {
+    const matchingItem = inventory.find(item => 
+      item.name.toLowerCase() === r.primaryIngredient.toLowerCase() ||
+      r.primaryIngredient.toLowerCase().includes(item.name.toLowerCase()) ||
+      item.name.toLowerCase().includes(r.primaryIngredient.toLowerCase())
+    );
+    if (matchingItem) {
+      if (matchingItem.status === 'Spoiled' || matchingItem.isCooked || matchingItem.category === 'cooked food' || matchingItem.category === 'Cooked Food') {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const uniqueIngredients = Array.from(new Set(activeRecipes.map(r => r.primaryIngredient)));
+
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -74,7 +93,6 @@ export const Recipes: React.FC<RecipesProps> = ({
 
         {/* Controls Row */}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-
           {/* Members count */}
           <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem', borderColor: 'rgba(0,230,118,0.3)' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>👨‍👩‍👧 Members:</span>
@@ -132,52 +150,49 @@ export const Recipes: React.FC<RecipesProps> = ({
           <p style={{ color: 'var(--color-spoiled)' }}>{error}</p>
           <button className="btn-secondary" style={{ marginTop: '1rem' }} onClick={fetchRecipes}>Retry Sync</button>
         </div>
-      ) : recipes.length === 0 ? (
+      ) : activeRecipes.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
           <p style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>No recipe matches available.</p>
-          <p style={{ fontSize: '0.9rem' }}>Recipes are only generated for raw (uncooked) food items. Add uncooked fruits/vegetables to view suggestions.</p>
+          <p style={{ fontSize: '0.9rem' }}>Recipes are only generated for raw (uncooked) and unspoiled food items. Add uncooked fruits/vegetables to view suggestions.</p>
         </div>
       ) : (
         <div>
           {/* Ingredient Role Filter Bar */}
-          {(() => {
-            const uniqueIngredients = Array.from(new Set(recipes.map(r => r.primaryIngredient)));
-            return uniqueIngredients.length > 0 && (
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--glass-bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginRight: '0.5rem' }}>🎯 Scanned Ingredient Role:</span>
+          {uniqueIngredients.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--glass-bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginRight: '0.5rem' }}>🎯 Scanned Ingredient Role:</span>
+              <button
+                className="btn-secondary"
+                style={{
+                  padding: '0.4rem 0.8rem', fontSize: '0.8rem',
+                  borderColor: selectedIngredient === 'all' ? 'var(--color-fresh)' : 'var(--glass-border)',
+                  background: selectedIngredient === 'all' ? 'rgba(0,230,118,0.05)' : 'var(--glass-bg)',
+                  color: selectedIngredient === 'all' ? 'var(--color-fresh)' : 'inherit'
+                }}
+                onClick={() => setSelectedIngredient('all')}
+              >
+                All Matches
+              </button>
+              {uniqueIngredients.map(ing => (
                 <button
+                  key={ing}
                   className="btn-secondary"
                   style={{
                     padding: '0.4rem 0.8rem', fontSize: '0.8rem',
-                    borderColor: selectedIngredient === 'all' ? 'var(--color-fresh)' : 'var(--glass-border)',
-                    background: selectedIngredient === 'all' ? 'rgba(0,230,118,0.05)' : 'var(--glass-bg)',
-                    color: selectedIngredient === 'all' ? 'var(--color-fresh)' : 'inherit'
+                    borderColor: selectedIngredient === ing ? 'var(--color-fresh)' : 'var(--glass-border)',
+                    background: selectedIngredient === ing ? 'rgba(0,230,118,0.05)' : 'var(--glass-bg)',
+                    color: selectedIngredient === ing ? 'var(--color-fresh)' : 'inherit'
                   }}
-                  onClick={() => setSelectedIngredient('all')}
+                  onClick={() => setSelectedIngredient(ing)}
                 >
-                  All Matches
+                  {ing}
                 </button>
-                {uniqueIngredients.map(ing => (
-                  <button
-                    key={ing}
-                    className="btn-secondary"
-                    style={{
-                      padding: '0.4rem 0.8rem', fontSize: '0.8rem',
-                      borderColor: selectedIngredient === ing ? 'var(--color-fresh)' : 'var(--glass-border)',
-                      background: selectedIngredient === ing ? 'rgba(0,230,118,0.05)' : 'var(--glass-bg)',
-                      color: selectedIngredient === ing ? 'var(--color-fresh)' : 'inherit'
-                    }}
-                    onClick={() => setSelectedIngredient(ing)}
-                  >
-                    {ing}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+              ))}
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {recipes
+            {activeRecipes
               .filter(r => selectedIngredient === 'all' ? true : r.primaryIngredient === selectedIngredient)
               .map((recipe, idx) => (
                 <div key={idx} className="glass-card" style={{ padding: '2rem' }}>
@@ -252,4 +267,3 @@ export const Recipes: React.FC<RecipesProps> = ({
     </div>
   );
 };
-

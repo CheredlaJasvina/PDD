@@ -32,17 +32,32 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
       if (spoiled > 0) {
         setInsightText(`Warning: You have ${spoiled} spoiled item(s) in your pantry. We recommend prioritizing cooked meal usage before fruits decay.`);
       } else {
-        setInsightText("Excellent work! Your pantry wastage is currently at 0%. Try planning recipes using Gala Apples to maintain this streak.");
+        const freshItems = inventory.filter(i => i.status === 'Fresh');
+        const recommendationItem = freshItems.length > 0 ? freshItems[0].name : "your fresh items";
+        setInsightText(`Excellent work! Your pantry wastage is currently at 0%. Try planning recipes using ${recommendationItem} to maintain this streak.`);
       }
     }
   }, [inventory, screenId]);
 
   // 2. Pantry Scan History
-  const [scanHistory, setScanHistory] = useState([
-    { date: "2026-08-22", item: "Gala Apples", method: "Visual Laser Scan", status: "Success" },
-    { date: "2026-08-20", item: "Organic Whole Milk", method: "Manual Entry Lookup", status: "Success" },
-    { date: "2026-08-19", item: "Spaghetti Bolognese", method: "Receipt OCR Scan", status: "Success" }
-  ]);
+  const [scanHistory, setScanHistory] = useState<any[]>([]);
+  useEffect(() => {
+    if (inventory && inventory.length > 0) {
+      setScanHistory(inventory.map(item => ({
+        date: item.addedDate ? new Date(item.addedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        item: item.name,
+        method: item.imageUrl ? "Visual Laser Scan" : "Manual Entry Lookup",
+        status: "Success"
+      })));
+    } else {
+      setScanHistory([
+        { date: "2026-08-22", item: "Gala Apples", method: "Visual Laser Scan", status: "Success" },
+        { date: "2026-08-20", item: "Organic Whole Milk", method: "Manual Entry Lookup", status: "Success" },
+        { date: "2026-08-19", item: "Spaghetti Bolognese", method: "Receipt OCR Scan", status: "Success" }
+      ]);
+    }
+  }, [inventory]);
+
   const clearHistory = () => {
     setScanHistory([]);
   };
@@ -55,6 +70,17 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   
   // 5. Gourmet Upgrade
   const [gourmetLevel, setGourmetLevel] = useState("Home Cook");
+  const [gourmetMsg, setGourmetMsg] = useState("");
+
+  const handleSelectSubstitution = (replacement: string) => {
+    if (!wishlist.includes(replacement)) {
+      setWishlist([...wishlist, replacement]);
+    }
+    setGourmetMsg(`✨ Selected ${replacement}! Added to your grocery wishlist.`);
+    setTimeout(() => {
+      setGourmetMsg("");
+    }, 4000);
+  };
 
   // 6. Leftovers Re-purposer
   const [leftoverSearch, setLeftoverSearch] = useState("");
@@ -273,6 +299,27 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'recipes-portions':
+        const displayPortionItems = inventory.length > 0
+          ? inventory.map(item => {
+              let qty = 1;
+              let unit = "unit(s)";
+              if (item.category === 'fruits') {
+                qty = 1;
+              } else if (item.category === 'vegetables') {
+                qty = 2;
+                unit = "pcs";
+              } else if (item.category === 'cooked food') {
+                qty = 150;
+                unit = "grams";
+              }
+              return { name: item.name, qty: qty * portionsServings, unit };
+            })
+          : [
+              { name: "Gala Apples", qty: portionsServings * 1, unit: "unit(s)" },
+              { name: "Milk Base", qty: portionsServings * 100, unit: "ml" },
+              { name: "Flour mix", qty: portionsServings * 40, unit: "g" }
+            ];
+
         return (
           <div>
             <h3>⚖️ Portions Quantity Calculator</h3>
@@ -285,15 +332,18 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
             <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
               <strong>Scaled Ingredients Needed:</strong>
               <ul style={{ paddingLeft: '1.25rem', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                <li>Gala Apples: {portionsServings * 1} unit(s)</li>
-                <li>Milk Base: {portionsServings * 100} ml</li>
-                <li>Flour mix: {portionsServings * 40} g</li>
+                {displayPortionItems.map((item, idx) => (
+                  <li key={idx}>{item.name}: {item.qty} {item.unit}</li>
+                ))}
               </ul>
             </div>
           </div>
         );
 
       case 'recipes-kids':
+        const kidsAdaptItem = inventory.filter(i => !i.isCooked).length > 0 
+          ? inventory.filter(i => !i.isCooked)[0].name 
+          : "dish recipes";
         return (
           <div>
             <h3>👶 Kid-Friendly Flavor Safe-guard</h3>
@@ -311,16 +361,70 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
               ))}
             </div>
             <p style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(0,230,118,0.03)', borderRadius: '8px', fontSize: '0.9rem' }}>
-              💡 Selected configuration: <strong>{kidsSpice} Mode</strong>. Spices will be automatically scaled down in suggested dish recipes.
+              💡 Selected configuration: <strong>{kidsSpice} Mode</strong>. Spices in recipe suggestions for <strong>{kidsAdaptItem}</strong> will be automatically scaled down.
             </p>
           </div>
         );
 
       case 'recipes-gourmet':
+        const gourmetUpgrades: Record<string, Record<string, string>> = {
+          "apple": { "Home Cook": "Apple Honey Drizzle", "Bistro Chef": "Caramel Drizzle Glaze", "Pro Master": "Sun-Dried Apple chips" },
+          "carrot": { "Home Cook": "Rainbow Baby Carrots", "Bistro Chef": "Heritage Glazed Carrots", "Pro Master": "Charred Heirloom Carrots" },
+          "cheese": { "Home Cook": "Sharp Cheddar", "Bistro Chef": "Aged Gouda", "Pro Master": "Truffle Infused Pecorino" },
+          "rice": { "Home Cook": "Jasmine Rice", "Bistro Chef": "Basmati Pilaf", "Pro Master": "Saffron Risotto Rice" },
+          "milk": { "Home Cook": "Organic Milk", "Bistro Chef": "Almond Milk", "Pro Master": "Macadamia Nut Milk" },
+          "chicken": { "Home Cook": "Pan-Seared Chicken", "Bistro Chef": "Herb Butter Basted Chicken", "Pro Master": "Sous-Vide Truffle Chicken" },
+          "biryani": { "Home Cook": "Basmati Chicken Pilaf", "Bistro Chef": "Dum Baked Biryani", "Pro Master": "Saffron Infused Biryani with Edible Gold" }
+        };
+
+        const substitutions: { original: string, replacement: string }[] = [];
+        inventory.forEach(item => {
+          const nameLower = item.name.toLowerCase();
+          for (const key of Object.keys(gourmetUpgrades)) {
+            if (nameLower.includes(key)) {
+              substitutions.push({
+                original: item.name,
+                replacement: gourmetUpgrades[key][gourmetLevel] || gourmetUpgrades[key]["Home Cook"]
+              });
+              break;
+            }
+          }
+        });
+
+        if (substitutions.length === 0) {
+          substitutions.push(
+            { original: "Ordinary Cheddar Cheese", replacement: gourmetLevel === "Pro Master" ? "Truffle Infused Pecorino" : gourmetLevel === "Bistro Chef" ? "Aged Gouda" : "Sharp Cheddar" },
+            { original: "Standard Apple Slice", replacement: gourmetLevel === "Pro Master" ? "Sun-Dried Apple chips" : gourmetLevel === "Bistro Chef" ? "Caramel Drizzle Glaze" : "Apple Honey Drizzle" }
+          );
+        }
+
         return (
           <div>
             <h3>🧑‍🍳 Gourmet Substitution Guide</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Upgrade simple grocery ingredients to professional chef alternatives.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              Upgrade simple grocery ingredients to professional chef alternatives. 
+              <br />
+              <span style={{ fontSize: '0.78rem', color: 'var(--color-fresh)' }}>💡 Click on any gourmet option below to add it to your wishlist!</span>
+            </p>
+            
+            {gourmetMsg && (
+              <div style={{
+                background: 'rgba(0, 230, 118, 0.1)',
+                border: '1px solid var(--color-fresh)',
+                padding: '0.6rem 1rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                fontSize: '0.85rem',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                animation: 'fadeIn 0.3s ease'
+              }}>
+                {gourmetMsg}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
               {["Home Cook", "Bistro Chef", "Pro Master"].map(lvl => (
                 <button
@@ -333,15 +437,38 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
                 </button>
               ))}
             </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)' }}>
-                <span>Ordinary Cheddar Cheese</span>
-                <span style={{ color: 'var(--color-fresh)', fontWeight: 600 }}>➔ {gourmetLevel === "Pro Master" ? "Truffle Infused Pecorino" : gourmetLevel === "Bistro Chef" ? "Aged Gouda" : "Sharp Cheddar"}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)' }}>
-                <span>Standard Apple Slice</span>
-                <span style={{ color: 'var(--color-fresh)', fontWeight: 600 }}>➔ {gourmetLevel === "Pro Master" ? "Sun-Dried Apple chips" : "Caramel Drizzle Glaze"}</span>
-              </div>
+              {substitutions.map((sub, idx) => (
+                <div 
+                  key={idx} 
+                  onClick={() => handleSelectSubstitution(sub.replacement)}
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '0.75rem 1rem', 
+                    borderBottom: '1px solid var(--glass-border)',
+                    cursor: 'pointer',
+                    background: 'rgba(255, 255, 255, 0.01)',
+                    borderRadius: '6px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  className="gourmet-item-hover"
+                  title="Click to select and add to wishlist"
+                >
+                  <span style={{ color: 'var(--text-muted)' }}>{sub.original}</span>
+                  <span style={{ 
+                    color: 'var(--color-fresh)', 
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}>
+                    ➔ {sub.replacement}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -464,10 +591,24 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'eco-compost':
+        const checkableItems = inventory.map(i => i.name);
         return (
           <div>
             <h3>🍂 compost safety advisor</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Enter any raw ingredient to verify if it is safe for standard home composting.</p>
+            {checkableItems.length > 0 && (
+              <div style={{ margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--color-fresh)' }}>
+                💡 Click to verify your inventory: {checkableItems.map((name, idx) => (
+                  <span 
+                    key={idx} 
+                    onClick={() => { setCompostInput(name); }}
+                    style={{ cursor: 'pointer', textDecoration: 'underline', marginRight: '0.75rem' }}
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
               <input type="text" placeholder="e.g. apple peel, egg shells, chicken" value={compostInput} onChange={e => setCompostInput(e.target.value)} style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }} />
               <button className="btn-primary" onClick={checkCompostSafety}>Verify</button>
@@ -518,11 +659,20 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'eco-challenges':
+        const challengeItems = inventory.filter(i => i.status !== 'Spoiled' && !i.isCooked);
+        const focusItemName = challengeItems.length > 0 ? challengeItems[0].name : "fresh food items";
+        const modifiedChallenges = challenges.map(c => {
+          if (c.id === 1) {
+            return { ...c, desc: `Finish ${focusItemName} before Friday` };
+          }
+          return c;
+        });
+
         return (
           <div>
             <h3>🎯 Weekly Zero-Waste Challenges</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              {challenges.map(ch => (
+              {modifiedChallenges.map(ch => (
                 <div key={ch.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--glass-border)', borderRadius: '8px', opacity: ch.done ? 0.6 : 1 }}>
                   <div>
                     <strong>{ch.title}</strong>
@@ -750,12 +900,13 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'adv-temp':
+        const tempItemName = inventory.length > 0 ? inventory[0].name : "apples";
         return (
           <div>
             <h3>🌡️ Ambient Temperature adjuster</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Estimate storage lifespan reduction based on ambient temperature adjustments.</p>
             <div style={{ padding: '1rem', background: 'rgba(255,234,0,0.05)', border: '1px solid var(--color-warning)', borderRadius: '8px', marginTop: '1.5rem', fontSize: '0.9rem' }}>
-              ⚠️ Alert: Storing apples above <strong>25°C</strong> reduces standard shelf-life by <strong>50%</strong>. Refrigerate to preserve.
+              ⚠️ Alert: Storing {tempItemName} above <strong>25°C</strong> reduces standard shelf-life by <strong>50%</strong>. Refrigerate to preserve.
             </div>
           </div>
         );

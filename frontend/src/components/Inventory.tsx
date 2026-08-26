@@ -293,14 +293,20 @@ export const Inventory: React.FC<InventoryProps> = ({
 
                 {/* Action Checkboxes */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>
-                    <input
-                      type="checkbox"
-                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-fresh)' }}
-                      onChange={() => handleUsed(item._id)}
-                    />
-                    <span>Used</span>
-                  </label>
+                  {currentPct > 50 && item.status !== 'Spoiled' ? (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>
+                      <input
+                        type="checkbox"
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-fresh)' }}
+                        onChange={() => handleUsed(item._id)}
+                      />
+                      <span>Used</span>
+                    </label>
+                  ) : (
+                    <span style={{ fontSize: '0.9rem', color: 'var(--color-spoiled)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      ❌ Don't Use
+                    </span>
+                  )}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--color-spoiled)', fontWeight: 600 }}>
                     <input
                       type="checkbox"

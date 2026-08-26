@@ -36,24 +36,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const timeDiff = new Date(item.predictedSpoilageDate).getTime() - new Date().getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
       const daysSinceAdded = Math.floor((Date.now() - new Date(item.addedDate).getTime()) / (1000 * 60 * 60 * 24));
-      if (daysSinceAdded >= 2) {
-        return { id: item._id, name: item.name, type: 'critical', daysDiff: 0,
+
+      const totalDuration = new Date(item.predictedSpoilageDate).getTime() - new Date(item.addedDate).getTime();
+      const elapsed = Date.now() - new Date(item.addedDate).getTime();
+      let currentPct = item.originalFreshness;
+      if (elapsed >= totalDuration) currentPct = 0;
+      else if (elapsed > 0) currentPct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
+
+      if (item.status === 'Spoiled' || currentPct <= 50 || daysDiff <= 0) {
+        return { id: item._id, name: item.name, type: 'critical', daysDiff, isSpoiled: true,
+          message: `"${item.name}" is spoiled (freshness ${currentPct}%). Avoid consumption!` };
+      } else if (daysSinceAdded >= 2) {
+        return { id: item._id, name: item.name, type: 'critical', daysDiff: 0, isSpoiled: false,
           message: `"${item.name}" will become spoil today, use it before!` };
-      } else if (item.status === 'Spoiled' || daysDiff <= 0) {
-        return { id: item._id, name: item.name, type: 'critical', daysDiff,
-          message: `"${item.name}" has expired and is marked Spoiled. Avoid consumption!` };
       } else if (daysDiff === 1) {
-        return { id: item._id, name: item.name, type: 'urgent', daysDiff,
+        return { id: item._id, name: item.name, type: 'urgent', daysDiff, isSpoiled: false,
           message: `"${item.name}" spoils in 1 day — use it today!` };
       } else if (daysDiff === 2) {
-        return { id: item._id, name: item.name, type: 'warning', daysDiff,
+        return { id: item._id, name: item.name, type: 'warning', daysDiff, isSpoiled: false,
           message: `"${item.name}" will spoil in 2 days. Plan to use it soon.` };
       }
       return null;
     })
     .filter(Boolean)
     .filter(a => !dismissedAlerts.has(a!.id)) as Array<{
-      id: string; name: string; type: string; message: string; daysDiff: number;
+      id: string; name: string; type: string; message: string; daysDiff: number; isSpoiled?: boolean;
     }>;
 
   const getFreshnessPercentage = (item: FoodItem) => {
@@ -133,22 +140,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexShrink: 0 }}>
-                  <button
-                    className="btn-primary"
-                    style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem', background: 'var(--color-fresh)', color: '#0b0c10' }}
-                    onClick={() => handleUsed(alert.id)}
-                    title="I already used / ate this item"
-                  >
-                    ✅ Used
-                  </button>
-                  <button
-                    className="btn-secondary"
-                    style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem', borderColor: 'var(--color-spoiled)', color: 'var(--color-spoiled)' }}
-                    onClick={() => handleWasted(alert.id)}
-                    title="This item was not used — counts as wasted"
-                  >
-                    🗑️ Not Used
-                  </button>
+                  {!alert.isSpoiled ? (
+                    <>
+                      <button
+                        className="btn-primary"
+                        style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem', background: 'var(--color-fresh)', color: '#0b0c10' }}
+                        onClick={() => handleUsed(alert.id)}
+                        title="I already used / ate this item"
+                      >
+                        ✅ Used
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem', borderColor: 'var(--color-spoiled)', color: 'var(--color-spoiled)' }}
+                        onClick={() => handleWasted(alert.id)}
+                        title="This item was not used — counts as wasted"
+                      >
+                        🗑️ Not Used
+                      </button>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-spoiled)', fontWeight: 600 }}>⚠️ Discard Recommended</span>
+                  )}
                 </div>
               </div>
             ))}

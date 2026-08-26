@@ -439,6 +439,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           preferences: _loggedInUser!,
           onUpdatePreferences: _updatePreferences,
           backendUrl: _backendUrl,
+          inventory: _inventory,
         );
       case "analytics":
         return AnalyticsScreen(backendUrl: _backendUrl);
@@ -452,6 +453,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return ProfileSettingsScreen(
           preferences: _loggedInUser!,
           onUpdatePreferences: _updatePreferences,
+        );
+      case "recipes-gourmet":
+        return GourmetUpgradeScreen(
+          onNavigateBack: () => setState(() => _activeRoute = "dashboard"),
         );
       default:
         return MockScreenWidget(
@@ -948,11 +953,11 @@ class DashboardScreen extends StatelessWidget {
       final daysDiff = spoilageDate.difference(DateTime.now()).inDays + 1;
       
       if (item["status"] == "Spoiled" || daysDiff <= 0) {
-        return {"id": item["_id"], "name": item["name"], "type": "critical", "msg": "Spoiled: Avoid consuming ${item["name"]}!"};
+        return {"id": item["_id"], "name": item["name"], "type": "critical", "isSpoiled": true, "msg": "Spoiled: Avoid consuming ${item["name"]}!"};
       } else if (daysDiff == 1) {
-        return {"id": item["_id"], "name": item["name"], "type": "urgent", "msg": "Urgent Alert (Stage 2): Consume ${item["name"]} today!"};
+        return {"id": item["_id"], "name": item["name"], "type": "urgent", "isSpoiled": false, "msg": "Urgent Alert (Stage 2): Consume ${item["name"]} today!"};
       } else if (daysDiff == 2) {
-        return {"id": item["_id"], "name": item["name"], "type": "warning", "msg": "Proactive Alert (Stage 1): ${item["name"]} will spoil in 2 days."};
+        return {"id": item["_id"], "name": item["name"], "type": "warning", "isSpoiled": false, "msg": "Proactive Alert (Stage 1): ${item["name"]} will spoil in 2 days."};
       }
       return null;
     }).where((element) => element != null).toList();
@@ -1001,21 +1006,23 @@ class DashboardScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(alarm!["msg"]!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), minimumSize: Size.zero),
-                              onPressed: () => onUpdateState(alarm["id"]!, "Used"),
-                              child: const Text("? Used", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(width: 4),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withOpacity(0.1), foregroundColor: const Color(0xFFFF1744), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero, side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
-                              onPressed: () => onUpdateState(alarm["id"]!, "Wasted"),
-                              child: const Text("??? Not Used", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                            )
-                          ],
-                        )
+                        alarm["isSpoiled"] != true
+                            ? Row(
+                                children: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), minimumSize: Size.zero),
+                                    onPressed: () => onUpdateState(alarm["id"]!, "Used"),
+                                    child: const Text("✅ Used", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withOpacity(0.1), foregroundColor: const Color(0xFFFF1744), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero, side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
+                                    onPressed: () => onUpdateState(alarm["id"]!, "Wasted"),
+                                    child: const Text("🗑️ Not Used", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                  )
+                                ],
+                              )
+                            : const Text("⚠️ Discard Recommended", style: TextStyle(color: Color(0xFFFF1744), fontSize: 10, fontWeight: FontWeight.bold))
                       ],
                     ),
                   )),
@@ -1901,55 +1908,74 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           const SizedBox(height: 10),
                           // Did you use this item? Used / Not Used
                           if (!_markedUsed.contains(item["_id"])) ...[
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.white.withOpacity(0.02), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white12)),
-                              child: Column(
+                            if (freshnessPct > 50 && item["status"] != "Spoiled") ...[
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.02), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white12)),
+                                child: Column(
+                                  children: [
+                                    const Text("Did you use this item?", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, padding: EdgeInsets.zero, minimumSize: const Size(0, 34)),
+                                            onPressed: () {
+                                              setState(() => _markedUsed.add(item["_id"]));
+                                              widget.onUpdateState(item["_id"], "Used");
+                                            },
+                                            child: const Text("✅ Used", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withOpacity(0.1), foregroundColor: const Color(0xFFFF1744), padding: EdgeInsets.zero, minimumSize: const Size(0, 34), side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
+                                            onPressed: () => widget.onUpdateState(item["_id"], "Wasted"),
+                                            child: const Text("🗑️ Not Used", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
                                 children: [
-                                  const Text("Did you use this item?", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, padding: EdgeInsets.zero, minimumSize: const Size(0, 34)),
-                                          onPressed: () {
-                                            setState(() => _markedUsed.add(item["_id"]));
-                                            widget.onUpdateState(item["_id"], "Used");
-                                          },
-                                          child: const Text("✅ Used", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withOpacity(0.1), foregroundColor: const Color(0xFFFF1744), padding: EdgeInsets.zero, minimumSize: const Size(0, 34), side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
-                                          onPressed: () => widget.onUpdateState(item["_id"], "Wasted"),
-                                          child: const Text("🗑️ Not Used", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                        ),
-                                      ),
-                                    ],
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.white10, foregroundColor: Colors.grey, padding: EdgeInsets.zero, minimumSize: const Size(0, 32)),
+                                      onPressed: () => widget.onUpdateState(item["_id"], "Eaten"),
+                                      child: const Text("🍽️ Eaten/Cooked", style: TextStyle(fontSize: 10)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
+                                    onPressed: () => widget.onDeleteItem(item["_id"]),
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.white10, foregroundColor: Colors.grey, padding: EdgeInsets.zero, minimumSize: const Size(0, 32)),
-                                    onPressed: () => widget.onUpdateState(item["_id"], "Eaten"),
-                                    child: const Text("🍽️ Eaten/Cooked", style: TextStyle(fontSize: 10)),
-                                  ),
+                            ] else ...[
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.2))),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text("❌ Don't Use (Spoiled)", style: TextStyle(color: Color(0xFFFF1744), fontWeight: FontWeight.bold, fontSize: 11)),
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.delete_outline, size: 14, color: Colors.white),
+                                      label: const Text("Remove", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 10), minimumSize: const Size(0, 30)),
+                                      onPressed: () => widget.onDeleteItem(item["_id"]),
+                                    )
+                                  ],
                                 ),
-                                const SizedBox(width: 6),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
-                                  onPressed: () => widget.onDeleteItem(item["_id"]),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ] else ...[
                             Container(
                               padding: const EdgeInsets.all(10),
@@ -1982,12 +2008,14 @@ class RecipesScreen extends StatefulWidget {
   final Map<String, dynamic> preferences;
   final Function(Map<String, dynamic>) onUpdatePreferences;
   final String backendUrl;
+  final List<dynamic> inventory;
 
   const RecipesScreen({
     super.key,
     required this.preferences,
     required this.onUpdatePreferences,
     required this.backendUrl,
+    required this.inventory,
   });
 
   @override
@@ -2144,13 +2172,39 @@ class _RecipesScreenState extends State<RecipesScreen> {
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : _recipes.isEmpty
-                  ? const Center(child: Text("No recipes match raw inventory items."))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _recipes.length,
-                      itemBuilder: (context, index) {
-                        final recipe = _recipes[index];
+              : (() {
+                  final activeRecipes = _recipes.where((recipe) {
+                    final matchingItem = widget.inventory.firstWhere(
+                      (item) {
+                        final name = item["name"].toString().toLowerCase();
+                        final prim = recipe["primaryIngredient"].toString().toLowerCase();
+                        return name == prim || name.contains(prim) || prim.contains(name);
+                      },
+                      orElse: () => null,
+                    );
+                    if (matchingItem != null) {
+                      final totalDur = DateTime.parse(matchingItem["predictedSpoilageDate"]).difference(DateTime.parse(matchingItem["addedDate"])).inSeconds;
+                      final elapsed = DateTime.now().difference(DateTime.parse(matchingItem["addedDate"])).inSeconds;
+                      double pct = 1.0 - (elapsed / totalDur);
+                      pct = pct.clamp(0.0, 1.0);
+                      final freshnessPct = (matchingItem["originalFreshness"] * pct).round();
+
+                      if (matchingItem["status"] == "Spoiled" || freshnessPct <= 50 || matchingItem["isCooked"] == true || matchingItem["category"] == "cooked food") {
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).toList();
+
+                  if (activeRecipes.isEmpty) {
+                    return const Center(child: Text("No recipes match raw inventory items."));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: activeRecipes.length,
+                    itemBuilder: (context, index) {
+                      final recipe = activeRecipes[index];
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
@@ -2205,7 +2259,8 @@ class _RecipesScreenState extends State<RecipesScreen> {
                           ),
                         );
                       },
-                    ),
+                    );
+                  })(),
         )
       ],
     );
@@ -3452,6 +3507,201 @@ class _ApplePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class GourmetUpgradeScreen extends StatefulWidget {
+  final VoidCallback onNavigateBack;
+
+  const GourmetUpgradeScreen({
+    super.key,
+    required this.onNavigateBack,
+  });
+
+  @override
+  State<GourmetUpgradeScreen> createState() => _GourmetUpgradeScreenState();
+}
+
+class _GourmetUpgradeScreenState extends State<GourmetUpgradeScreen> {
+  String _gourmetLevel = "Home Cook";
+
+  final Map<String, List<Map<String, String>>> _substitutions = {
+    "Home Cook": [
+      {"original": "Ordinary Cheddar Cheese", "replacement": "Sharp Cheddar"},
+      {"original": "Standard Apple Slice", "replacement": "Apple Honey Drizzle"},
+      {"original": "White Rice", "replacement": "Jasmine Rice"},
+      {"original": "Standard Milk", "replacement": "Organic Milk"},
+    ],
+    "Bistro Chef": [
+      {"original": "Ordinary Cheddar Cheese", "replacement": "Aged Gouda"},
+      {"original": "Standard Apple Slice", "replacement": "Caramel Drizzle Glaze"},
+      {"original": "White Rice", "replacement": "Basmati Pilaf"},
+      {"original": "Standard Milk", "replacement": "Almond Milk"},
+    ],
+    "Pro Master": [
+      {"original": "Ordinary Cheddar Cheese", "replacement": "Truffle Infused Pecorino"},
+      {"original": "Standard Apple Slice", "replacement": "Sun-Dried Apple chips"},
+      {"original": "White Rice", "replacement": "Saffron Risotto Rice"},
+      {"original": "Standard Milk", "replacement": "Macadamia Nut Milk"},
+    ],
+  };
+
+  void _handleSubstitutionTap(String replacement) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Text("✨ ", style: TextStyle(fontSize: 16)),
+            Expanded(
+              child: Text(
+                "Selected $replacement! Added to your wishlist.",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF00E676),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final list = _substitutions[_gourmetLevel] ?? [];
+
+    return Container(
+      color: const Color(0xFF0B0C10),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: widget.onNavigateBack,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                "Gourmet Upgrade",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Card(
+            color: Color(0xFF13151B),
+            child: Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Text("🧑‍🍳", style: TextStyle(fontSize: 24)),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Gourmet Substitution Guide",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Upgrade simple grocery ingredients to professional chef alternatives. Tap on any replacement to add it to your wishlist.",
+                          style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.3),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Tab bar buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: ["Home Cook", "Bistro Chef", "Pro Master"].map((lvl) {
+              final isSelected = _gourmetLevel == lvl;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isSelected ? const Color(0xFF00E676).withOpacity(0.15) : Colors.transparent,
+                      foregroundColor: isSelected ? const Color(0xFF00E676) : Colors.white60,
+                      side: BorderSide(
+                        color: isSelected ? const Color(0xFF00E676) : Colors.white12,
+                        width: 1,
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _gourmetLevel = lvl;
+                      });
+                    },
+                    child: Text(
+                      lvl,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: ListView.builder(
+              itemCount: list.length,
+              itemBuilder: (context, index) {
+                final item = list[index];
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.015),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.06)),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    title: Text(
+                      item["original"] ?? "",
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "➔ ",
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                        Text(
+                          item["replacement"] ?? "",
+                          style: const TextStyle(
+                            color: Color(0xFF00E676),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () => _handleSubstitutionTap(item["replacement"] ?? ""),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 

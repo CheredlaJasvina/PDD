@@ -381,8 +381,19 @@ exports.getSmartSuggestions = async (req, res) => {
     const prefs = await db.getPreferences();
     const inventory = await db.find({ state: 'Tracked' });
 
-    // 1. Filter: Restrict recommendations strictly to RAW (uncooked) items in the inventory
-    const rawItems = inventory.filter(item => !item.isCooked && item.category !== 'cooked food' && item.state === 'Tracked');
+    // 1. Filter: Restrict recommendations strictly to RAW (uncooked) and UNSPOILED items in the inventory
+    const rawItems = inventory.filter(item => {
+      if (item.isCooked || item.category === 'cooked food' || item.category === 'Cooked Food' || item.status === 'Spoiled' || item.state !== 'Tracked') {
+        return false;
+      }
+      const totalDuration = new Date(item.predictedSpoilageDate).getTime() - new Date(item.addedDate).getTime();
+      const elapsed = Date.now() - new Date(item.addedDate).getTime();
+      let currentPct = item.originalFreshness;
+      if (elapsed >= totalDuration) currentPct = 0;
+      else if (elapsed > 0) currentPct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
+
+      return currentPct > 50;
+    });
 
     // Sort raw items by remaining freshness (ascending) so items nearing expiry appear first
     rawItems.sort((a, b) => a.originalFreshness - b.originalFreshness);

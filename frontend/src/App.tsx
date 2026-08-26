@@ -364,6 +364,7 @@ function App() {
           <Recipes 
             preferences={loggedInUser} 
             onUpdatePreferences={handleUpdatePreferences}
+            inventory={inventory}
           />
         );
       case 'analytics':
