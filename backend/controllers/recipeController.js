@@ -194,6 +194,110 @@ const RECIPE_DATABASE = {
       kidFriendlyNotes: "Naturally sweet and soft. Kids love the honey glaze flavor.",
       gourmetNotes: "Add a splash of orange juice and top with toasted sesame seeds.",
       chiliLevel: "none"
+    },
+    {
+      title: "Creamy Carrot & Ginger Soup",
+      description: "A warm, velvety soup with sweet carrots and a kick of fresh ginger.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "Carrots chopped", qty: 4, unit: "pcs" },
+        { name: "Fresh Ginger grated", qty: 1, unit: "tsp" },
+        { name: "Onion chopped", qty: 0.5, unit: "pcs" },
+        { name: "Vegetable Broth", qty: 2, unit: "cups" }
+      ],
+      steps: [
+        "Sauté chopped onion and grated ginger in a pot with olive oil until soft.",
+        "Add chopped carrots and vegetable broth, bring to a boil, then simmer for 15 minutes.",
+        "Puree the soup in a blender until smooth and creamy.",
+        "Season with salt, pepper, and a squeeze of fresh lime juice."
+      ],
+      kidFriendlyNotes: "Very smooth and naturally sweet. Ginger gives a nice warm flavor.",
+      gourmetNotes: "Drizzle with coconut cream and top with roasted pumpkin seeds.",
+      chiliLevel: "none"
+    },
+    {
+      title: "Crispy Baked Carrot Fries",
+      description: "Healthy and crispy alternative to potato fries seasoned with herbs.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "Carrots cut into matchsticks", qty: 3, unit: "pcs" },
+        { name: "Cornstarch", qty: 1, unit: "tbsp" },
+        { name: "Olive Oil", qty: 1, unit: "tbsp" },
+        { name: "Dried Thyme", qty: 0.5, unit: "tsp" }
+      ],
+      steps: [
+        "Preheat oven to 200°C (400°F).",
+        "Toss carrot matchsticks with cornstarch, olive oil, dried thyme, salt, and pepper.",
+        "Spread in a single layer on a baking sheet.",
+        "Bake for 20-25 minutes, flipping halfway, until crispy and golden brown."
+      ],
+      kidFriendlyNotes: "Fun shape to grab and dip in ketchup.",
+      gourmetNotes: "Toss with garlic powder and fresh rosemary, and serve with truffle dip.",
+      chiliLevel: "none"
+    }
+  ],
+  cauliflower: [
+    {
+      title: "Garlic Parmesan Roasted Cauliflower",
+      description: "Crisp and tender roasted cauliflower tossed in olive oil, garlic, and fresh parmesan cheese.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "Cauliflower Florets", qty: 3, unit: "cups" },
+        { name: "Olive Oil", qty: 2, unit: "tbsp" },
+        { name: "Garlic Powder", qty: 1, unit: "tsp" },
+        { name: "Grated Parmesan", qty: 0.25, unit: "cup" }
+      ],
+      steps: [
+        "Preheat oven to 200°C (400°F).",
+        "Toss cauliflower florets with olive oil, garlic powder, salt, and pepper.",
+        "Spread in a single layer on a baking sheet and roast for 20 minutes until edges are browned.",
+        "Sprinkle with grated parmesan and roast for another 3 minutes until cheese is melted and golden."
+      ],
+      kidFriendlyNotes: "Super cheesy and easy to bite.",
+      gourmetNotes: "Top with fresh lemon zest and toasted pine nuts.",
+      chiliLevel: "none"
+    },
+    {
+      title: "Creamy Cauliflower Garlic Mash",
+      description: "A healthy, low-carb alternative to mashed potatoes that is rich and buttery.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "Cauliflower cut into florets", qty: 4, unit: "cups" },
+        { name: "Garlic cloves minced", qty: 2, unit: "pcs" },
+        { name: "Cream Cheese", qty: 2, unit: "tbsp" },
+        { name: "Butter", qty: 1, unit: "tbsp" }
+      ],
+      steps: [
+        "Steam or boil cauliflower florets until very tender (about 10 minutes).",
+        "Drain completely and pat dry with a paper towel.",
+        "Add cauliflower, garlic, cream cheese, and butter to a food processor.",
+        "Blend until completely smooth and creamy. Season with salt and pepper to taste."
+      ],
+      kidFriendlyNotes: "Indistinguishable from mashed potatoes! Fluffy and creamy.",
+      gourmetNotes: "Stir in white truffle oil and chopped fresh chives.",
+      chiliLevel: "none"
+    },
+    {
+      title: "Spicy Buffalo Cauliflower Bites",
+      description: "Baked crispy cauliflower wings tossed in a spicy buffalo sauce.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "Cauliflower Florets", qty: 3, unit: "cups" },
+        { name: "Flour", qty: 0.5, unit: "cup" },
+        { name: "Milk", qty: 0.5, unit: "cup" },
+        { name: "Buffalo Hot Sauce", qty: 0.5, unit: "cup" },
+        { name: "Melted Butter", qty: 1, unit: "tbsp" }
+      ],
+      steps: [
+        "Preheat oven to 220°C (450°F).",
+        "Whisk flour, milk, garlic powder, salt, and pepper to create a batter.",
+        "Dip cauliflower florets in batter and place on a baking sheet. Bake for 20 minutes.",
+        "Whisk buffalo hot sauce and melted butter together.",
+        "Toss baked cauliflower in buffalo sauce, return to oven and bake for 10 more minutes until crispy."
+      ],
+      kidFriendlyNotes: "WARNING: Very spicy! Replace buffalo sauce with honey BBQ for kids.",
+      gourmetNotes: "Serve with a side of homemade blue cheese dressing and celery sticks.",
+      chiliLevel: "high"
     }
   ],
   banana: [
