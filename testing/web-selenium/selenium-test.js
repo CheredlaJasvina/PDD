@@ -118,7 +118,10 @@ async function runSeleniumTests() {
     "Verify layout adaptivity on mobile screens",
     "Verify layout adaptivity on tablet screens",
     "Verify layout adaptivity on 4K desktop screens",
-    "Verify application offline banner displays on network disconnect"
+    "Verify application offline banner displays on network disconnect",
+    "Verify items with <= 50% freshness have Used/Not Used actions hidden on web",
+    "Verify items with <= 50% freshness do not generate web recipe recommendations",
+    "Verify identical brand logo is displayed across web header layouts"
   ];
 
   const browsers = ["Chrome", "Firefox", "Safari", "Edge", "Opera", "Mobile Web"];

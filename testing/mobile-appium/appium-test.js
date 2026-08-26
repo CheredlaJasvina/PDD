@@ -119,7 +119,10 @@ async function runAppiumTests() {
     "Verify notifications modal displays alert details correctly",
     "Verify profile preferences page saves settings state locally",
     "Verify offline banner is displayed when phone is in airplane mode",
-    "Verify keyboard dismisses when tapping outside text fields"
+    "Verify keyboard dismisses when tapping outside text fields",
+    "Verify items with <= 50% freshness have Used/Not Used actions hidden on mobile",
+    "Verify items with <= 50% freshness do not generate mobile recipe recommendations",
+    "Verify identical brand logo is displayed across mobile app layouts"
   ];
 
   const devices = ["Android Emulator", "Android Physical device", "iOS Simulator", "iOS Physical device"];
