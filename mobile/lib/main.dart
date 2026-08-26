@@ -3471,15 +3471,15 @@ class _ApplePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final bodyPath = Path();
-    bodyPath.moveTo(w * 0.5, h * 0.22);
-    bodyPath.cubicTo(w * 0.35, h * 0.22, w * 0.2, h * 0.14, w * 0.1, h * 0.22);
-    bodyPath.cubicTo(w * -0.1, h * 0.34, w * -0.1, h * 0.74, w * 0.1, h * 0.94);
-    bodyPath.cubicTo(w * 0.22, h * 1.14, w * 0.42, h * 1.20, w * 0.5, h * 1.07);
-    bodyPath.cubicTo(w * 0.58, h * 1.20, w * 0.78, h * 1.14, w * 0.9, h * 0.94);
-    bodyPath.cubicTo(w * 0.95, h * 0.82, w * 0.98, h * 0.80, w * 0.88, h * 0.74);
-    bodyPath.cubicTo(w * 0.76, h * 0.68, w * 0.76, h * 0.48, w * 0.88, h * 0.42);
-    bodyPath.cubicTo(w * 0.98, h * 0.36, w * 0.96, h * 0.34, w * 0.9, h * 0.30);
-    bodyPath.cubicTo(w * 0.8, h * 0.14, w * 0.65, h * 0.22, w * 0.5, h * 0.22);
+    bodyPath.moveTo(w * 0.5, h * 0.2);
+    bodyPath.cubicTo(w * 0.35, h * 0.2, w * 0.2, h * 0.12, w * 0.1, h * 0.2);
+    bodyPath.cubicTo(w * -0.1, h * 0.32, w * -0.1, h * 0.72, w * 0.1, h * 0.92);
+    bodyPath.cubicTo(w * 0.22, h * 1.12, w * 0.42, h * 1.18, w * 0.5, h * 1.05);
+    bodyPath.cubicTo(w * 0.58, h * 1.18, w * 0.78, h * 1.12, w * 0.9, h * 0.92);
+    bodyPath.cubicTo(w * 0.95, h * 0.8, w * 0.98, h * 0.78, w * 0.88, h * 0.72);
+    bodyPath.cubicTo(w * 0.76, h * 0.66, w * 0.76, h * 0.46, w * 0.88, h * 0.4);
+    bodyPath.cubicTo(w * 0.98, h * 0.34, w * 0.96, h * 0.32, w * 0.9, h * 0.28);
+    bodyPath.cubicTo(w * 0.8, h * 0.12, w * 0.65, h * 0.2, w * 0.5, h * 0.2);
     bodyPath.close();
 
     canvas.drawPath(bodyPath, bodyPaint);
@@ -3492,7 +3492,7 @@ class _ApplePainter extends CustomPainter {
     canvas.save();
     canvas.translate(w * 0.35, h * 0.5);
     canvas.rotate(-15 * 3.14159 / 180);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: w * 0.12, height: h * 0.25), highlightPaint);
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: w * 0.1, height: h * 0.22), highlightPaint);
     canvas.restore();
 
     // 3. Brown Stem
@@ -3503,7 +3503,7 @@ class _ApplePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final stemPath = Path();
-    stemPath.moveTo(w * 0.5, h * 0.22);
+    stemPath.moveTo(w * 0.5, h * 0.2);
     stemPath.cubicTo(w * 0.5, h * 0.05, w * 0.6, h * 0.0, w * 0.6, h * 0.0);
     canvas.drawPath(stemPath, stemPaint);
 

@@ -415,13 +415,13 @@ function App() {
           <svg viewBox="0 0 120 120" width="36" height="36" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
             <rect x="5" y="5" width="110" height="110" rx="28" fill="#0E1B18" stroke="#00E676" strokeWidth="1.5" strokeOpacity="0.5"/>
             {/* Solid Apple Body */}
-            <path d="M 60 42 C 48 42, 33 50, 33 75 C 33 98, 48 108, 60 108 C 72 108, 87 98, 87 75 C 87 50, 72 42, 60 42 Z" fill="#00E676" />
+            <path d="M 60 40 C 53 40, 48 37, 43 40 C 33 46, 33 66, 38 78 C 43 90, 53 95, 60 90 C 67 95, 77 90, 82 78 C 84 72, 85 71, 80 68 C 74 65, 74 55, 80 52 C 85 49, 84 48, 82 46 C 77 40, 72 40, 67 40 C 63 37, 60 40, 60 40 Z" fill="#00E676" />
             {/* Highlight */}
-            <ellipse cx="48" cy="62" rx="5" ry="11" fill="#FFFFFF" opacity="0.4" transform="rotate(-15 48 62)" />
+            <ellipse cx="48" cy="60" rx="4" ry="10" fill="#FFFFFF" opacity="0.4" transform="rotate(-15 48 60)" />
             {/* Stem */}
-            <path d="M 60 42 C 60 27, 70 22, 70 22" fill="none" stroke="#8B5A2B" strokeWidth="4" strokeLinecap="round" />
+            <path d="M 60 40 C 60 25, 70 20, 70 20" fill="none" stroke="#8B5A2B" strokeWidth="4" strokeLinecap="round" />
             {/* Leaf */}
-            <path d="M 70 22 C 80 22, 85 30, 75 34 C 68 37, 66 30, 70 22 Z" fill="#2E7D32" />
+            <path d="M 70 20 C 80 20, 85 28, 75 32 C 68 35, 66 28, 70 20 Z" fill="#2E7D32" />
           </svg>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1.1 }}>
@@ -448,13 +448,13 @@ function App() {
           <svg viewBox="0 0 120 120" width="40" height="40" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
             <rect x="5" y="5" width="110" height="110" rx="28" fill="#0E1B18" stroke="#00E676" strokeWidth="1.5" strokeOpacity="0.5"/>
             {/* Solid Apple Body */}
-            <path d="M 60 42 C 48 42, 33 50, 33 75 C 33 98, 48 108, 60 108 C 72 108, 87 98, 87 75 C 87 50, 72 42, 60 42 Z" fill="#00E676" />
+            <path d="M 60 40 C 53 40, 48 37, 43 40 C 33 46, 33 66, 38 78 C 43 90, 53 95, 60 90 C 67 95, 77 90, 82 78 C 84 72, 85 71, 80 68 C 74 65, 74 55, 80 52 C 85 49, 84 48, 82 46 C 77 40, 72 40, 67 40 C 63 37, 60 40, 60 40 Z" fill="#00E676" />
             {/* Highlight */}
-            <ellipse cx="48" cy="62" rx="5" ry="11" fill="#FFFFFF" opacity="0.4" transform="rotate(-15 48 62)" />
+            <ellipse cx="48" cy="60" rx="4" ry="10" fill="#FFFFFF" opacity="0.4" transform="rotate(-15 48 60)" />
             {/* Stem */}
-            <path d="M 60 42 C 60 27, 70 22, 70 22" fill="none" stroke="#8B5A2B" strokeWidth="4" strokeLinecap="round" />
+            <path d="M 60 40 C 60 25, 70 20, 70 20" fill="none" stroke="#8B5A2B" strokeWidth="4" strokeLinecap="round" />
             {/* Leaf */}
-            <path d="M 70 22 C 80 22, 85 30, 75 34 C 68 37, 66 30, 70 22 Z" fill="#2E7D32" />
+            <path d="M 70 20 C 80 20, 85 28, 75 32 C 68 35, 66 28, 70 20 Z" fill="#2E7D32" />
           </svg>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1.1 }}>
