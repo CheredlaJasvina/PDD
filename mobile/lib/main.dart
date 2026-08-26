@@ -62,8 +62,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         {"id": "inventory", "name": "Dynamic Pantry Inventory", "icon": "📦"},
         {"id": "analytics", "name": "Waste Cost Tracker", "icon": "📉"},
         {"id": "alerts", "name": "Real-time Spoilage Alerts", "icon": "🚨"},
-        {"id": "insights", "name": "AI Consumption Insights", "icon": "🧠"},
-        {"id": "history", "name": "Pantry Scan History", "icon": "🕒"}
+        {"id": "insights", "name": "AI Consumption Insights", "icon": "🧠"}
       ]
     },
     {
