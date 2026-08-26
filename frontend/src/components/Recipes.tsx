@@ -72,7 +72,7 @@ export const Recipes: React.FC<RecipesProps> = ({
       item.name.toLowerCase().includes(r.primaryIngredient.toLowerCase())
     );
     if (matchingItem) {
-      if (matchingItem.status === 'Spoiled' || matchingItem.isCooked || matchingItem.category === 'cooked food' || matchingItem.category === 'Cooked Food') {
+      if (matchingItem.status === 'Spoiled' || matchingItem.isCooked || matchingItem.category === 'cooked food') {
         return false;
       }
     }
