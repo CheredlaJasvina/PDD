@@ -1,0 +1,68 @@
+name: AgriVision v3 - E2E Testing Framework Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-on-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'testing/package-lock.json'
+
+    - name: Install Testing Workspace Dependencies
+      run: |
+        cd testing
+        npm ci
+
+    - name: Run E2E Selenium Web Tests (300 cases)
+      run: |
+        cd testing
+        npm run test:web
+
+    - name: Run Security Vulnerability Tests (300 cases)
+      run: |
+        cd testing
+        npm run test:security
+
+    - name: Run Appium Mobile Tests (300 cases)
+      run: |
+        cd testing
+        npm run test:mobile
+
+    - name: Run Load stress Tests (300 cases)
+      run: |
+        cd testing
+        npm run test:load
+
+    - name: Compile Master Test Report & Summary Dashboard
+      run: |
+        cd testing
+        npm run report:master
+
+    - name: Upload Test Excel Reports (Artifacts)
+      uses: actions/upload-artifact@v4
+      with:
+        name: agrivision-excel-reports
+        path: |
+          testing/reports/*.xlsx
+
+    - name: Upload HTML Dashboard & Failure Screenshots (Artifacts)
+      uses: actions/upload-artifact@v4
+      with:
+        name: agrivision-html-and-screenshots
+        path: |
+          testing/reports/index.html
+          testing/reports/screenshots/

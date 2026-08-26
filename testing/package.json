@@ -6,7 +6,11 @@
   "scripts": {
     "generate-catalog": "node scripts/generate-catalog.js",
     "test:web": "node web-selenium/selenium-test.js",
-    "test:mobile": "node mobile-appium/appium-test.js"
+    "test:mobile": "node mobile-appium/appium-test.js",
+    "test:security": "node vulnerability/vulnerability-test.js",
+    "test:load": "node load/load-test.js",
+    "report:master": "node master-reporter.js",
+    "test:all": "npm run test:web && npm run test:mobile && npm run test:security && npm run test:load && npm run report:master"
   },
   "dependencies": {
     "selenium-webdriver": "^4.19.0",
