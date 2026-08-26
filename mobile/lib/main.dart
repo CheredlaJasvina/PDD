@@ -3450,10 +3450,12 @@ class _ApplePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // 1. Solid Apple Body
+    // 1. Outline Apple Body with Bite
     final bodyPaint = Paint()
       ..color = const Color(0xFF00E676)
-      ..style = PaintingStyle.fill;
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
 
     final bodyPath = Path();
     bodyPath.moveTo(w * 0.5, h * 0.2);
@@ -3469,22 +3471,17 @@ class _ApplePainter extends CustomPainter {
 
     canvas.drawPath(bodyPath, bodyPaint);
 
-    // 2. White Highlight Reflection
-    final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(0.4)
+    // 2. Radar Dot (Bite center)
+    final dotPaint = Paint()
+      ..color = const Color(0xFF00E676)
       ..style = PaintingStyle.fill;
-    
-    canvas.save();
-    canvas.translate(w * 0.35, h * 0.5);
-    canvas.rotate(-15 * 3.14159 / 180);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: w * 0.1, height: h * 0.22), highlightPaint);
-    canvas.restore();
+    canvas.drawCircle(Offset(w * 0.68, h * 0.62), 1.5, dotPaint);
 
-    // 3. Brown Stem
+    // 3. Light Grey Stem
     final stemPaint = Paint()
-      ..color = const Color(0xFF8B5A2B)
+      ..color = const Color(0xFFE2E8F0)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
+      ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
     final stemPath = Path();
@@ -3492,9 +3489,9 @@ class _ApplePainter extends CustomPainter {
     stemPath.cubicTo(w * 0.5, h * 0.05, w * 0.6, h * 0.0, w * 0.6, h * 0.0);
     canvas.drawPath(stemPath, stemPaint);
 
-    // 4. Green Leaf
+    // 4. Gold Leaf
     final leafPaint = Paint()
-      ..color = const Color(0xFF2E7D32)
+      ..color = const Color(0xFFFFEA00)
       ..style = PaintingStyle.fill;
 
     final leafPath = Path();
@@ -3503,6 +3500,16 @@ class _ApplePainter extends CustomPainter {
     leafPath.cubicTo(w * 0.6, h * 0.16, w * 0.58, h * 0.08, w * 0.6, h * 0.0);
     leafPath.close();
     canvas.drawPath(leafPath, leafPaint);
+
+    // 5. Secondary Dark Green Leaf/Accent
+    final secondaryLeafPaint = Paint()
+      ..color = const Color(0xFF1B4332)
+      ..style = PaintingStyle.fill;
+    final secondaryLeafPath = Path();
+    secondaryLeafPath.moveTo(w * 0.5, h * 0.2);
+    secondaryLeafPath.cubicTo(w * 0.45, h * 0.15, w * 0.45, h * 0.05, w * 0.53, h * 0.05);
+    secondaryLeafPath.close();
+    canvas.drawPath(secondaryLeafPath, secondaryLeafPaint);
   }
 
   @override
