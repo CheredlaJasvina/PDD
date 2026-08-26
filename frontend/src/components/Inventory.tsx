@@ -262,33 +262,50 @@ export const Inventory: React.FC<InventoryProps> = ({
                     }} />
                   </div>
 
-                   <p style={{ fontSize: '0.8rem', color: ambientTemp === 'Hot' ? 'var(--color-warning)' : 'var(--text-muted)', lineHeight: 1.4, marginTop: '0.5rem', fontStyle: ambientTemp === 'Hot' ? 'italic' : 'normal' }}>
-                    💡 {getDynamicStorageAdvisory(item)}
-                  </p>
-                  <div style={{
-                    marginTop: '0.5rem',
-                    padding: '0.5rem',
-                    background: 'rgba(255,255,255,0.02)',
-                    borderRadius: '6px',
-                    border: '1px solid var(--glass-border)',
-                    fontSize: '0.75rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.2rem'
-                  }}>
-                    <div style={{ display: 'flex', gap: '0.75rem', fontWeight: 600 }}>
-                      <span>🔥 {item.nutrition.calories} kcal</span>
-                      <span>💪 Prot: {item.nutrition.protein}g</span>
-                      <span>🍞 Carb: {item.nutrition.carbs}g</span>
-                      <span>💧 Fat: {item.nutrition.fat}g</span>
-                      <span>• Vitamins: {item.nutrition.vitamins.join(', ')}</span>
+                  {currentPct <= 50 || item.status === 'Spoiled' ? (
+                    <div style={{
+                      marginTop: '0.75rem',
+                      padding: '0.75rem 1rem',
+                      background: 'rgba(255, 23, 68, 0.08)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-spoiled)',
+                      color: 'var(--color-spoiled)',
+                      fontSize: '0.85rem',
+                      fontWeight: 700
+                    }}>
+                      ⚠️ WARNING: This item is spoiled. Do not eat!
                     </div>
-                    {item.nutrition.healthNotes && (
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
-                        ℹ️ {item.nutrition.healthNotes}
+                  ) : (
+                    <>
+                      <p style={{ fontSize: '0.8rem', color: ambientTemp === 'Hot' ? 'var(--color-warning)' : 'var(--text-muted)', lineHeight: 1.4, marginTop: '0.5rem', fontStyle: ambientTemp === 'Hot' ? 'italic' : 'normal' }}>
+                        💡 {getDynamicStorageAdvisory(item)}
+                      </p>
+                      <div style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem',
+                        background: 'rgba(255,255,255,0.02)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--glass-border)',
+                        fontSize: '0.75rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.2rem'
+                      }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', fontWeight: 600 }}>
+                          <span>🔥 {item.nutrition.calories} kcal</span>
+                          <span>💪 Prot: {item.nutrition.protein}g</span>
+                          <span>🍞 Carb: {item.nutrition.carbs}g</span>
+                          <span>💧 Fat: {item.nutrition.fat}g</span>
+                          <span>• Vitamins: {item.nutrition.vitamins.join(', ')}</span>
+                        </div>
+                        {item.nutrition.healthNotes && (
+                          <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                            ℹ️ {item.nutrition.healthNotes}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Action Checkboxes */}

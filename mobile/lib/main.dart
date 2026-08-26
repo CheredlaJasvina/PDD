@@ -1897,9 +1897,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(customAdvisory, style: TextStyle(color: _tempMode == "Hot" ? Colors.orange : Colors.grey, fontSize: 11, fontStyle: _tempMode == "Hot" ? FontStyle.italic : FontStyle.normal)),
-                                    const SizedBox(height: 2),
-                                    Text("Calories: ${item["nutrition"]["calories"]} kcal", style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                                    if (freshnessPct <= 50 || item["status"] == "Spoiled") ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.08), borderRadius: BorderRadius.circular(6)),
+                                        child: const Text("⚠️ WARNING: This item is spoiled. Do not eat!", style: TextStyle(color: Color(0xFFFF1744), fontSize: 10, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ] else ...[
+                                      Text(customAdvisory, style: TextStyle(color: _tempMode == "Hot" ? Colors.orange : Colors.grey, fontSize: 11, fontStyle: _tempMode == "Hot" ? FontStyle.italic : FontStyle.normal)),
+                                      const SizedBox(height: 2),
+                                      Text("Calories: ${item["nutrition"]["calories"]} kcal", style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                                    ],
                                   ],
                                 ),
                               )
