@@ -91,19 +91,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ]
     },
     {
-      "title": "Co-Op & Sharing",
-      "icon": "👥",
-      "screens": [
-        {"id": "household", "name": "Household Members Manager", "icon": "🏠"},
-        {"id": "coop-ledger", "name": "Fridge Co-op Ledger", "icon": "📖"},
-        {"id": "coop-pantry", "name": "Shared Pantry Log", "icon": "🪵"},
-        {"id": "coop-planner", "name": "Shopping Co-op Planner", "icon": "📝"},
-        {"id": "coop-splitter", "name": "Expense Splitter", "icon": "✂️"},
-        {"id": "coop-rules", "name": "Co-Op Household Rules", "icon": "⚖️"},
-        {"id": "coop-wishlist", "name": "Shared Grocery Wishlist", "icon": "🛒"}
-      ]
-    },
-    {
       "title": "Community Catalog",
       "icon": "🤝",
       "screens": [
