@@ -72,10 +72,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         {"id": "recipes", "name": "Dish Suggestion Hub", "icon": "🥣"},
         {"id": "recipes-portions", "name": "Cooking Portion Scaler", "icon": "⚖️"},
         {"id": "recipes-kids", "name": "Kid-Friendly Adjuster", "icon": "👶"},
-        {"id": "recipes-gourmet", "name": "Gourmet Upgrade Guide", "icon": "🧑‍🍳"},
         {"id": "recipes-leftovers", "name": "Leftovers Re-purposer", "icon": "♻️"},
-        {"id": "recipes-spice", "name": "Spice Customizer", "icon": "🌶️"},
-        {"id": "recipes-allergens", "name": "Allergen Warning Safe-List", "icon": "🚫"}
+        {"id": "recipes-spice", "name": "Spice Customizer", "icon": "🌶️"}
       ]
     },
     {
