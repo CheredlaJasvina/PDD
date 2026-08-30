@@ -82,7 +82,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "screens": [
         {"id": "eco", "name": "Eco & Carbon Tracker", "icon": "🌱"},
         {"id": "eco-savings", "name": "Financial Savings Meter", "icon": "₹"},
-        {"id": "eco-standings", "name": "Community Standing", "icon": "🏆"},
         {"id": "eco-donation", "name": "Food Donation Registry", "icon": "🎁"},
         {"id": "eco-compost", "name": "Compost Safety Advisor", "icon": "🍂"},
         {"id": "eco-waste", "name": "Bio-waste Optimizer", "icon": "🪱"},
