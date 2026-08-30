@@ -379,6 +379,7 @@ function App() {
             onUpdatePreferences={handleUpdatePreferences}
             theme={theme}
             onThemeChange={setTheme}
+            onUpdateState={handleUpdateItemState}
           />
         );
     }

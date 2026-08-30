@@ -246,8 +246,9 @@ module.exports = {
   },
 
   // Waste summary: per-item stats for weekly/monthly waste tracking
-  getWasteSummary: () => {
-    if (!currentUser) {
+  getWasteSummary: (email) => {
+    const user = email ? module.exports.getUserByEmail(email) : currentUser;
+    if (!user) {
       return {
         weeklyWastedCount: 0,
         monthlyWastedCount: 0,
@@ -258,7 +259,7 @@ module.exports = {
         membersCount: 2
       };
     }
-    const allItems = [...foodItems, ...historicalItems].filter(i => i.owner === currentUser.email);
+    const allItems = [...foodItems, ...historicalItems].filter(i => i.owner && i.owner.toLowerCase() === user.email.toLowerCase());
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
@@ -333,19 +334,24 @@ module.exports = {
     const itemIndex = foodItems.findIndex(i => i._id === id && i.owner === (currentUser ? currentUser.email : ''));
     if (itemIndex > -1) {
       foodItems[itemIndex].state = state;
+      foodItems[itemIndex].addedDate = new Date();
       // Increment CO2 and savings indicators
       if (state === 'Eaten' || state === 'Used') {
-        currentUser.healthScore = Math.min(100, currentUser.healthScore + 2);
-        currentUser.streakCount += 1;
-        const eco = getEcoMetricsForUser(currentUser.email);
-        eco.co2SavedKg += 0.4;
-        eco.moneySaved += 4.5;
-        if (currentUser.streakCount >= 7 && !currentUser.unlockedBadges.includes('Consistency King')) {
-          currentUser.unlockedBadges.push('Consistency King');
+        if (currentUser) {
+          currentUser.healthScore = Math.min(100, currentUser.healthScore + 2);
+          currentUser.streakCount += 1;
+          const eco = getEcoMetricsForUser(currentUser.email);
+          eco.co2SavedKg += 0.4;
+          eco.moneySaved += 4.5;
+          if (currentUser.streakCount >= 7 && !currentUser.unlockedBadges.includes('Consistency King')) {
+            currentUser.unlockedBadges.push('Consistency King');
+          }
         }
       } else if (state === 'Wasted') {
-        currentUser.healthScore = Math.max(0, currentUser.healthScore - 5);
-        currentUser.streakCount = 0;
+        if (currentUser) {
+          currentUser.healthScore = Math.max(0, currentUser.healthScore - 5);
+          currentUser.streakCount = 0;
+        }
       }
       return foodItems[itemIndex];
     }
@@ -411,19 +417,19 @@ module.exports = {
   },
 
   // Eco impact logs
-  getEcoMetrics: () => {
-    const email = currentUser ? currentUser.email : 'jasvina@foodfreshness.com';
-    return getEcoMetricsForUser(email);
+  getEcoMetrics: (email) => {
+    const activeEmail = email || (currentUser ? currentUser.email : 'jasvina@foodfreshness.com');
+    return getEcoMetricsForUser(activeEmail);
   },
 
   // Notification logs
-  getNotifications: () => {
-    const email = currentUser ? currentUser.email : 'jasvina@foodfreshness.com';
-    return getNotificationsForUser(email);
+  getNotifications: (email) => {
+    const activeEmail = email || (currentUser ? currentUser.email : 'jasvina@foodfreshness.com');
+    return getNotificationsForUser(activeEmail);
   },
-  markNotificationsRead: () => {
-    const email = currentUser ? currentUser.email : 'jasvina@foodfreshness.com';
-    const logs = getNotificationsForUser(email);
+  markNotificationsRead: (email) => {
+    const activeEmail = email || (currentUser ? currentUser.email : 'jasvina@foodfreshness.com');
+    const logs = getNotificationsForUser(activeEmail);
     logs.forEach(n => n.read = true);
     return logs;
   },

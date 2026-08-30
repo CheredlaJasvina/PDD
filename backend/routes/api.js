@@ -35,7 +35,8 @@ router.get('/analytics', analyticsController.getWastageAnalytics);
 // Waste Summary: per-item weekly/monthly waste tracking + buy-less advice
 router.get('/waste-summary', (req, res) => {
   try {
-    const summary = fallbackDb.getWasteSummary();
+    const email = req.headers['x-user-email'];
+    const summary = fallbackDb.getWasteSummary(email);
     res.json({ success: true, ...summary });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -78,15 +79,18 @@ router.put('/donations/:id/request', (req, res) => {
 
 // ECO IMPACT METRICS
 router.get('/eco', (req, res) => {
-  res.json({ success: true, eco: fallbackDb.getEcoMetrics() });
+  const email = req.headers['x-user-email'];
+  res.json({ success: true, eco: fallbackDb.getEcoMetrics(email) });
 });
 
 // IN-APP NOTIFICATION LOGS
 router.get('/notifications', (req, res) => {
-  res.json({ success: true, notifications: fallbackDb.getNotifications() });
+  const email = req.headers['x-user-email'];
+  res.json({ success: true, notifications: fallbackDb.getNotifications(email) });
 });
 router.post('/notifications/read', (req, res) => {
-  const notifications = fallbackDb.markNotificationsRead();
+  const email = req.headers['x-user-email'];
+  const notifications = fallbackDb.markNotificationsRead(email);
   res.json({ success: true, notifications });
 });
 

@@ -9,6 +9,7 @@ interface EnterpriseScreenProps {
   onUpdatePreferences: (updates: any) => void;
   theme: string;
   onThemeChange: (theme: string) => void;
+  onUpdateState?: (id: string, state: 'Used' | 'Eaten' | 'Wasted') => void;
 }
 
 export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
@@ -18,7 +19,8 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   preferences,
   onUpdatePreferences,
   theme,
-  onThemeChange
+  onThemeChange,
+  onUpdateState
 }) => {
   // Common container style
   const cardStyle = { padding: '2rem', maxWidth: '800px', margin: '1.5rem auto' };
@@ -250,6 +252,105 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   // Switch statement rendering the corresponding custom tool
   const renderContent = () => {
     switch (screenId) {
+      case 'alerts':
+        const activeAlerts = inventory
+          .map(item => {
+            const timeDiff = new Date(item.predictedSpoilageDate).getTime() - new Date().getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            const daysSinceAdded = Math.floor((Date.now() - new Date(item.addedDate).getTime()) / (1000 * 60 * 60 * 24));
+
+            const totalDuration = new Date(item.predictedSpoilageDate).getTime() - new Date(item.addedDate).getTime();
+            const elapsed = Date.now() - new Date(item.addedDate).getTime();
+            let currentPct = item.originalFreshness;
+            if (elapsed >= totalDuration) currentPct = 0;
+            else if (elapsed > 0) currentPct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
+
+            if (item.status === 'Spoiled' || currentPct <= 50 || daysDiff <= 0) {
+              return { id: item._id, name: item.name, type: 'critical', daysDiff, isSpoiled: true,
+                message: `"${item.name}" is spoiled (freshness ${currentPct}%). Avoid consumption!` };
+            } else if (daysSinceAdded >= 2) {
+              return { id: item._id, name: item.name, type: 'critical', daysDiff: 0, isSpoiled: false,
+                message: `"${item.name}" will become spoil today, use it before!` };
+            } else if (daysDiff === 1) {
+              return { id: item._id, name: item.name, type: 'urgent', daysDiff, isSpoiled: false,
+                message: `"${item.name}" spoils in 1 day — use it today!` };
+            } else if (daysDiff === 2) {
+              return { id: item._id, name: item.name, type: 'warning', daysDiff, isSpoiled: false,
+                message: `"${item.name}" will spoil in 2 days. Plan to use it soon.` };
+            }
+            return null;
+          })
+          .filter(Boolean) as Array<{
+            id: string; name: string; type: string; message: string; daysDiff: number; isSpoiled?: boolean;
+          }>;
+
+        const alertBgColor = (type: string) =>
+          type === 'critical' ? 'var(--color-spoiled-bg)' :
+          type === 'urgent'   ? 'rgba(255,145,0,0.1)' :
+                                'var(--color-warning-bg)';
+        const alertBorderColor = (type: string) =>
+          type === 'critical' ? 'var(--color-spoiled)' :
+          type === 'urgent'   ? 'var(--color-warning)' :
+                                'var(--glass-border)';
+
+        return (
+          <div>
+            <h3>🚨 Active Spoilage Notifications ({activeAlerts.length})</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              Real-time warnings based on dynamic ambient storage temperatures and decay rates.
+            </p>
+            {activeAlerts.length === 0 ? (
+              <p style={{ color: 'var(--color-fresh)', fontSize: '0.9rem' }}>✅ Your pantry is currently fully optimized with zero spoilage warnings.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {activeAlerts.map(alert => (
+                  <div
+                    key={alert.id}
+                    className="glass-card"
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '1rem', background: alertBgColor(alert.type), borderColor: alertBorderColor(alert.type)
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                        {alert.type === 'critical' ? '🔴' : alert.type === 'urgent' ? '🟠' : '🟡'} {alert.message}
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Priority: {alert.type.toUpperCase()}
+                      </span>
+                    </div>
+                    {onUpdateState && (
+                      <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexShrink: 0 }}>
+                        {!alert.isSpoiled ? (
+                          <>
+                            <button
+                              className="btn-primary"
+                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem', background: 'var(--color-fresh)', color: '#0b0c10' }}
+                              onClick={() => onUpdateState(alert.id, 'Used')}
+                            >
+                              ✅ Used
+                            </button>
+                            <button
+                              className="btn-secondary"
+                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem', borderColor: 'var(--color-spoiled)', color: 'var(--color-spoiled)' }}
+                              onClick={() => onUpdateState(alert.id, 'Wasted')}
+                            >
+                              🗑️ Not Used
+                            </button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--color-spoiled)', fontWeight: 600 }}>⚠️ Discard Recommended</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
       case 'insights':
         return (
           <div>
