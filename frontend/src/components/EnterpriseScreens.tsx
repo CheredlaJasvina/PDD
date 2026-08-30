@@ -128,20 +128,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     setDonateName("");
   };
 
-  // 12. Compost Safety check
-  const [compostInput, setCompostInput] = useState("");
-  const [compostSafety, setCompostSafety] = useState("");
-  const checkCompostSafety = () => {
-    const item = compostInput.toLowerCase();
-    if (item.includes("apple") || item.includes("peel") || item.includes("veg") || item.includes("banana")) {
-      setCompostSafety("✅ SAFE: Organic greens and browns compost perfectly.");
-    } else if (item.includes("meat") || item.includes("dairy") || item.includes("fish") || item.includes("cheese")) {
-      setCompostSafety("❌ UNSAFE: Meat and dairy attract pests and generate bad odors in standard compost bins.");
-    } else {
-      setCompostSafety("ℹ️ UNKNOWN: Try checking moisture level. Organic plant fibers are generally safe.");
-    }
-  };
-
   // 13. Bio-waste optimizer
   const [wasteWeight, setWasteWeight] = useState(0.5);
 
@@ -688,37 +674,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
               </div>
               <button className="btn-primary" onClick={handleRegisterDonation}>Register surplus item</button>
             </div>
-          </div>
-        );
-
-      case 'eco-compost':
-        const checkableItems = inventory.map(i => i.name);
-        return (
-          <div>
-            <h3>🍂 compost safety advisor</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Enter any raw ingredient to verify if it is safe for standard home composting.</p>
-            {checkableItems.length > 0 && (
-              <div style={{ margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--color-fresh)' }}>
-                💡 Click to verify your inventory: {checkableItems.map((name, idx) => (
-                  <span 
-                    key={idx} 
-                    onClick={() => { setCompostInput(name); }}
-                    style={{ cursor: 'pointer', textDecoration: 'underline', marginRight: '0.75rem' }}
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
-              <input type="text" placeholder="e.g. apple peel, egg shells, chicken" value={compostInput} onChange={e => setCompostInput(e.target.value)} style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }} />
-              <button className="btn-primary" onClick={checkCompostSafety}>Verify</button>
-            </div>
-            {compostSafety && (
-              <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '0.9rem' }}>
-                {compostSafety}
-              </div>
-            )}
           </div>
         );
 

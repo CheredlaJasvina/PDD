@@ -80,10 +80,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "title": "Eco & Sustainability",
       "icon": "🌿",
       "screens": [
-        {"id": "eco", "name": "Eco & Carbon Tracker", "icon": "🌱"},
         {"id": "eco-savings", "name": "Financial Savings Meter", "icon": "₹"},
         {"id": "eco-donation", "name": "Food Donation Registry", "icon": "🎁"},
-        {"id": "eco-compost", "name": "Compost Safety Advisor", "icon": "🍂"},
         {"id": "eco-waste", "name": "Bio-waste Optimizer", "icon": "🪱"},
         {"id": "eco-scorecard", "name": "Green Citizen Scorecard", "icon": "💳"},
         {"id": "eco-challenges", "name": "Weekly Zero-Waste Challenges", "icon": "🎯"}
@@ -435,8 +433,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         );
       case "analytics":
         return AnalyticsScreen(backendUrl: _backendUrl);
-      case "eco":
-        return EcoImpactScreen(backendUrl: _backendUrl);
       case "household":
         return CoOpHouseholdScreen(backendUrl: _backendUrl, userName: _loggedInUser!["name"]);
       case "community":
@@ -2267,136 +2263,6 @@ class _RecipesScreenState extends State<RecipesScreen> {
   }
 }
 
-// ----------------------------------------------------
-// SCREEN 6: ECO-IMPACT & CARBON TRACKING (5 Screens)
-// ----------------------------------------------------
-class EcoImpactScreen extends StatefulWidget {
-  final String backendUrl;
-  const EcoImpactScreen({super.key, required this.backendUrl});
-
-  @override
-  State<EcoImpactScreen> createState() => _EcoImpactScreenState();
-}
-
-class _EcoImpactScreenState extends State<EcoImpactScreen> {
-  Map<String, dynamic> _eco = {
-    "co2SavedKg": 24.8,
-    "moneySaved": 140.0,
-    "foodHealthLevel": "Waste Warden",
-    "ecoMilestones": [
-      {"title": "CO2 Savior 🌿", "desc": "Saved 20kg of carbon emissions.", "unlocked": true},
-      {"title": "Zero Waste Hero 💎", "desc": "Keep wastage below 5% for one month.", "unlocked": false}
-    ],
-    "comparisonStats": {"communityAvgKg": 15.2, "userSavingPct": 63}
-  };
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchEco();
-  }
-
-  Future<void> _fetchEco() async {
-    try {
-      final res = await http.get(Uri.parse("${widget.backendUrl}/eco")).timeout(const Duration(seconds: 3));
-      final Map<String, dynamic> data = jsonDecode(res.body);
-      if (data["success"] == true) {
-        setState(() {
-          _eco = data["eco"];
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    final milestones = _eco["ecoMilestones"] as List<dynamic>;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Eco-Impact & Cost savings", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          
-          Row(
-            children: [
-              Expanded(
-                child: _buildValueCard("CO2 EMISSIONS", "${_eco["co2SavedKg"]} kg", const Color(0xFF00E676)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildValueCard("FINANCIAL SAVING", "₹${_eco["moneySaved"]}", Colors.orange),
-              )
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          const Text("Composting Safety & Bio-waste directions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.015), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.06))),
-            child: const Column(
-              children: [
-                _CompostTipTile(icon: "♻️", title: "Separate Packaging", desc: "Always strip plastic wraps before throwing produce in compost."),
-                Divider(color: Colors.white10),
-                _CompostTipTile(icon: "🍂", title: "Compost Browns", desc: "Maintain 1:3 ratio of food scraps to dry leaves."),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          const Text("Eco Savings Milestones", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 8),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: milestones.length,
-            itemBuilder: (c, idx) {
-              final ms = milestones[idx];
-              final isUnlocked = ms["unlocked"] == true;
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  color: isUnlocked ? const Color(0xFF00E676).withOpacity(0.04) : Colors.white10,
-                  border: Border.all(color: isUnlocked ? const Color(0xFF00E676).withOpacity(0.2) : Colors.transparent),
-                  borderRadius: BorderRadius.circular(12)
-                ),
-                child: ListTile(
-                  leading: Text(isUnlocked ? "🏆" : "🔒", style: const TextStyle(fontSize: 20)),
-                  title: Text(ms["title"], style: TextStyle(fontWeight: FontWeight.bold, color: isUnlocked ? Colors.white : Colors.grey)),
-                  subtitle: Text(ms["desc"], style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                ),
-              );
-            },
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildValueCard(String label, String value, Color color) {
-    return Container(
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.015), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.06))),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-        ],
-      ),
-    );
-  }
-}
 
 // ----------------------------------------------------
 // SCREEN 7: COLLABORATIVE CO-OP HOUSEHOLD (4 Screens)
@@ -3262,35 +3128,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               },
             );
           }),
-        ],
-      ),
-    );
-  }
-}
-
-class _CompostTipTile extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String desc;
-  const _CompostTipTile({required this.icon, required this.title, required this.desc});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 22)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-              ],
-            ),
-          )
         ],
       ),
     );

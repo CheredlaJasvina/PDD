@@ -7,7 +7,6 @@ import { Recipes } from './components/Recipes';
 import { Analytics } from './components/Analytics';
 import { ProfileSettings } from './components/ProfileSettings';
 import { LandingAuth } from './components/LandingAuth';
-import { EcoImpact } from './components/EcoImpact';
 import { CoOpHousehold } from './components/CoOpHousehold';
 import { CommunityCatalog } from './components/CommunityCatalog';
 import { EnterpriseScreen } from './components/EnterpriseScreens';
@@ -52,10 +51,8 @@ const sidebarCategories: SidebarCategory[] = [
     title: "Eco & Sustainability",
     icon: "🌿",
     screens: [
-      { id: "eco", name: "Eco & Carbon Tracker", icon: "🌱" },
       { id: "eco-savings", name: "Financial Savings Meter", icon: "₹" },
       { id: "eco-donation", name: "Food Donation Registry", icon: "🎁" },
-      { id: "eco-compost", name: "Compost Safety Advisor", icon: "🍂" },
       { id: "eco-waste", name: "Bio-waste Optimizer", icon: "🪱" },
       { id: "eco-scorecard", name: "Green Citizen Scorecard", icon: "💳" },
       { id: "eco-challenges", name: "Weekly Zero-Waste Challenges", icon: "🎯" }
@@ -352,8 +349,6 @@ function App() {
         );
       case 'analytics':
         return <Analytics />;
-      case 'eco':
-        return <EcoImpact />;
       case 'household':
         return <CoOpHousehold />;
       case 'community':
