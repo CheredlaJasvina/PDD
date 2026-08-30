@@ -320,7 +320,7 @@ const RECIPE_DATABASE = {
         "Serve warm with sliced fresh bananas and maple syrup."
       ],
       kidFriendlyNotes: "Perfect sweet breakfast for children. Easy to chew.",
-      gourmetNotes: "Add a dash of vanilla extract and a pinch of nutmeg to the batter.",
+      gourmetNotes: "Add a dash of vanilla extract and a pinch of nutmeg to the baker.",
       chiliLevel: "none"
     }
   ],
@@ -473,6 +473,29 @@ const RECIPE_DATABASE = {
       ],
       kidFriendlyNotes: "Standard ultimate comfort food. Highly popular with kids.",
       gourmetNotes: "Add sliced tomatoes, a spread of basil pesto, and a pinch of red pepper flakes.",
+      chiliLevel: "none"
+    }
+  ],
+  "curry leaves": [
+    {
+      title: "Crisp Spiced Curry Leaf Tempered Potatoes",
+      description: "Fragrant potato cubes tempered with fresh curry leaves, mustard seeds, and turmeric.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "Potatoes cubed", qty: 2, unit: "pcs" },
+        { name: "Fresh Curry Leaves", qty: 10, unit: "pcs" },
+        { name: "Mustard Seeds", qty: 0.5, unit: "tsp" },
+        { name: "Turmeric Powder", qty: 0.25, unit: "tsp" },
+        { name: "Oil", qty: 1, unit: "tbsp" }
+      ],
+      steps: [
+        "Boil potato cubes until cooked through but still firm.",
+        "Heat oil in a pan, add mustard seeds, and let them splutter.",
+        "Toss in the fresh curry leaves, letting them sizzle and release their oils.",
+        "Add turmeric powder and the boiled potatoes, stir-fry until golden-crisp, and season with salt."
+      ],
+      kidFriendlyNotes: "Skip any additional chili peppers. Keep it golden and crispy.",
+      gourmetNotes: "Add fresh grated coconut and a squeeze of lemon juice at the end.",
       chiliLevel: "none"
     }
   ]

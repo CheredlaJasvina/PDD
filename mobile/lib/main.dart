@@ -167,6 +167,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    try {
+      if (Platform.isAndroid) {
+        _backendUrl = "http://10.0.2.2:5000/api";
+      } else if (Platform.isIOS || Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+        _backendUrl = "http://localhost:5000/api";
+      }
+    } catch (e) {
+      _backendUrl = "http://localhost:5000/api";
+    }
     _fetchSession();
   }
 

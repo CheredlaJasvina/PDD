@@ -238,9 +238,11 @@ exports.scanFoodItem = async (req, res) => {
           safetyAdvisory: result.safetyAdvisory
         };
 
+        const savedItem = await db.create(newItemData);
+
         return res.json({
           success: true,
-          scannedItems: [newItemData]
+          scannedItems: [savedItem]
         });
 
       } catch (groqErr) {
@@ -322,9 +324,11 @@ exports.scanFoodItem = async (req, res) => {
           safetyAdvisory: result.safetyAdvisory
         };
 
+        const savedItem = await db.create(newItemData);
+
         res.json({
           success: true,
-          scannedItems: [newItemData]
+          scannedItems: [savedItem]
         });
 
       } catch (parseError) {
