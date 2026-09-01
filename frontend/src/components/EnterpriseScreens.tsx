@@ -26,21 +26,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   const cardStyle = { padding: '2rem', maxWidth: '800px', margin: '1.5rem auto' };
   const headerStyle = { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1.25rem' };
   
-  // 1. AI Consumption Insights
-  const [insightText, setInsightText] = useState("Analyzing your recent storage trends...");
-  useEffect(() => {
-    if (screenId === 'insights') {
-      const spoiled = inventory.filter(i => i.status === 'Spoiled').length;
-      if (spoiled > 0) {
-        setInsightText(`Warning: You have ${spoiled} spoiled item(s) in your pantry. We recommend prioritizing cooked meal usage before fruits decay.`);
-      } else {
-        const freshItems = inventory.filter(i => i.status === 'Fresh');
-        const recommendationItem = freshItems.length > 0 ? freshItems[0].name : "your fresh items";
-        setInsightText(`Excellent work! Your pantry wastage is currently at 0%. Try planning recipes using ${recommendationItem} to maintain this streak.`);
-      }
-    }
-  }, [inventory, screenId]);
-
   // 2. Pantry Scan History
   const [scanHistory, setScanHistory] = useState<any[]>([]);
   useEffect(() => {
@@ -334,26 +319,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
                 ))}
               </div>
             )}
-          </div>
-        );
-
-      case 'insights':
-        return (
-          <div>
-            <h3>🔮 Smart Pantry Analytics</h3>
-            <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>{insightText}</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
-              <div className="glass-card" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)' }}>
-                <span style={{ fontSize: '1.5rem' }}>📉</span>
-                <h4 style={{ margin: '0.5rem 0' }}>Wastage Rate</h4>
-                <strong>{(inventory.filter(i => i.status === 'Spoiled').length * 10).toFixed(0)}%</strong>
-              </div>
-              <div className="glass-card" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)' }}>
-                <span style={{ fontSize: '1.5rem' }}>🔋</span>
-                <h4 style={{ margin: '0.5rem 0' }}>Shelf Optimization</h4>
-                <strong>88%</strong>
-              </div>
-            </div>
           </div>
         );
 

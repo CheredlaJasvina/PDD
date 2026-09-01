@@ -8,8 +8,8 @@ import { Analytics } from './components/Analytics';
 import { ProfileSettings } from './components/ProfileSettings';
 import { LandingAuth } from './components/LandingAuth';
 import { CoOpHousehold } from './components/CoOpHousehold';
-import { CommunityCatalog } from './components/CommunityCatalog';
 import { EnterpriseScreen } from './components/EnterpriseScreens';
+import { EcoImpact } from './components/EcoImpact';
 
 interface SidebarScreen {
   id: string;
@@ -32,8 +32,7 @@ const sidebarCategories: SidebarCategory[] = [
       { id: "scanner", name: "Visual laser scan", icon: "📸" },
       { id: "inventory", name: "Dynamic Pantry Inventory", icon: "📦" },
       { id: "analytics", name: "Waste Cost Tracker", icon: "📉" },
-      { id: "alerts", name: "Real-time Spoilage Alerts", icon: "🚨" },
-      { id: "insights", name: "AI Consumption Insights", icon: "🧠" }
+      { id: "alerts", name: "Real-time Spoilage Alerts", icon: "🚨" }
     ]
   },
   {
@@ -51,24 +50,9 @@ const sidebarCategories: SidebarCategory[] = [
     title: "Eco & Sustainability",
     icon: "🌿",
     screens: [
-      { id: "eco-savings", name: "Financial Savings Meter", icon: "₹" },
+      { id: "eco-tracker", name: "Eco & Carbon Tracker", icon: "🍏" },
       { id: "eco-donation", name: "Food Donation Registry", icon: "🎁" },
-      { id: "eco-waste", name: "Bio-waste Optimizer", icon: "🪱" },
-      { id: "eco-scorecard", name: "Green Citizen Scorecard", icon: "💳" },
-      { id: "eco-challenges", name: "Weekly Zero-Waste Challenges", icon: "🎯" }
-    ]
-  },
-  {
-    title: "Community Catalog",
-    icon: "🤝",
-    screens: [
-      { id: "community", name: "Surplus Catalog Market", icon: "🛒" },
-      { id: "community-maps", name: "Local Food Donation Maps", icon: "📍" },
-      { id: "community-claims", name: "Claim Food Requests", icon: "🙋" },
-      { id: "community-catalogs", name: "Public Food Catalogs", icon: "📁" },
-      { id: "community-standings", name: "Neighborhood Standings", icon: "🏅" },
-      { id: "community-dispatch", name: "Volunteer Dispatch Hub", icon: "🚒" },
-      { id: "community-events", name: "Local Food Sharing Events", icon: "🎪" }
+      { id: "eco-waste", name: "Bio-waste Optimizer", icon: "🪱" }
     ]
   },
   {
@@ -76,13 +60,10 @@ const sidebarCategories: SidebarCategory[] = [
     icon: "📖",
     screens: [
       { id: "adv-storage", name: "Crop Storage Database", icon: "🗄️" },
-      { id: "adv-temp", name: "Ambient Temp Adjuster", icon: "🌡️" },
       { id: "adv-science", name: "Spoilage Science Library", icon: "🔬" },
       { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "🧼" },
       { id: "adv-meal", name: "Smart Meal Planner", icon: "📅" },
-      { id: "adv-nutrition", name: "Nutrition Profiler", icon: "🍎" },
-      { id: "adv-preservatives", name: "Preservatives Warning Guide", icon: "⚠️" },
-      { id: "adv-preservation", name: "DIY Food Dehydrator Guide", icon: "☀️" }
+      { id: "adv-nutrition", name: "Nutrition Profiler", icon: "🍎" }
     ]
   },
   {
@@ -91,9 +72,7 @@ const sidebarCategories: SidebarCategory[] = [
     screens: [
       { id: "settings", name: "Main Dietary Profile", icon: "👤" },
       { id: "settings-notice", name: "Expiry Advance Schedule", icon: "⏰" },
-      { id: "settings-theme", name: "Color Theme Switcher", icon: "🎨" },
       { id: "settings-alerts", name: "In-app Alert Controls", icon: "🔔" },
-      { id: "settings-email", name: "Email Warning Config", icon: "📧" },
       { id: "settings-badges", name: "Achievement Badges", icon: "🎖️" }
     ]
   }
@@ -349,10 +328,10 @@ function App() {
         );
       case 'analytics':
         return <Analytics />;
+      case 'eco-tracker':
+        return <EcoImpact />;
       case 'household':
         return <CoOpHousehold />;
-      case 'community':
-        return <CommunityCatalog />;
       case 'settings':
         return (
           <ProfileSettings 
