@@ -1278,7 +1278,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
           _results    = data["scannedItems"];
           _isScanning = false;
         });
-        widget.onScanComplete(data["scannedItems"]);
+        // We do NOT call onScanComplete here anymore. 
+        // User must explicitly tap 'Save to Pantry'.
       } else {
         setState(() {
           _error      = data["message"] ?? "Scan rejected.";
@@ -1333,6 +1334,35 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   // -- Scanner tab ----------------------------------------------------------
+  Future<void> _saveScannedItem(dynamic item) async {
+    setState(() => _isScanning = true);
+    try {
+      final uri = Uri.parse("${widget.backendUrl}/inventory");
+      final res = await http.post(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": widget.email,
+        },
+        body: jsonEncode(item),
+      );
+
+      if (res.statusCode == 200) {
+        widget.onScanComplete(item);
+        _reset();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${item['name']} added to pantry!")));
+        }
+      } else {
+        setState(() => _error = "Failed to save item.");
+      }
+    } catch (e) {
+      setState(() => _error = "Network error: $e");
+    } finally {
+      setState(() => _isScanning = false);
+    }
+  }
+
   Widget _buildScannerTab() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // How-it-works banner
@@ -1533,6 +1563,37 @@ class _ScannerScreenState extends State<ScannerScreen> {
             color: status == "Spoiled" ? const Color(0xFFFF1744) : Colors.grey,
             fontSize: 11, height: 1.4,
           ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00E676),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: const Icon(Icons.save, size: 18),
+                label: const Text("Save to Pantry", style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: () => _saveScannedItem(item),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.grey,
+                  side: const BorderSide(color: Colors.white24),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text("Discard"),
+                onPressed: _reset,
+              ),
+            ),
+          ],
         ),
       ]),
     );
