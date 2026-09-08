@@ -836,8 +836,26 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                   onPressed: _submitLogin,
                   child: const Text("Sign In", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                TextButton(onPressed: () => setState(() => _state = "forgot"), child: const Text("Forgot password?", style: TextStyle(color: Colors.grey))),
-                TextButton(onPressed: () => setState(() => _state = "signup"), child: const Text("Create Free Account", style: TextStyle(color: Color(0xFF00E676)))),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _state = "forgot";
+                      _error = null;
+                      _success = null;
+                    });
+                  },
+                  child: const Text("Forgot password?", style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _state = "signup";
+                      _error = null;
+                      _success = null;
+                    });
+                  },
+                  child: const Text("Create Free Account", style: TextStyle(color: Color(0xFF00E676))),
+                ),
               ],
 
               if (_state == "signup") ...[
@@ -852,7 +870,27 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                   onPressed: _submitSignup,
                   child: const Text("Register Account", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                TextButton(onPressed: () => setState(() => _state = "login"), child: const Text("Already have an account? Login", style: TextStyle(color: Colors.grey))),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _state = "login";
+                      _error = null;
+                      _success = null;
+                    });
+                  },
+                  child: RichText(
+                    text: const TextSpan(
+                      text: "Already have an account? ",
+                      style: TextStyle(color: Colors.grey),
+                      children: [
+                        TextSpan(
+                          text: "Login",
+                          style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
 
               if (_state == "otp") ...[

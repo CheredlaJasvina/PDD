@@ -7,6 +7,6 @@ void main() {
     await tester.pumpWidget(const FoodFreshnessApp());
 
     // Verify that the app logo/header text compiles and loads
-    expect(find.textContaining('FreshnessAI'), findsWidgets);
+    expect(find.textContaining('SMART FOOD FRESHNESS TRACKING'), findsWidgets);
   });
 }
