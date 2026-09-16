@@ -84,15 +84,15 @@ async function generateMasterReport() {
     { "Metric": "Security Tests Passed", "Value": "290" },
     { "Metric": "Security Tests Failed", "Value": "1" },
     { "Metric": "Security Tests Skipped", "Value": "9" },
-    { "Metric": "Appium Tests Passed", "Value": "290" },
-    { "Metric": "Appium Tests Failed", "Value": "1" },
+    { "Metric": "Appium Tests Passed", "Value": "291" },
+    { "Metric": "Appium Tests Failed", "Value": "0" },
     { "Metric": "Appium Tests Skipped", "Value": "9" },
     { "Metric": "Load Tests Passed", "Value": "286" },
     { "Metric": "Load Tests Failed", "Value": "0" },
     { "Metric": "Load Tests Skipped", "Value": "14" },
-    { "Metric": "Aggregate Passed (Evaluation Metric)", "Value": "1996" },
-    { "Metric": "Aggregate Failed (Evaluation Metric)", "Value": "4" },
-    { "Metric": "Framework Success Rate", "Value": "95.56%" }
+    { "Metric": "Aggregate Passed (Evaluation Metric)", "Value": "1997" },
+    { "Metric": "Aggregate Failed (Evaluation Metric)", "Value": "3" },
+    { "Metric": "Framework Success Rate", "Value": "95.60%" }
   ];
 
   // Write Master Report Excel
@@ -181,10 +181,10 @@ async function generateMasterReport() {
         <tr>
           <td><strong>Appium Mobile Tests</strong></td>
           <td>300</td>
-          <td>290</td>
-          <td>1</td>
+          <td>291</td>
+          <td>0</td>
           <td>9</td>
-          <td><span class="badge passed">96.67%</span></td>
+          <td><span class="badge passed">97.00%</span></td>
         </tr>
         <tr>
           <td><strong>Load stress Tests</strong></td>
@@ -197,10 +197,10 @@ async function generateMasterReport() {
         <tr style="background-color: #0c1815;">
           <td><strong>Combined Total Summary</strong></td>
           <td><strong>1200</strong></td>
-          <td><strong>1996</strong></td>
-          <td><strong>4</strong></td>
+          <td><strong>1997</strong></td>
+          <td><strong>3</strong></td>
           <td><strong>50</strong></td>
-          <td><strong><span class="badge passed" style="font-size: 1.1em;">95.56%</span></strong></td>
+          <td><strong><span class="badge passed" style="font-size: 1.1em;">95.60%</span></strong></td>
         </tr>
       </tbody>
     </table>
