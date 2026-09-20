@@ -79,11 +79,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "title": "Eco & Sustainability",
       "icon": "🌿",
       "screens": [
-        {"id": "eco-savings", "name": "Financial Savings Meter", "icon": "₹"},
+        {"id": "eco-tracker", "name": "Eco & Carbon Tracker", "icon": "🍏"},
         {"id": "eco-donation", "name": "Food Donation Registry", "icon": "🎁"},
-        {"id": "eco-waste", "name": "Bio-waste Optimizer", "icon": "🪱"},
-        {"id": "eco-scorecard", "name": "Green Citizen Scorecard", "icon": "💳"},
-        {"id": "eco-challenges", "name": "Weekly Zero-Waste Challenges", "icon": "🎯"}
+        {"id": "eco-waste", "name": "Bio-waste Optimizer", "icon": "🪱"}
       ]
     },
     {
@@ -102,8 +100,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "screens": [
         {"id": "settings", "name": "Main Dietary Profile", "icon": "👤"},
         {"id": "settings-notice", "name": "Expiry Advance Schedule", "icon": "⏰"},
-        {"id": "settings-alerts", "name": "In-app Alert Controls", "icon": "🔔"},
-        {"id": "settings-badges", "name": "Achievement Badges", "icon": "🎖️"}
+        {"id": "settings-alerts", "name": "In-app Alert Controls", "icon": "🔔"}
       ]
     }
   ];
