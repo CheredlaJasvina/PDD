@@ -6,11 +6,7 @@ import App from './App.tsx'
 // Global Fetch Interceptor to attach x-user-email header automatically
 const originalFetch = window.fetch;
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const apiBase = isLocal ? 'http://localhost:5000/api' : 'http://localhost:5000/api';
-
   let url = '';
-  let isRequestObject = false;
 
   if (typeof input === 'string') {
     url = input;
@@ -18,7 +14,6 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     url = input.toString();
   } else if (input && typeof input === 'object' && 'url' in input) {
     url = (input as any).url;
-    isRequestObject = true;
   }
 
   if (url.includes('http://localhost:5000/api')) {

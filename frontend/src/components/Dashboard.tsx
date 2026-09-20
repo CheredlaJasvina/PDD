@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FoodItem, UserPreference, WasteSummary } from '../types';
+import { FoodItem, User, WasteSummary } from '../types';
 
 interface DashboardProps {
   inventory: FoodItem[];
-  preferences: UserPreference;
+  preferences: User;
   onUpdateState: (id: string, state: 'Used' | 'Eaten' | 'Wasted') => void;
   onNavigate: (tab: string, status?: string) => void;
 }
