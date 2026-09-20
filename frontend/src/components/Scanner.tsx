@@ -59,7 +59,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
   const handleSaveScannedItem = async (item: FoodItem) => {
     setIsSavingItem(true);
     try {
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
@@ -170,7 +170,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── drag helpers ──────────────────────────────────────────────────────────
+  // â”€â”€ drag helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDragOver  = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true);  };
   const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(false); };
   const handleDrop      = (e: React.DragEvent) => {
@@ -182,7 +182,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
     if (e.target.files?.[0]) triggerScan(e.target.files[0]);
   };
 
-  // ── main scan function ────────────────────────────────────────────────────
+  // â”€â”€ main scan function â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const triggerScan = async (file: File) => {
     // Validate it's actually an image
     if (!file.type.startsWith('image/')) {
@@ -200,7 +200,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/scan', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/scan', {
         method: 'POST',
         body: formData,
       });
@@ -243,7 +243,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
     setUseManual(false);
   };
 
-  // ── status colour helper ──────────────────────────────────────────────────
+  // â”€â”€ status colour helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const statusColor = (s: string) =>
     s === 'Fresh' ? 'var(--color-fresh)' :
     s === 'Slightly Spoiled' ? 'var(--color-warning)' :
@@ -257,16 +257,16 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
   return (
     <div style={{ maxWidth: '820px', margin: '0 auto' }}>
 
-      {/* ── Page header ── */}
+      {/* â”€â”€ Page header â”€â”€ */}
       <div style={{ marginBottom: '2rem' }}>
         <h1>AI Visual Freshness Scanner</h1>
         <p style={{ color: 'var(--text-muted)' }}>
-          Upload or drag a photo of any food item — the AI identifies it and estimates
+          Upload or drag a photo of any food item â€” the AI identifies it and estimates
           freshness automatically. No labels or dropdowns needed.
         </p>
       </div>
 
-      {/* ── Mode switcher ── */}
+      {/* â”€â”€ Mode switcher â”€â”€ */}
       <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.75rem' }}>
           <button
@@ -278,7 +278,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
             }}
             onClick={() => { setUseManual(false); resetScan(); }}
           >
-            📸 Camera &amp; Image Scanner
+            ðŸ“¸ Camera &amp; Image Scanner
           </button>
           <button
             className="btn-secondary"
@@ -289,15 +289,15 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
             }}
             onClick={() => setUseManual(true)}
           >
-            ✍️ Manual Entry
+            âœï¸ Manual Entry
           </button>
         </div>
 
-        {/* ══════════════════════ IMAGE SCANNER ══════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IMAGE SCANNER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {!useManual && (
           <div>
 
-            {/* ── How it works tip ── */}
+            {/* â”€â”€ How it works tip â”€â”€ */}
             <div style={{
               display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
               padding: '0.85rem 1rem',
@@ -309,17 +309,17 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
               color: 'var(--text-muted)',
               lineHeight: 1.5,
             }}>
-              <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🤖</span>
+              <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>ðŸ¤–</span>
               <span>
                 <strong style={{ color: '#fff' }}>How it works:</strong> The AI runs
                 MobileNetV3 (trained on 1 000 ImageNet classes) on your photo.
                 It identifies the food, cross-checks the result against the image
-                colours, and rejects mismatches — so a cauliflower photo will
+                colours, and rejects mismatches â€” so a cauliflower photo will
                 never be accepted as an apple.
               </span>
             </div>
 
-            {/* ── Camera Toggle Button ── */}
+            {/* â”€â”€ Camera Toggle Button â”€â”€ */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
               <button
                 className="btn-secondary"
@@ -340,7 +340,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                   else startCamera();
                 }}
               >
-                📷 {isCameraActive ? 'Switch to Upload Mode' : 'Use Live Web Camera'}
+                ðŸ“· {isCameraActive ? 'Switch to Upload Mode' : 'Use Live Web Camera'}
               </button>
             </div>
 
@@ -382,7 +382,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                     style={{ background: 'var(--color-fresh)', color: '#0b0c10', padding: '0.6rem 1.25rem', fontWeight: 700 }}
                     onClick={capturePhoto}
                   >
-                    📸 Capture &amp; Analyze
+                    ðŸ“¸ Capture &amp; Analyze
                   </button>
                   <button
                     className="btn-secondary"
@@ -390,13 +390,13 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                     style={{ background: 'rgba(255,23,68,0.2)', borderColor: 'var(--color-spoiled)', color: 'var(--color-spoiled)', padding: '0.6rem 1.25rem', fontWeight: 700 }}
                     onClick={stopCamera}
                   >
-                    ❌ Cancel
+                    âŒ Cancel
                   </button>
                 </div>
               </div>
             ) : (
               <>
-                {/* ── Drag & Drop zone ── */}
+                {/* â”€â”€ Drag & Drop zone â”€â”€ */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -452,9 +452,9 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                           borderRadius: '50%',
                           animation: 'spin 0.9s linear infinite',
                         }}/>
-                        <h2 style={{ fontSize: '1.1rem' }}>Analysing food composition…</h2>
+                        <h2 style={{ fontSize: '1.1rem' }}>Analysing food compositionâ€¦</h2>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
-                          Running MobileNetV3 · cross-validating colours · estimating freshness
+                          Running MobileNetV3 Â· cross-validating colours Â· estimating freshness
                         </p>
                       </div>
                     </>
@@ -470,7 +470,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                     />
                   ) : (
                     <div style={{ textAlign: 'center', padding: '2.5rem' }}>
-                      <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>📸</div>
+                      <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>ðŸ“¸</div>
                       <h2 style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>
                         Drop a food photo here
                       </h2>
@@ -491,14 +491,14 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                   )}
                 </div>
 
-                {/* ── Accepted formats note ── */}
+                {/* â”€â”€ Accepted formats note â”€â”€ */}
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.6rem', textAlign: 'center', marginBottom: '1.5rem' }}>
-                  Supports JPG · PNG · WEBP · GIF — max ~10 MB
+                  Supports JPG Â· PNG Â· WEBP Â· GIF â€” max ~10 MB
                 </p>
               </>
             )}
 
-            {/* ── Error / Rejection card ── */}
+            {/* â”€â”€ Error / Rejection card â”€â”€ */}
             {scanError && (
               <div
                 className="glass-card"
@@ -510,7 +510,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                   animation: 'fadeInUp 0.3s ease',
                 }}
               >
-                <span style={{ fontSize: '1.8rem', flexShrink: 0 }}>⚠️</span>
+                <span style={{ fontSize: '1.8rem', flexShrink: 0 }}>âš ï¸</span>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ color: 'var(--color-spoiled)', marginBottom: '0.3rem' }}>
                     Scan Rejected
@@ -527,7 +527,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
               </div>
             )}
 
-            {/* ── Success results ── */}
+            {/* â”€â”€ Success results â”€â”€ */}
             {scanResults && scanResults.length > 0 && (
               <div style={{ marginTop: '2rem', animation: 'fadeInUp 0.35s ease' }}>
                 <div style={{
@@ -535,7 +535,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                   alignItems: 'center', marginBottom: '1rem',
                 }}>
                   <h2 style={{ color: 'var(--color-fresh)' }}>
-                    ✅ {scanResults.length} Item{scanResults.length > 1 ? 's' : ''} Detected
+                    âœ… {scanResults.length} Item{scanResults.length > 1 ? 's' : ''} Detected
                   </h2>
                   <button
                     className="btn-secondary"
@@ -582,14 +582,14 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                               fontSize: '0.75rem', color: 'var(--text-muted)',
                               textTransform: 'capitalize',
                             }}>
-                              {item.category} · {item.isCooked ? 'Cooked' : 'Raw'}
+                              {item.category} Â· {item.isCooked ? 'Cooked' : 'Raw'}
                             </span>
                           </div>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
                           <span className={`user-score-badge ${statusClass(item.status)}`}>
-                            {item.status} · {item.originalFreshness}%
+                            {item.status} Â· {item.originalFreshness}%
                           </span>
                           {/* Show AI confidence if available */}
                           {(item as any).confidence && (
@@ -599,7 +599,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                               border: '1px solid var(--glass-border)',
                               borderRadius: '6px',
                             }}>
-                              🤖 AI confidence: {(item as any).confidence}%
+                              ðŸ¤– AI confidence: {(item as any).confidence}%
                             </span>
                           )}
                         </div>
@@ -627,13 +627,13 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                           fontSize: '0.82rem',
                         }}>
                           <span style={{ fontWeight: 600, color: 'var(--color-warning)' }}>
-                            🔍 Label OCR:
+                            ðŸ” Label OCR:
                           </span>{' '}
-                          Brand: <strong>{item.ocrInfo.brand}</strong> · Expiry:{' '}
+                          Brand: <strong>{item.ocrInfo.brand}</strong> Â· Expiry:{' '}
                           <strong>
                             {item.ocrInfo.expiryDate
                               ? new Date(item.ocrInfo.expiryDate).toLocaleDateString()
-                              : '—'}
+                              : 'â€”'}
                           </strong>
                         </div>
                       )}
@@ -651,13 +651,13 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                         gap: '0.35rem'
                       }}>
                         <div style={{ display: 'flex', gap: '1rem', fontWeight: 600 }}>
-                          <span>🔥 Calories: {item.nutrition.calories} kcal</span>
-                          <span>💪 Protein: {item.nutrition.protein}g</span>
-                          <span>🍞 Carbs: {item.nutrition.carbs}g</span>
-                          <span>💧 Fat: {item.nutrition.fat}g</span>
+                          <span>ðŸ”¥ Calories: {item.nutrition.calories} kcal</span>
+                          <span>ðŸ’ª Protein: {item.nutrition.protein}g</span>
+                          <span>ðŸž Carbs: {item.nutrition.carbs}g</span>
+                          <span>ðŸ’§ Fat: {item.nutrition.fat}g</span>
                         </div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.15rem' }}>
-                          ℹ️ {item.nutrition.healthNotes || 'No health notes available.'}
+                          â„¹ï¸ {item.nutrition.healthNotes || 'No health notes available.'}
                         </div>
                       </div>
 
@@ -668,11 +668,11 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                         marginTop: '0.75rem'
                       }}>
                         <div>
-                          <strong>🌡️ Storage:</strong>{' '}
+                          <strong>ðŸŒ¡ï¸ Storage:</strong>{' '}
                           <span style={{ color: 'var(--text-muted)' }}>{item.storageGuidance}</span>
                         </div>
                         <div>
-                          <strong>🛡️ Safety:</strong>{' '}
+                          <strong>ðŸ›¡ï¸ Safety:</strong>{' '}
                           <span style={{
                             color: item.status === 'Spoiled'
                               ? 'var(--color-spoiled)'
@@ -694,7 +694,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                           fontSize: '0.8rem',
                           color: 'var(--color-spoiled)',
                         }}>
-                          ⚠️ Dietary conflict with your profile:{' '}
+                          âš ï¸ Dietary conflict with your profile:{' '}
                           <strong>{item.compatibilityConflicts.join(', ')}</strong>
                         </div>
                       )}
@@ -717,7 +717,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                           onClick={() => handleSaveScannedItem(item)}
                           disabled={isSavingItem}
                         >
-                          💾 {isSavingItem ? 'Saving...' : 'Save to Pantry'}
+                          ðŸ’¾ {isSavingItem ? 'Saving...' : 'Save to Pantry'}
                         </button>
                         <button
                           className="btn-secondary"
@@ -735,7 +735,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                           onClick={resetScan}
                           disabled={isSavingItem}
                         >
-                          🗑️ Discard Scan
+                          ðŸ—‘ï¸ Discard Scan
                         </button>
                       </div>
                     </div>
@@ -746,7 +746,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
           </div>
         )}
 
-        {/* ══════════════════════ MANUAL ENTRY ══════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MANUAL ENTRY â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {useManual && (
           <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{
@@ -757,7 +757,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
               fontSize: '0.82rem',
               color: 'var(--text-muted)',
             }}>
-              💡 Use this when the AI scanner can't identify an item (poor lighting, unusual packaging, etc.).
+              ðŸ’¡ Use this when the AI scanner can't identify an item (poor lighting, unusual packaging, etc.).
             </div>
 
             <div>

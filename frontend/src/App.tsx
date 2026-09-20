@@ -26,52 +26,52 @@ interface SidebarCategory {
 const sidebarCategories: SidebarCategory[] = [
   {
     title: "Dashboard & Overview",
-    icon: "📊",
+    icon: "ðŸ“Š",
     screens: [
-      { id: "dashboard", name: "Dashboard Summary", icon: "📈" },
-      { id: "scanner", name: "Visual laser scan", icon: "📸" },
-      { id: "inventory", name: "Dynamic Pantry Inventory", icon: "📦" },
-      { id: "analytics", name: "Waste Cost Tracker", icon: "📉" },
-      { id: "alerts", name: "Real-time Spoilage Alerts", icon: "🚨" }
+      { id: "dashboard", name: "Dashboard Summary", icon: "ðŸ“ˆ" },
+      { id: "scanner", name: "Visual laser scan", icon: "ðŸ“¸" },
+      { id: "inventory", name: "Dynamic Pantry Inventory", icon: "ðŸ“¦" },
+      { id: "analytics", name: "Waste Cost Tracker", icon: "ðŸ“‰" },
+      { id: "alerts", name: "Real-time Spoilage Alerts", icon: "ðŸš¨" }
     ]
   },
   {
     title: "Smart Recipe Engine",
-    icon: "🥗",
+    icon: "ðŸ¥—",
     screens: [
-      { id: "recipes", name: "Dish Suggestion Hub", icon: "🥣" },
-      { id: "recipes-portions", name: "Cooking Portion Scaler", icon: "⚖️" },
-      { id: "recipes-kids", name: "Kid-Friendly Adjuster", icon: "👶" },
-      { id: "recipes-leftovers", name: "Leftovers Re-purposer", icon: "♻️" },
-      { id: "recipes-spice", name: "Spice Customizer", icon: "🌶️" }
+      { id: "recipes", name: "Dish Suggestion Hub", icon: "ðŸ¥£" },
+      { id: "recipes-portions", name: "Cooking Portion Scaler", icon: "âš–ï¸" },
+      { id: "recipes-kids", name: "Kid-Friendly Adjuster", icon: "ðŸ‘¶" },
+      { id: "recipes-leftovers", name: "Leftovers Re-purposer", icon: "â™»ï¸" },
+      { id: "recipes-spice", name: "Spice Customizer", icon: "ðŸŒ¶ï¸" }
     ]
   },
   {
     title: "Eco & Sustainability",
-    icon: "🌿",
+    icon: "ðŸŒ¿",
     screens: [
-      { id: "eco-tracker", name: "Eco & Carbon Tracker", icon: "🍏" },
-      { id: "eco-donation", name: "Food Donation Registry", icon: "🎁" },
-      { id: "eco-waste", name: "Bio-waste Optimizer", icon: "🪱" }
+      { id: "eco-tracker", name: "Eco & Carbon Tracker", icon: "ðŸ" },
+      { id: "eco-donation", name: "Food Donation Registry", icon: "ðŸŽ" },
+      { id: "eco-waste", name: "Bio-waste Optimizer", icon: "ðŸª±" }
     ]
   },
   {
     title: "Advisories & Library",
-    icon: "📖",
+    icon: "ðŸ“–",
     screens: [
-      { id: "adv-storage", name: "Crop Storage Database", icon: "🗄️" },
-      { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "🧼" },
-      { id: "adv-meal", name: "Smart Meal Planner", icon: "📅" },
-      { id: "adv-nutrition", name: "Nutrition Profiler", icon: "🍎" }
+      { id: "adv-storage", name: "Crop Storage Database", icon: "ðŸ—„ï¸" },
+      { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "ðŸ§¼" },
+      { id: "adv-meal", name: "Smart Meal Planner", icon: "ðŸ“…" },
+      { id: "adv-nutrition", name: "Nutrition Profiler", icon: "ðŸŽ" }
     ]
   },
   {
     title: "Theme & Profiles",
-    icon: "⚙️",
+    icon: "âš™ï¸",
     screens: [
-      { id: "settings", name: "Main Dietary Profile", icon: "👤" },
-      { id: "settings-notice", name: "Expiry Advance Schedule", icon: "⏰" },
-      { id: "settings-alerts", name: "In-app Alert Controls", icon: "🔔" }
+      { id: "settings", name: "Main Dietary Profile", icon: "ðŸ‘¤" },
+      { id: "settings-notice", name: "Expiry Advance Schedule", icon: "â°" },
+      { id: "settings-alerts", name: "In-app Alert Controls", icon: "ðŸ””" }
     ]
   }
 ];
@@ -111,7 +111,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();
@@ -125,7 +125,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/me', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/me', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();
@@ -166,7 +166,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/logout', { 
+      await fetch('https://pdd-9fqv.onrender.com/api/auth/logout', { 
         method: 'POST',
         headers: { 'x-user-email': email }
       });
@@ -183,7 +183,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch(`https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory/${id}/status`, {
+      const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -206,7 +206,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch(`https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory/${id}`, {
+      const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}`, {
         method: 'DELETE',
         headers: { 'x-user-email': email }
       });
@@ -230,7 +230,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/manual', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/manual', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -258,7 +258,7 @@ function App() {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const updatedUser = { ...loggedInUser, ...updates };
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/profile', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -366,7 +366,7 @@ function App() {
       {/* Mobile top bar */}
       <div className="mobile-header">
         <button className="hamburger-btn" onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}>
-          ☰
+          â˜°
         </button>
         <div className="logo-container" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
           <svg viewBox="0 0 120 120" width="36" height="36" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
@@ -466,7 +466,7 @@ function App() {
                     <span>{cat.title}</span>
                   </span>
                   <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                    {isExpanded ? '▼' : '►'}
+                    {isExpanded ? 'â–¼' : 'â–º'}
                   </span>
                 </div>
 
@@ -511,10 +511,10 @@ function App() {
 
           <ul className="nav-menu" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem', listStyle: 'none', paddingLeft: 0 }}>
             <li className="nav-item" onClick={() => { toggleTheme(); setIsMobileSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-              <span className="nav-icon">{theme === 'light' ? '🌙' : '☀️'}</span> {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              <span className="nav-icon">{theme === 'light' ? 'ðŸŒ™' : 'â˜€ï¸'}</span> {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
             </li>
             <li className="nav-item" onClick={() => { handleLogout(); setIsMobileSidebarOpen(false); }} style={{ color: 'var(--color-spoiled)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <span className="nav-icon">🚪</span> Sign Out
+              <span className="nav-icon">ðŸšª</span> Sign Out
             </li>
           </ul>
         </nav>
@@ -525,7 +525,7 @@ function App() {
             <div className="user-avatar" style={{ textTransform: 'uppercase' }}>{loggedInUser.name.substring(0, 2)}</div>
             <div className="user-info">
               <strong style={{ display: 'block' }}>{loggedInUser.name}</strong>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Streak: 🔥 {loggedInUser.streakCount}d</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Streak: ðŸ”¥ {loggedInUser.streakCount}d</span>
             </div>
           </div>
         </div>

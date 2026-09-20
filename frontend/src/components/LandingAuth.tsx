@@ -18,7 +18,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setErrorMsg(null);
     try {
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/login', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -50,7 +50,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     }
 
     try {
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/signup', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name: cleanName })
@@ -75,7 +75,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     }
     setErrorMsg(null);
     try {
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/verify-otp', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: otpPin })
@@ -107,7 +107,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     setErrorMsg(null);
     setSuccessMsg(null);
     try {
-      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/send-otp', {
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -176,21 +176,21 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
           {/* Interactive Feature teaser grids */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginTop: '2rem', textAlign: 'left' }}>
             <div className="glass-card">
-              <span style={{ fontSize: '2rem' }}>📸</span>
+              <span style={{ fontSize: '2rem' }}>ðŸ“¸</span>
               <h3 style={{ margin: '0.75rem 0' }}>AI Vision Recognition</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
                 Instant deep learning freshness analysis. Identifies rot spots and isolates packaging labels. Rejects faces automatically.
               </p>
             </div>
             <div className="glass-card">
-              <span style={{ fontSize: '2rem' }}>🥗</span>
+              <span style={{ fontSize: '2rem' }}>ðŸ¥—</span>
               <h3 style={{ margin: '0.75rem 0' }}>Zero Waste Recipes</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
                 Auto-suggest recipes tailored strictly to raw food nearing decay. Adjusts portions and spice thresholds automatically.
               </p>
             </div>
             <div className="glass-card">
-              <span style={{ fontSize: '2rem' }}>🌿</span>
+              <span style={{ fontSize: '2rem' }}>ðŸŒ¿</span>
               <h3 style={{ margin: '0.75rem 0' }}>Carbon Footprint Offset</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
                 Tracks greenhouse gases offset by consuming food rather than discarding. Syncs household data instantly.
@@ -208,7 +208,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
             Enter details to open your connected kitchen.
           </p>
 
-          {errorMsg && <div style={{ color: 'var(--color-spoiled)', background: 'var(--color-spoiled-bg)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem' }}>⚠️ {errorMsg}</div>}
+          {errorMsg && <div style={{ color: 'var(--color-spoiled)', background: 'var(--color-spoiled-bg)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem' }}>âš ï¸ {errorMsg}</div>}
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
@@ -256,7 +256,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
             Get started on zero-waste household tracking.
           </p>
 
-          {errorMsg && <div style={{ color: 'var(--color-spoiled)', background: 'var(--color-spoiled-bg)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem' }}>⚠️ {errorMsg}</div>}
+          {errorMsg && <div style={{ color: 'var(--color-spoiled)', background: 'var(--color-spoiled-bg)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem' }}>âš ï¸ {errorMsg}</div>}
 
           <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
@@ -312,7 +312,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
             Enter your email to receive a 4-digit OTP verification code.
           </p>
 
-          {errorMsg && <div style={{ color: 'var(--color-spoiled)', fontSize: '0.85rem', marginBottom: '1rem' }}>⚠️ {errorMsg}</div>}
+          {errorMsg && <div style={{ color: 'var(--color-spoiled)', fontSize: '0.85rem', marginBottom: '1rem' }}>âš ï¸ {errorMsg}</div>}
 
           <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
@@ -343,7 +343,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
             {successMsg || 'Enter the 4-digit code sent to your account.'}
           </p>
 
-          {errorMsg && <div style={{ color: 'var(--color-spoiled)', fontSize: '0.85rem', marginBottom: '1rem' }}>⚠️ {errorMsg}</div>}
+          {errorMsg && <div style={{ color: 'var(--color-spoiled)', fontSize: '0.85rem', marginBottom: '1rem' }}>âš ï¸ {errorMsg}</div>}
 
           <form onSubmit={handleOtpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>

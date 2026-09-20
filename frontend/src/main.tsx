@@ -16,7 +16,7 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     url = (input as any).url;
   }
 
-  if (url.includes('https://srv-da5dcaqjobas73ebumk0.onrender.com/api')) {
+  if (url.includes('https://pdd-9fqv.onrender.com/api')) {
     // URL is already using srv-da5dcaqjobas73ebumk0.onrender.com, do nothing or handle mapping if needed
   }
 

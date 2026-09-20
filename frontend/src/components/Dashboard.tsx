@@ -18,7 +18,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/waste-summary', {
+    fetch('https://pdd-9fqv.onrender.com/api/waste-summary', {
       headers: { 'x-user-email': preferences.email }
     })
       .then(r => r.json())
@@ -53,7 +53,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           message: `"${item.name}" will become spoil today, use it before!` };
       } else if (daysDiff === 1) {
         return { id: item._id, name: item.name, type: 'urgent', daysDiff, isSpoiled: false,
-          message: `"${item.name}" spoils in 1 day — use it today!` };
+          message: `"${item.name}" spoils in 1 day â€” use it today!` };
       } else if (daysDiff === 2) {
         return { id: item._id, name: item.name, type: 'warning', daysDiff, isSpoiled: false,
           message: `"${item.name}" will spoil in 2 days. Plan to use it soon.` };
@@ -105,23 +105,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="glass-card" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Streak:</span>
-            <span style={{ marginLeft: '0.5rem', fontWeight: 700, color: 'var(--color-warning)' }}>🔥 {preferences.streakCount} Days</span>
+            <span style={{ marginLeft: '0.5rem', fontWeight: 700, color: 'var(--color-warning)' }}>ðŸ”¥ {preferences.streakCount} Days</span>
           </div>
           <div style={{ borderLeft: '1px solid var(--glass-border)', paddingLeft: '1rem' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Health Score:</span>
-            <span style={{ marginLeft: '0.5rem', fontWeight: 700, color: 'var(--color-fresh)' }}>⭐ {preferences.healthScore}/100</span>
+            <span style={{ marginLeft: '0.5rem', fontWeight: 700, color: 'var(--color-fresh)' }}>â­ {preferences.healthScore}/100</span>
           </div>
         </div>
       </div>
 
-      {/* ── SPOILAGE ALERTS with Used / Not Used ── */}
+      {/* â”€â”€ SPOILAGE ALERTS with Used / Not Used â”€â”€ */}
       {activeAlerts.length > 0 && (
         <div className="glass-card" style={{ borderColor: 'var(--color-spoiled)', borderLeftWidth: '5px', marginBottom: '2rem' }}>
           <h3 style={{ color: 'var(--color-spoiled)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            🚨 Active Spoilage Notifications ({activeAlerts.length})
+            ðŸš¨ Active Spoilage Notifications ({activeAlerts.length})
           </h3>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            Mark each item as <strong>Used</strong> (you consumed it — notification dismissed, waste not counted) or <strong>Not Used / Wasted</strong> (counts toward your waste report).
+            Mark each item as <strong>Used</strong> (you consumed it â€” notification dismissed, waste not counted) or <strong>Not Used / Wasted</strong> (counts toward your waste report).
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {activeAlerts.map(alert => (
@@ -135,10 +135,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                    {alert.type === 'critical' ? '🔴' : alert.type === 'urgent' ? '🟠' : '🟡'} {alert.message}
+                    {alert.type === 'critical' ? 'ðŸ”´' : alert.type === 'urgent' ? 'ðŸŸ ' : 'ðŸŸ¡'} {alert.message}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Tap <em>Used</em> if you already consumed it — the notification disappears and no waste is recorded.
+                    Tap <em>Used</em> if you already consumed it â€” the notification disappears and no waste is recorded.
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexShrink: 0 }}>
@@ -150,19 +150,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => handleUsed(alert.id)}
                         title="I already used / ate this item"
                       >
-                        ✅ Used
+                        âœ… Used
                       </button>
                       <button
                         className="btn-secondary"
                         style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem', borderColor: 'var(--color-spoiled)', color: 'var(--color-spoiled)' }}
                         onClick={() => handleWasted(alert.id)}
-                        title="This item was not used — counts as wasted"
+                        title="This item was not used â€” counts as wasted"
                       >
-                        🗑️ Not Used
+                        ðŸ—‘ï¸ Not Used
                       </button>
                     </>
                   ) : (
-                    <span style={{ fontSize: '0.8rem', color: 'var(--color-spoiled)', fontWeight: 600 }}>⚠️ Discard Recommended</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-spoiled)', fontWeight: 600 }}>âš ï¸ Discard Recommended</span>
                   )}
                 </div>
               </div>
@@ -171,7 +171,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* ── METRIC TILES ── */}
+      {/* â”€â”€ METRIC TILES â”€â”€ */}
       <div className="grid-3-col" style={{ marginBottom: '2.5rem' }}>
         <div
           className="glass-card"
@@ -231,13 +231,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           alt={item.name} 
                           style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--glass-border)' }}
                           onError={(e) => {
-                            e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><rect width='100%' height='100%' fill='%2313151b'/><text x='50%' y='65%' font-family='sans-serif' font-size='20' fill='%2300E676' text-anchor='middle'>🍏</text></svg>";
+                            e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><rect width='100%' height='100%' fill='%2313151b'/><text x='50%' y='65%' font-family='sans-serif' font-size='20' fill='%2300E676' text-anchor='middle'>ðŸ</text></svg>";
                           }}
                         />
                         <div>
                           <h3 style={{ fontSize: '1rem' }}>{item.name}</h3>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                            {item.category} • {item.isCooked ? 'Cooked' : 'Raw'} • {item.nutrition.calories} kcal • {item.nutrition.protein}g Prot
+                            {item.category} â€¢ {item.isCooked ? 'Cooked' : 'Raw'} â€¢ {item.nutrition.calories} kcal â€¢ {item.nutrition.protein}g Prot
                           </span>
                         </div>
                       </div>
@@ -268,13 +268,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Right column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-          {/* ── WASTE SUMMARY WIDGET ── */}
+          {/* â”€â”€ WASTE SUMMARY WIDGET â”€â”€ */}
           <div
             className="glass-card"
             onClick={() => onNavigate('analytics')}
             style={{ borderLeft: '4px solid var(--color-spoiled)', cursor: 'pointer' }}
           >
-            <h2 style={{ marginBottom: '1rem' }}>🗑️ Waste Report This Week</h2>
+            <h2 style={{ marginBottom: '1rem' }}>ðŸ—‘ï¸ Waste Report This Week</h2>
             {wasteSummary ? (
               <>
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
@@ -293,18 +293,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>Items wasted this week:</p>
                     {wasteSummary.weeklyWastedItems.slice(0, 3).map((it, i) => (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--glass-border)' }}>
-                        <span>🗑️ {it.name}</span>
+                        <span>ðŸ—‘ï¸ {it.name}</span>
                         <span style={{ textTransform: 'capitalize', color: 'var(--text-muted)' }}>{it.category}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontSize: '0.82rem', color: 'var(--color-fresh)', marginBottom: '1rem' }}>✅ Zero waste this week — great job!</p>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--color-fresh)', marginBottom: '1rem' }}>âœ… Zero waste this week â€” great job!</p>
                 )}
 
                 {wasteSummary.buyAdvice.length > 0 && (
                   <div style={{ background: 'rgba(255,234,0,0.04)', border: '1px solid rgba(255,234,0,0.12)', borderRadius: '8px', padding: '0.75rem' }}>
-                    <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-warning)', marginBottom: '0.4rem' }}>💡 Buy Less Next Time:</p>
+                    <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-warning)', marginBottom: '0.4rem' }}>ðŸ’¡ Buy Less Next Time:</p>
                     {wasteSummary.buyAdvice.slice(0, 2).map((adv, i) => (
                       <p key={i} style={{ fontSize: '0.77rem', color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: '0.3rem' }}>{adv.advice}</p>
                     ))}
@@ -312,7 +312,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 )}
 
                 <button className="btn-secondary" style={{ width: '100%', marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => onNavigate('analytics')}>
-                  View Full Waste Report →
+                  View Full Waste Report â†’
                 </button>
               </>
             ) : (
@@ -326,7 +326,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Healthy vs Packaged Scans:</span>
-                <span style={{ fontWeight: 600, color: 'var(--color-fresh)' }}>⭐ Outstanding Balance</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-fresh)' }}>â­ Outstanding Balance</span>
               </div>
               <div style={{ display: 'flex', height: '18px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
                 <div style={{ width: '70%', background: 'linear-gradient(90deg, var(--cat-vegetables), var(--cat-fruits))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0b0c10', fontWeight: 700 }}>Healthy (70%)</div>
