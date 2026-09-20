@@ -295,7 +295,7 @@ def run_deep_learning_classification(img_path):
 
         # ── 1. Try custom-trained checkpoint first ─────────────────────
         custom_model_path = os.path.join(backend_dir, 'models', 'freshness_model.pth')
-        if os.path.exists(custom_model_path):
+        if False and os.path.exists(custom_model_path):
             try:
                 checkpoint = torch.load(custom_model_path, map_location='cpu')
                 from torchvision.models import resnet18
