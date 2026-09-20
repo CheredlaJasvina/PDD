@@ -215,7 +215,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
 
       setScanResults(data.scannedItems);
     } catch {
-      setScanError('Cannot reach backend server. Make sure Node.js is running on port 5000.');
+      setScanError('Cannot reach backend server. Please verify your connection.');
     } finally {
       setIsScanning(false);
     }
