@@ -18,7 +18,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setErrorMsg(null);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -50,7 +50,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     }
 
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/signup', {
+      const response = await fetch('http://localhost:5000/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name: cleanName })
@@ -75,7 +75,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     }
     setErrorMsg(null);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/verify-otp', {
+      const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: otpPin })
@@ -107,7 +107,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     setErrorMsg(null);
     setSuccessMsg(null);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/send-otp', {
+      const response = await fetch('http://localhost:5000/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })

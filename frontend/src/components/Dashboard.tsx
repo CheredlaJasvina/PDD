@@ -18,11 +18,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch('https://pdd-9fqv.onrender.com/api/waste-summary')
+    fetch('http://localhost:5000/api/waste-summary', {
+      headers: { 'x-user-email': preferences.email }
+    })
       .then(r => r.json())
       .then(d => { if (d.success) setWasteSummary(d); })
       .catch(() => null);
-  }, [inventory]); // refresh when inventory changes
+  }, [inventory, preferences.email]); // refresh when inventory changes
 
   // Compute key metrics
   const totalTracked = inventory.length;
@@ -339,17 +341,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
 
-          {/* Badges */}
-          <div className="glass-card">
-            <h2>Unlocked Achievement Badges</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem' }}>
-              {preferences.unlockedBadges.map((badge, idx) => (
-                <div key={idx} style={{ padding: '0.5rem 0.8rem', borderRadius: '12px', background: 'rgba(255,234,0,0.05)', border: '1px solid rgba(255,234,0,0.15)', fontSize: '0.75rem', color: 'var(--color-warning)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  🏅 {badge}
-                </div>
-              ))}
-            </div>
-          </div>
+
 
         </div>
       </div>

@@ -57,8 +57,8 @@ exports.getWastageAnalytics = async (req, res) => {
     let healthyCount = 0;
     let junkCount = 0;
     allItems.forEach(item => {
-      if (item.category === 'fruits' || item.category === 'vegetables') healthyCount++;
-      else if (item.category === 'packaged food' || item.category === 'cooked food') junkCount++;
+      if (item.category === 'fruits' || item.category === 'vegetables' || item.category === 'non-veg') healthyCount++;
+      else if (item.category === 'packaged food' || item.category === 'cooked food' || item.category === 'liquid') junkCount++;
     });
     const totalScanned = healthyCount + junkCount || 1;
     const healthyPercentage = Math.round((healthyCount / totalScanned) * 100);
@@ -73,8 +73,8 @@ exports.getWastageAnalytics = async (req, res) => {
     });
 
     const recommendations = [
-      "Buy fruits in smaller batches. Analysis shows fruits have a 4-day average shelf-life in your ambient temperature.",
-      "Check expiration tags before purchasing dairy items to align with weekly consumption."
+      "Buy items in smaller batches based on your weekly consumption patterns.",
+      "Check expiration tags before purchasing items to align with weekly consumption."
     ];
 
     let maxWastedCategory = null;
@@ -91,6 +91,10 @@ exports.getWastageAnalytics = async (req, res) => {
         recommendations.unshift(`CRITICAL TIP: Cooked food has been wasted ${maxWastedCount} times. Try portioning leftovers in airtight freezing bags immediately after dinner.`);
       } else if (maxWastedCategory === 'packaged food') {
         recommendations.unshift(`SAVINGS ALERT: Packaged foods represent your highest waste sector. Check package seals and buy standard mini-packs instead of family-sized volumes.`);
+      } else if (maxWastedCategory === 'liquid') {
+        recommendations.unshift(`LIQUID WASTE ALERT: Liquid items like milk or juices are spoiling. Ensure proper refrigeration and consider buying smaller cartons.`);
+      } else if (maxWastedCategory === 'non-veg') {
+        recommendations.unshift(`NON-VEG WASTE ALERT: Meat/poultry/fish is being wasted. Freeze them immediately if not cooking within 1-2 days to prevent dangerous spoilage.`);
       } else {
         recommendations.unshift(`FRESHNESS TIP: Organic fresh produce is decaying before usage. Separate apples and bananas to stop ethylene gas from rapidly spoiling nearby greens.`);
       }

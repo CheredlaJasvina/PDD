@@ -60,7 +60,6 @@ const sidebarCategories: SidebarCategory[] = [
     icon: "📖",
     screens: [
       { id: "adv-storage", name: "Crop Storage Database", icon: "🗄️" },
-      { id: "adv-science", name: "Spoilage Science Library", icon: "🔬" },
       { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "🧼" },
       { id: "adv-meal", name: "Smart Meal Planner", icon: "📅" },
       { id: "adv-nutrition", name: "Nutrition Profiler", icon: "🍎" }
@@ -72,8 +71,7 @@ const sidebarCategories: SidebarCategory[] = [
     screens: [
       { id: "settings", name: "Main Dietary Profile", icon: "👤" },
       { id: "settings-notice", name: "Expiry Advance Schedule", icon: "⏰" },
-      { id: "settings-alerts", name: "In-app Alert Controls", icon: "🔔" },
-      { id: "settings-badges", name: "Achievement Badges", icon: "🎖️" }
+      { id: "settings-alerts", name: "In-app Alert Controls", icon: "🔔" }
     ]
   }
 ];
@@ -113,7 +111,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
+      const response = await fetch('http://localhost:5000/api/inventory', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();
@@ -127,7 +125,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/me', {
+      const response = await fetch('http://localhost:5000/api/auth/me', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();
@@ -168,7 +166,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      await fetch('https://pdd-9fqv.onrender.com/api/auth/logout', { 
+      await fetch('http://localhost:5000/api/auth/logout', { 
         method: 'POST',
         headers: { 'x-user-email': email }
       });
@@ -185,7 +183,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}/status`, {
+      const response = await fetch(`http://localhost:5000/api/inventory/${id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -208,7 +206,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch(`https://pdd-9fqv.onrender.com/api/inventory/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/inventory/${id}`, {
         method: 'DELETE',
         headers: { 'x-user-email': email }
       });
@@ -232,7 +230,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/manual', {
+      const response = await fetch('http://localhost:5000/api/manual', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -260,7 +258,7 @@ function App() {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const updatedUser = { ...loggedInUser, ...updates };
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/profile', {
+      const response = await fetch('http://localhost:5000/api/auth/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

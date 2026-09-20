@@ -59,7 +59,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
   const handleSaveScannedItem = async (item: FoodItem) => {
     setIsSavingItem(true);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
+      const response = await fetch('http://localhost:5000/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
@@ -135,10 +135,11 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
 
   // Manual form
   const [manualName, setManualName]           = useState('');
-  const [manualCategory, setManualCategory]   = useState<'fruits' | 'vegetables' | 'cooked food' | 'packaged food'>('fruits');
+  const [manualCategory, setManualCategory]   = useState<'fruits' | 'vegetables' | 'cooked food' | 'packaged food' | 'non-veg' | 'liquid'>('fruits');
   const [manualShelfLife, setManualShelfLife] = useState(5);
   const [manualIsCooked, setManualIsCooked]   = useState(false);
   const [manualCalories, setManualCalories]   = useState(100);
+  const [manualSpiceLevel, setManualSpiceLevel] = useState<'none' | 'low' | 'medium' | 'high'>('none');
 
   const handleNameChange = (val: string) => {
     setManualName(val);
@@ -199,7 +200,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/scan', {
+      const response = await fetch('http://localhost:5000/api/scan', {
         method: 'POST',
         body: formData,
       });
@@ -236,6 +237,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       shelfLifeDays: Number(manualShelfLife),
       isCooked: manualIsCooked,
       calories: Number(manualCalories),
+      spiceLevel: manualSpiceLevel,
     });
     setManualName('');
     setUseManual(false);
@@ -800,6 +802,8 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                   <option value="vegetables">Vegetables</option>
                   <option value="cooked food">Cooked Food</option>
                   <option value="packaged food">Packaged Food</option>
+                  <option value="non-veg">Non-Veg</option>
+                  <option value="liquid">Liquid</option>
                 </select>
               </div>
 
@@ -857,6 +861,31 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                     color: '#fff',
                   }}
                 />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>
+                  Spice Level
+                </label>
+                <select
+                  value={manualSpiceLevel}
+                  onChange={(e: any) => setManualSpiceLevel(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--glass-border)',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    color: '#fff',
+                  }}
+                >
+                  <option value="none">None</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
               </div>
             </div>
 

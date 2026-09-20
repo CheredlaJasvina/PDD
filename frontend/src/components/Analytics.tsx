@@ -13,9 +13,12 @@ export const Analytics: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      
       const [analyticsRes, wasteRes] = await Promise.all([
-        fetch('https://pdd-9fqv.onrender.com/api/analytics'),
-        fetch('https://pdd-9fqv.onrender.com/api/waste-summary')
+        fetch('http://localhost:5000/api/analytics', { headers: { 'x-user-email': email } }),
+        fetch('http://localhost:5000/api/waste-summary', { headers: { 'x-user-email': email } })
       ]);
       const analyticsData = await analyticsRes.json();
       const wasteData = await wasteRes.json();

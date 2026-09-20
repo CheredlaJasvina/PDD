@@ -153,7 +153,7 @@ exports.scanFoodItem = async (req, res) => {
 
         // Prompt Groq to return JSON output matching our database structure
         const chatCompletion = await groq.chat.completions.create({
-          model: "qwen/qwen3.6-27b",
+          model: "llama-3.2-90b-vision-preview",
           response_format: { type: "json_object" },
           messages: [
             {
@@ -166,7 +166,7 @@ exports.scanFoodItem = async (req, res) => {
                     "success": true (or false if the image is NOT food, or skin/face/non-food is detected),
                     "message": "reason for failure or success message",
                     "name": "Specific Food Name (e.g., Red Apple, Cauliflower, Broccoli, Banana, Pizza)",
-                    "category": "one of: 'fruits', 'vegetables', 'cooked food', 'packaged food'",
+                    "category": "one of: 'fruits', 'vegetables', 'cooked food', 'packaged food', 'liquid', 'non-veg'",
                     "status": "one of: 'Fresh', 'Slightly Spoiled', 'Spoiled' based on visual decay/browning status",
                     "originalFreshness": 100 (a percentage score from 5 to 100 estimating overall freshness, e.g. fresh=95%, browning=50%, rotten=10%),
                     "shelfLifeDays": 5 (average shelf-life days left before this item completely spoils),
@@ -344,7 +344,7 @@ exports.scanFoodItem = async (req, res) => {
 // Add manual food item (Fallback when visual recognition fails)
 exports.addManualItem = async (req, res) => {
   try {
-    const { name, category, shelfLifeDays, isCooked, calories, dietaryPreferences } = req.body;
+    const { name, category, shelfLifeDays, isCooked, calories, dietaryPreferences, spiceLevel } = req.body;
     const db = getDB(req);
 
     const addedDate = new Date();
@@ -384,7 +384,8 @@ exports.addManualItem = async (req, res) => {
         healthNotes: "Manually entered food item. High nutritional properties."
       },
       storageGuidance: "Store in normal temperature. Keep checked.",
-      safetyAdvisory: status === 'Spoiled' ? "Discard safely." : "Safe to consume."
+      safetyAdvisory: status === 'Spoiled' ? "Discard safely." : "Safe to consume.",
+      spiceLevel: spiceLevel !== undefined ? Number(spiceLevel) : 5
     };
 
     const saved = await db.create(itemData);

@@ -36,6 +36,7 @@ const FoodItemSchema = new mongoose.Schema({
   },
   storageGuidance: { type: String, default: '' },
   safetyAdvisory: { type: String, default: '' },
+  spiceLevel: { type: Number, default: 5 },
   owner: { type: String, required: true }
 });
 

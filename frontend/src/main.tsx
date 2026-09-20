@@ -7,7 +7,7 @@ import App from './App.tsx'
 const originalFetch = window.fetch;
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const apiBase = isLocal ? 'http://localhost:5000/api' : 'https://pdd-9fqv.onrender.com/api';
+  const apiBase = isLocal ? 'http://localhost:5000/api' : 'http://localhost:5000/api';
 
   let url = '';
   let isRequestObject = false;
@@ -21,15 +21,8 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     isRequestObject = true;
   }
 
-  if (url.includes('pdd-9fqv.onrender.com/api')) {
-    const relativePath = url.split('pdd-9fqv.onrender.com/api')[1];
-    const newUrl = `${apiBase}${relativePath}`;
-    if (isRequestObject) {
-      input = new Request(newUrl, input as Request);
-    } else {
-      input = newUrl;
-    }
-    url = newUrl;
+  if (url.includes('http://localhost:5000/api')) {
+    // URL is already using localhost:5000, do nothing or handle mapping if needed
   }
 
   const cachedUser = localStorage.getItem('user');
@@ -40,7 +33,7 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     } catch (e) {}
   }
 
-  if (email && (url.includes('pdd-9fqv.onrender.com/api') || url.includes('localhost:5000/api') || url.includes('/api/'))) {
+  if (email && (url.includes('localhost:5000/api') || url.includes('/api/'))) {
     init = init || {};
     init.headers = init.headers || {};
     if (init.headers instanceof Headers) {

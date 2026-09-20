@@ -454,6 +454,48 @@ const RECIPE_DATABASE = {
       chiliLevel: "none"
     }
   ],
+  fish: [
+    {
+      title: "Lemon Butter Baked Fish",
+      description: "Simple and flaky fish baked with a rich lemon butter sauce.",
+      baseServings: 2,
+      baseIngredients: [
+        { name: "White Fish Fillets", qty: 2, unit: "pcs" },
+        { name: "Butter", qty: 2, unit: "tbsp" },
+        { name: "Lemon Juice", qty: 1, unit: "tbsp" },
+        { name: "Garlic Powder", qty: 0.5, unit: "tsp" }
+      ],
+      steps: [
+        "Preheat oven to 200°C (400°F).",
+        "Place fish fillets in a baking dish and season with salt, pepper, and garlic powder.",
+        "Melt butter and mix with lemon juice, then pour over the fish.",
+        "Bake for 10-12 minutes until fish flakes easily with a fork."
+      ],
+      kidFriendlyNotes: "Mild and soft, ensure there are no bones.",
+      gourmetNotes: "Top with fresh dill and capers before serving.",
+      chiliLevel: "none"
+    }
+  ],
+  milk: [
+    {
+      title: "Warm Spiced Milk",
+      description: "A comforting cup of warm milk with soothing spices.",
+      baseServings: 1,
+      baseIngredients: [
+        { name: "Milk", qty: 1, unit: "cup" },
+        { name: "Honey", qty: 1, unit: "tsp" },
+        { name: "Cinnamon", qty: 0.25, unit: "tsp" }
+      ],
+      steps: [
+        "Heat milk in a small saucepan over medium-low heat until warm.",
+        "Stir in honey and cinnamon.",
+        "Pour into a mug and serve immediately."
+      ],
+      kidFriendlyNotes: "A classic bedtime drink for kids.",
+      gourmetNotes: "Add a pinch of nutmeg and use a milk frother for a café-style finish.",
+      chiliLevel: "none"
+    }
+  ],
   cheese: [
     {
       title: "Gourmet Three-Cheese Grilled Toast",

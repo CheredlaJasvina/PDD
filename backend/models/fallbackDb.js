@@ -161,10 +161,10 @@ const getNotificationsForUser = (email) => {
 
 // Catalog database search profiles
 const FOOD_CATALOG = [
-  { name: "Bananas", category: "fruits", calories: 89, protein: 1.1, carbs: 22.8, fat: 0.3, vitamins: ["Vitamin B6", "Vitamin C", "Potassium"], storageAdvice: "Store at room temp. Wrap stems in plastic wrap to slow decay." },
-  { name: "Spinach", category: "vegetables", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, vitamins: ["Vitamin A", "Vitamin K", "Iron"], storageAdvice: "Refrigerate in dry containers. Moisture accelerates wilting." },
-  { name: "Cheddar Cheese", category: "packaged food", calories: 402, protein: 25, carbs: 1.3, fat: 33, vitamins: ["Calcium", "Vitamin B12"], storageAdvice: "Wrap in wax paper and store in drawer." },
-  { name: "Fried Rice", category: "cooked food", calories: 350, protein: 8, carbs: 55, fat: 12, vitamins: ["Iron"], storageAdvice: "Consume within 3 days. Do not reheat more than once." }
+  { name: "Bananas", category: "fruits", calories: 89, protein: 1.1, carbs: 22.8, fat: 0.3, vitamins: ["Vitamin B6", "Vitamin C", "Potassium"], storageAdvice: "Store at room temp. Wrap stems in plastic wrap to slow decay.", spiceLevel: 1 },
+  { name: "Spinach", category: "vegetables", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, vitamins: ["Vitamin A", "Vitamin K", "Iron"], storageAdvice: "Refrigerate in dry containers. Moisture accelerates wilting.", spiceLevel: 2 },
+  { name: "Cheddar Cheese", category: "packaged food", calories: 402, protein: 25, carbs: 1.3, fat: 33, vitamins: ["Calcium", "Vitamin B12"], storageAdvice: "Wrap in wax paper and store in drawer.", spiceLevel: 3 },
+  { name: "Fried Rice", category: "cooked food", calories: 350, protein: 8, carbs: 55, fat: 12, vitamins: ["Iron"], storageAdvice: "Consume within 3 days. Do not reheat more than once.", spiceLevel: 4 }
 ];
 
 module.exports = {

@@ -91,7 +91,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "icon": "📖",
       "screens": [
         {"id": "adv-storage", "name": "Crop Storage Database", "icon": "🗄️"},
-        {"id": "adv-science", "name": "Spoilage Science Library", "icon": "🔬"},
         {"id": "adv-poisoning", "name": "Food Poisoning Prevention", "icon": "🧼"},
         {"id": "adv-meal", "name": "Smart Meal Planner", "icon": "📅"},
         {"id": "adv-nutrition", "name": "Nutrition Profiler", "icon": "🍎"}
@@ -1227,6 +1226,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   int    _life     = 5;
   bool   _isCooked = false;
   int    _cals     = 100;
+  String _spiceLevel = "none";
 
   final Map<String, Map<String, dynamic>> foodAutocompleteDB = {
     "apple": {"category": "fruits", "shelfLife": 14, "calories": 52, "isCooked": false},
@@ -1657,7 +1657,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   // -- Manual entry tab -----------------------------------------------------
   Widget _buildManualTab() {
-    final cats = ["fruits", "vegetables", "cooked food", "packaged food"];
+    final cats = ["fruits", "vegetables", "cooked food", "packaged food", "non-veg", "liquid"];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
         padding: const EdgeInsets.all(10),
@@ -1709,12 +1709,24 @@ class _ScannerScreenState extends State<ScannerScreen> {
         )),
       ]),
       const SizedBox(height: 12),
+      const SizedBox(height: 12),
       CheckboxListTile(
         title: const Text("Already cooked / ready to eat?", style: TextStyle(fontSize: 13)),
         value: _isCooked,
         activeColor: const Color(0xFF00E676),
         onChanged: (v) => setState(() => _isCooked = v!),
         contentPadding: EdgeInsets.zero,
+      ),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+        value: _spiceLevel,
+        decoration: const InputDecoration(labelText: "Spice Level", border: OutlineInputBorder()),
+        dropdownColor: const Color(0xFF13151B),
+        items: ["none", "low", "medium", "high"].map((c) => DropdownMenuItem(
+          value: c,
+          child: Text(c[0].toUpperCase() + c.substring(1)),
+        )).toList(),
+        onChanged: (v) => setState(() => _spiceLevel = v!),
       ),
       const SizedBox(height: 16),
       ElevatedButton(
@@ -1731,6 +1743,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
             "shelfLifeDays": _life,
             "isCooked": _isCooked,
             "calories": _cals,
+            "spiceLevel": _spiceLevel,
           });
           _nameCtrl.clear();
           setState(() => _useManual = false);
