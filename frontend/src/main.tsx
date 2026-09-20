@@ -16,8 +16,8 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     url = (input as any).url;
   }
 
-  if (url.includes('http://localhost:5000/api')) {
-    // URL is already using localhost:5000, do nothing or handle mapping if needed
+  if (url.includes('https://srv-da5dcaqjobas73ebumk0.onrender.com/api')) {
+    // URL is already using srv-da5dcaqjobas73ebumk0.onrender.com, do nothing or handle mapping if needed
   }
 
   const cachedUser = localStorage.getItem('user');
@@ -28,7 +28,7 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     } catch (e) {}
   }
 
-  if (email && (url.includes('localhost:5000/api') || url.includes('/api/'))) {
+  if (email && (url.includes('srv-da5dcaqjobas73ebumk0.onrender.com/api') || url.includes('/api/'))) {
     init = init || {};
     init.headers = init.headers || {};
     if (init.headers instanceof Headers) {

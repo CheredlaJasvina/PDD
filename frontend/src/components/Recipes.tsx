@@ -22,7 +22,7 @@ export const Recipes: React.FC<RecipesProps> = ({
     setError(null);
     try {
       const email = preferences ? preferences.email : '';
-      const response = await fetch('http://localhost:5000/api/recipes', {
+      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/recipes', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();

@@ -17,8 +17,8 @@ export const Analytics: React.FC = () => {
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
       
       const [analyticsRes, wasteRes] = await Promise.all([
-        fetch('http://localhost:5000/api/analytics', { headers: { 'x-user-email': email } }),
-        fetch('http://localhost:5000/api/waste-summary', { headers: { 'x-user-email': email } })
+        fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/analytics', { headers: { 'x-user-email': email } }),
+        fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/waste-summary', { headers: { 'x-user-email': email } })
       ]);
       const analyticsData = await analyticsRes.json();
       const wasteData = await wasteRes.json();

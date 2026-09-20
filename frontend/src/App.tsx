@@ -111,7 +111,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('http://localhost:5000/api/inventory', {
+      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();
@@ -125,7 +125,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('http://localhost:5000/api/auth/me', {
+      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/me', {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();
@@ -166,7 +166,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      await fetch('http://localhost:5000/api/auth/logout', { 
+      await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/logout', { 
         method: 'POST',
         headers: { 'x-user-email': email }
       });
@@ -183,7 +183,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch(`http://localhost:5000/api/inventory/${id}/status`, {
+      const response = await fetch(`https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory/${id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -206,7 +206,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch(`http://localhost:5000/api/inventory/${id}`, {
+      const response = await fetch(`https://srv-da5dcaqjobas73ebumk0.onrender.com/api/inventory/${id}`, {
         method: 'DELETE',
         headers: { 'x-user-email': email }
       });
@@ -230,7 +230,7 @@ function App() {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('http://localhost:5000/api/manual', {
+      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/manual', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -258,7 +258,7 @@ function App() {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const updatedUser = { ...loggedInUser, ...updates };
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/auth/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

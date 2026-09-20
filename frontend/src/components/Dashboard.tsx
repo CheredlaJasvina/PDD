@@ -18,7 +18,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/waste-summary', {
+    fetch('https://srv-da5dcaqjobas73ebumk0.onrender.com/api/waste-summary', {
       headers: { 'x-user-email': preferences.email }
     })
       .then(r => r.json())
