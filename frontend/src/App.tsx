@@ -26,52 +26,52 @@ interface SidebarCategory {
 const sidebarCategories: SidebarCategory[] = [
   {
     title: "Dashboard & Overview",
-    icon: "ðŸ“Š",
+    icon: "📊",
     screens: [
-      { id: "dashboard", name: "Dashboard Summary", icon: "ðŸ“ˆ" },
-      { id: "scanner", name: "Visual laser scan", icon: "ðŸ“¸" },
-      { id: "inventory", name: "Dynamic Pantry Inventory", icon: "ðŸ“¦" },
-      { id: "analytics", name: "Waste Cost Tracker", icon: "ðŸ“‰" },
-      { id: "alerts", name: "Real-time Spoilage Alerts", icon: "ðŸš¨" }
+      { id: "dashboard", name: "Dashboard Summary", icon: "📈" },
+      { id: "scanner", name: "Visual laser scan", icon: "📸" },
+      { id: "inventory", name: "Dynamic Pantry Inventory", icon: "📦" },
+      { id: "analytics", name: "Waste Cost Tracker", icon: "📉" },
+      { id: "alerts", name: "Real-time Spoilage Alerts", icon: "🚨" }
     ]
   },
   {
     title: "Smart Recipe Engine",
-    icon: "ðŸ¥—",
+    icon: "🥗",
     screens: [
-      { id: "recipes", name: "Dish Suggestion Hub", icon: "ðŸ¥£" },
-      { id: "recipes-portions", name: "Cooking Portion Scaler", icon: "âš–ï¸" },
-      { id: "recipes-kids", name: "Kid-Friendly Adjuster", icon: "ðŸ‘¶" },
-      { id: "recipes-leftovers", name: "Leftovers Re-purposer", icon: "â™»ï¸" },
-      { id: "recipes-spice", name: "Spice Customizer", icon: "ðŸŒ¶ï¸" }
+      { id: "recipes", name: "Dish Suggestion Hub", icon: "🥣" },
+      { id: "recipes-portions", name: "Cooking Portion Scaler", icon: "⚖️" },
+      { id: "recipes-kids", name: "Kid-Friendly Adjuster", icon: "👶" },
+      { id: "recipes-leftovers", name: "Leftovers Re-purposer", icon: "♻️" },
+      { id: "recipes-spice", name: "Spice Customizer", icon: "🌶️" }
     ]
   },
   {
     title: "Eco & Sustainability",
-    icon: "ðŸŒ¿",
+    icon: "🌿",
     screens: [
-      { id: "eco-tracker", name: "Eco & Carbon Tracker", icon: "ðŸ" },
-      { id: "eco-donation", name: "Food Donation Registry", icon: "ðŸŽ" },
-      { id: "eco-waste", name: "Bio-waste Optimizer", icon: "ðŸª±" }
+      { id: "eco-tracker", name: "Eco & Carbon Tracker", icon: "🍏" },
+      { id: "eco-donation", name: "Food Donation Registry", icon: "🎁" },
+      { id: "eco-waste", name: "Bio-waste Optimizer", icon: "🪱" }
     ]
   },
   {
     title: "Advisories & Library",
-    icon: "ðŸ“–",
+    icon: "📖",
     screens: [
-      { id: "adv-storage", name: "Crop Storage Database", icon: "ðŸ—„ï¸" },
-      { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "ðŸ§¼" },
-      { id: "adv-meal", name: "Smart Meal Planner", icon: "ðŸ“…" },
-      { id: "adv-nutrition", name: "Nutrition Profiler", icon: "ðŸŽ" }
+      { id: "adv-storage", name: "Crop Storage Database", icon: "🗄️" },
+      { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "🧼" },
+      { id: "adv-meal", name: "Smart Meal Planner", icon: "📅" },
+      { id: "adv-nutrition", name: "Nutrition Profiler", icon: "🍎" }
     ]
   },
   {
     title: "Theme & Profiles",
-    icon: "âš™ï¸",
+    icon: "⚙️",
     screens: [
-      { id: "settings", name: "Main Dietary Profile", icon: "ðŸ‘¤" },
-      { id: "settings-notice", name: "Expiry Advance Schedule", icon: "â°" },
-      { id: "settings-alerts", name: "In-app Alert Controls", icon: "ðŸ””" }
+      { id: "settings", name: "Main Dietary Profile", icon: "👤" },
+      { id: "settings-notice", name: "Expiry Advance Schedule", icon: "⏰" },
+      { id: "settings-alerts", name: "In-app Alert Controls", icon: "🔔" }
     ]
   }
 ];
@@ -366,7 +366,7 @@ function App() {
       {/* Mobile top bar */}
       <div className="mobile-header">
         <button className="hamburger-btn" onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}>
-          â˜°
+          ☰
         </button>
         <div className="logo-container" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
           <svg viewBox="0 0 120 120" width="36" height="36" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
@@ -466,7 +466,7 @@ function App() {
                     <span>{cat.title}</span>
                   </span>
                   <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                    {isExpanded ? 'â–¼' : 'â–º'}
+                    {isExpanded ? '▼' : '►'}
                   </span>
                 </div>
 
@@ -511,10 +511,10 @@ function App() {
 
           <ul className="nav-menu" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem', listStyle: 'none', paddingLeft: 0 }}>
             <li className="nav-item" onClick={() => { toggleTheme(); setIsMobileSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-              <span className="nav-icon">{theme === 'light' ? 'ðŸŒ™' : 'â˜€ï¸'}</span> {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              <span className="nav-icon">{theme === 'light' ? '🌙' : '☀️'}</span> {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
             </li>
             <li className="nav-item" onClick={() => { handleLogout(); setIsMobileSidebarOpen(false); }} style={{ color: 'var(--color-spoiled)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', cursor: 'pointer', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              <span className="nav-icon">ðŸšª</span> Sign Out
+              <span className="nav-icon">🚪</span> Sign Out
             </li>
           </ul>
         </nav>
@@ -525,7 +525,7 @@ function App() {
             <div className="user-avatar" style={{ textTransform: 'uppercase' }}>{loggedInUser.name.substring(0, 2)}</div>
             <div className="user-info">
               <strong style={{ display: 'block' }}>{loggedInUser.name}</strong>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Streak: ðŸ”¥ {loggedInUser.streakCount}d</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Streak: 🔥 {loggedInUser.streakCount}d</span>
             </div>
           </div>
         </div>

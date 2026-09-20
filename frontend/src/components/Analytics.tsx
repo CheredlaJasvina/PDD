@@ -193,7 +193,7 @@ export const Analytics: React.FC = () => {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                    <strong>ðŸ¥¦ Fresh Produce (Fruits & Veg)</strong>
+                    <strong>🥦 Fresh Produce (Fruits & Veg)</strong>
                     <span>{data.nutritionalRatio.healthyCount} scans</span>
                   </div>
                   <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
@@ -203,7 +203,7 @@ export const Analytics: React.FC = () => {
 
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                    <strong>ðŸ” Processed & Packaged Foods</strong>
+                    <strong>🍔 Processed & Packaged Foods</strong>
                     <span>{data.nutritionalRatio.junkCount} scans</span>
                   </div>
                   <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
@@ -223,11 +223,11 @@ export const Analytics: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2>Consumption History</h2>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className="btn-secondary" style={{ padding: '0.3rem 0.6rem' }} onClick={() => changeMonth(-1)}>â—€</button>
+                <button className="btn-secondary" style={{ padding: '0.3rem 0.6rem' }} onClick={() => changeMonth(-1)}>◀</button>
                 <span style={{ minWidth: '110px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 700 }}>
                   {monthNames[month]} {year}
                 </span>
-                <button className="btn-secondary" style={{ padding: '0.3rem 0.6rem' }} onClick={() => changeMonth(1)}>â–¶</button>
+                <button className="btn-secondary" style={{ padding: '0.3rem 0.6rem' }} onClick={() => changeMonth(1)}>▶</button>
               </div>
             </div>
 
@@ -267,9 +267,9 @@ export const Analytics: React.FC = () => {
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', fontSize: '0.7rem', justifyContent: 'center' }}>
-              <span>ðŸŸ¢ Item Scanned</span>
-              <span>ðŸ”´ Spoilage / Wasted</span>
-              <span>ðŸŸ¡ Consumed</span>
+              <span>🟢 Item Scanned</span>
+              <span>🔴 Spoilage / Wasted</span>
+              <span>🟡 Consumed</span>
             </div>
           </div>
 
@@ -279,18 +279,18 @@ export const Analytics: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '1rem' }}>
               {data.buyingRecommendations.map((rec, rIdx) => (
                 <div key={rIdx} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem', lineHeight: 1.4 }}>
-                  <span>ðŸ’¡</span>
+                  <span>💡</span>
                   <span style={{ color: 'var(--text-muted)' }}>{rec}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* â”€â”€ FOOD WASTE REPORT â”€â”€ */}
+          {/* ── FOOD WASTE REPORT ── */}
           {wasteSummary && (
             <div className="glass-card" style={{ borderLeft: '4px solid var(--color-spoiled)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <h2>ðŸ—‘ï¸ Food Waste Report</h2>
+                <h2>🗑️ Food Waste Report</h2>
                 <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-secondary)', borderRadius: '8px', padding: '2px' }}>
                   <button
                     className="btn-secondary"
@@ -322,7 +322,7 @@ export const Analytics: React.FC = () => {
               {/* Wasted items list */}
               {(wasteView === 'weekly' ? wasteSummary.weeklyWastedItems : wasteSummary.monthlyWastedItems).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(0,230,118,0.04)', borderRadius: '10px', border: '1px solid rgba(0,230,118,0.12)' }}>
-                  <p style={{ color: 'var(--color-fresh)', fontWeight: 600 }}>ðŸŽ‰ Zero waste {wasteView === 'weekly' ? 'this week' : 'this month'}!</p>
+                  <p style={{ color: 'var(--color-fresh)', fontWeight: 600 }}>🎉 Zero waste {wasteView === 'weekly' ? 'this week' : 'this month'}!</p>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Keep using your items before they expire to maintain this streak.</p>
                 </div>
               ) : (
@@ -331,7 +331,7 @@ export const Analytics: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     {(wasteView === 'weekly' ? wasteSummary.weeklyWastedItems : wasteSummary.monthlyWastedItems).map((it, i) => (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', padding: '0.45rem 0.75rem', background: 'rgba(255,23,68,0.04)', borderRadius: '6px', border: '1px solid rgba(255,23,68,0.08)' }}>
-                        <span>ðŸ—‘ï¸ <strong>{it.name}</strong></span>
+                        <span>🗑️ <strong>{it.name}</strong></span>
                         <span style={{ textTransform: 'capitalize', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{it.category}</span>
                       </div>
                     ))}
@@ -343,12 +343,12 @@ export const Analytics: React.FC = () => {
               {wasteSummary.buyAdvice.length > 0 && (
                 <div style={{ background: 'rgba(255,234,0,0.04)', border: '1px solid rgba(255,234,0,0.12)', borderRadius: '10px', padding: '1rem' }}>
                   <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-warning)', marginBottom: '0.75rem' }}>
-                    ðŸ›’ Buy Less Next Time â€” Quantity Advice for {wasteSummary.membersCount} Member{wasteSummary.membersCount > 1 ? 's' : ''}:
+                    🛒 Buy Less Next Time — Quantity Advice for {wasteSummary.membersCount} Member{wasteSummary.membersCount > 1 ? 's' : ''}:
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {wasteSummary.buyAdvice.map((adv, i) => (
                       <div key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.82rem', lineHeight: 1.5 }}>
-                        <span>ðŸ“¦</span>
+                        <span>📦</span>
                         <span style={{ color: 'var(--text-muted)' }}>{adv.advice}</span>
                       </div>
                     ))}

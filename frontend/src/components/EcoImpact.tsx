@@ -48,8 +48,8 @@ export const EcoImpact: React.FC<EcoImpactProps> = () => {
 
   // Fallbacks if data loading fails or doesn't exist
   const milestones = metrics?.ecoMilestones || [
-    { title: "CO2 Savior ðŸŒ¿", desc: "Saved 20kg of carbon emissions.", unlocked: false },
-    { title: "Zero Waste Hero ðŸ’Ž", desc: "Keep wastage below 5% for one month.", unlocked: false }
+    { title: "CO2 Savior 🌿", desc: "Saved 20kg of carbon emissions.", unlocked: false },
+    { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
   ];
 
   return (
@@ -89,7 +89,7 @@ export const EcoImpact: React.FC<EcoImpactProps> = () => {
                     border: '1px solid var(--glass-border)',
                     fontSize: '1.25rem'
                   }}>
-                    {m.unlocked ? "ðŸ”“" : "ðŸ”’"}
+                    {m.unlocked ? "🔓" : "🔒"}
                   </div>
                   <div>
                     <strong style={{ display: 'block', fontSize: '0.95rem', color: m.unlocked ? '#00E676' : '#FFFFFF' }}>

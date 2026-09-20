@@ -95,9 +95,9 @@ export const Recipes: React.FC<RecipesProps> = ({
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           {/* Members count */}
           <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem', borderColor: 'rgba(0,230,118,0.3)' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ðŸ‘¨â€ðŸ‘©â€ðŸ‘§ Members:</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>👨‍👩‍👧 Members:</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button className="btn-secondary" style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none' }} onClick={() => handleMembersChange(-1)}>âˆ’</button>
+              <button className="btn-secondary" style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none' }} onClick={() => handleMembersChange(-1)}>−</button>
               <strong style={{ minWidth: '1.5rem', textAlign: 'center', color: 'var(--color-fresh)' }}>{preferences.membersCount || 2}</strong>
               <button className="btn-secondary" style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none' }} onClick={() => handleMembersChange(1)}>+</button>
             </div>
@@ -107,7 +107,7 @@ export const Recipes: React.FC<RecipesProps> = ({
           <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Servings:</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button className="btn-secondary" style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none' }} onClick={() => handleServingsChange(-1)}>âˆ’</button>
+              <button className="btn-secondary" style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none' }} onClick={() => handleServingsChange(-1)}>−</button>
               <strong style={{ minWidth: '1.5rem', textAlign: 'center' }}>{preferences.servings}</strong>
               <button className="btn-secondary" style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none' }} onClick={() => handleServingsChange(1)}>+</button>
             </div>
@@ -121,7 +121,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                 <button key={mode} className="btn-secondary"
                   style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', border: 'none', background: preferences.audienceMode === mode ? 'var(--glass-border)' : 'transparent', color: preferences.audienceMode === mode ? '#fff' : 'var(--text-muted)' }}
                   onClick={() => handleAudienceChange(mode)}>
-                  {mode === 'Kid-friendly' ? 'Kid-friendly ðŸ‘¶' : mode}
+                  {mode === 'Kid-friendly' ? 'Kid-friendly 👶' : mode}
                 </button>
               ))}
             </div>
@@ -132,10 +132,10 @@ export const Recipes: React.FC<RecipesProps> = ({
       {/* Members quantity advice banner */}
       {(preferences.membersCount || 2) > 0 && (
         <div className="glass-card" style={{ marginBottom: '1.5rem', padding: '0.85rem 1.25rem', borderColor: 'rgba(0,230,118,0.25)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '1.2rem' }}>ðŸ›’</span>
+          <span style={{ fontSize: '1.2rem' }}>🛒</span>
           <div>
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Cooking for {preferences.membersCount || 2} member{(preferences.membersCount || 2) > 1 ? 's' : ''}</span>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>â€” ingredient quantities below are auto-scaled. Check the "Buy Quantity" column to know how much to purchase next time.</span>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>— ingredient quantities below are auto-scaled. Check the "Buy Quantity" column to know how much to purchase next time.</span>
           </div>
         </div>
       )}
@@ -160,7 +160,7 @@ export const Recipes: React.FC<RecipesProps> = ({
           {/* Ingredient Role Filter Bar */}
           {uniqueIngredients.length > 0 && (
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--glass-bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginRight: '0.5rem' }}>ðŸŽ¯ Scanned Ingredient Role:</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginRight: '0.5rem' }}>🎯 Scanned Ingredient Role:</span>
               <button
                 className="btn-secondary"
                 style={{
@@ -199,14 +199,14 @@ export const Recipes: React.FC<RecipesProps> = ({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1.25rem', marginBottom: '1.5rem' }}>
                     <div>
                       <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-warning)', fontWeight: 700, letterSpacing: '1px' }}>
-                        ðŸ’¡ Matches: {recipe.primaryIngredient} ({recipe.daysToExpiry} days left)
+                        💡 Matches: {recipe.primaryIngredient} ({recipe.daysToExpiry} days left)
                       </span>
                       <h2 style={{ margin: '0.25rem 0 0.5rem', fontSize: '1.6rem' }}>{recipe.title}</h2>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{recipe.description}</p>
                     </div>
                     {recipe.chiliLevel === 'high' && (
                       <span className="user-score-badge spoiled-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                        ðŸŒ¶ï¸ Spicy Recipe
+                        🌶️ Spicy Recipe
                       </span>
                     )}
                   </div>
