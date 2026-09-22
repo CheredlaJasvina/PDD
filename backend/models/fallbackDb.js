@@ -330,27 +330,30 @@ module.exports = {
     foodItems.push(newItem);
     return newItem;
   },
-  updateFoodItemState: (id, state) => {
-    const itemIndex = foodItems.findIndex(i => i._id === id && i.owner === (currentUser ? currentUser.email : ''));
+  updateFoodItemState: (id, state, ownerEmail) => {
+    const userEmail = ownerEmail || (currentUser ? currentUser.email : '');
+    const itemIndex = foodItems.findIndex(i => i._id === id && i.owner.toLowerCase() === userEmail.toLowerCase());
     if (itemIndex > -1) {
       foodItems[itemIndex].state = state;
       foodItems[itemIndex].addedDate = new Date();
       // Increment CO2 and savings indicators
       if (state === 'Eaten' || state === 'Used') {
-        if (currentUser) {
-          currentUser.healthScore = Math.min(100, currentUser.healthScore + 2);
-          currentUser.streakCount += 1;
-          const eco = getEcoMetricsForUser(currentUser.email);
+        const user = module.exports.getUserByEmail(userEmail);
+        if (user) {
+          user.healthScore = Math.min(100, user.healthScore + 2);
+          user.streakCount += 1;
+          const eco = getEcoMetricsForUser(user.email);
           eco.co2SavedKg += 0.4;
           eco.moneySaved += 4.5;
-          if (currentUser.streakCount >= 7 && !currentUser.unlockedBadges.includes('Consistency King')) {
-            currentUser.unlockedBadges.push('Consistency King');
+          if (user.streakCount >= 7 && !user.unlockedBadges.includes('Consistency King')) {
+            user.unlockedBadges.push('Consistency King');
           }
         }
       } else if (state === 'Wasted') {
-        if (currentUser) {
-          currentUser.healthScore = Math.max(0, currentUser.healthScore - 5);
-          currentUser.streakCount = 0;
+        const user = module.exports.getUserByEmail(userEmail);
+        if (user) {
+          user.healthScore = Math.max(0, user.healthScore - 5);
+          user.streakCount = 0;
         }
       }
       return foodItems[itemIndex];

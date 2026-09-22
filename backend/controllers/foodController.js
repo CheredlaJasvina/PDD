@@ -105,7 +105,7 @@ const getDB = (req) => {
       return all;
     },
     create: async (data) => fallbackDb.addFoodItem(data),
-    findByIdAndUpdate: async (id, update) => fallbackDb.updateFoodItemState(id, update.state),
+    findByIdAndUpdate: async (id, update) => fallbackDb.updateFoodItemState(id, update.state, email),
     findByIdAndDelete: async (id) => fallbackDb.deleteFoodItem(id),
     getPreferences: async () => fallbackDb.getUserPreferenceByEmail(email),
     updatePreferences: async (updates) => fallbackDb.updateUserPreference(updates)

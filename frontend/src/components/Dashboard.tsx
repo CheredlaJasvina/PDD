@@ -102,16 +102,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
             AI-powered shelf-life predictions &amp; wastage prevention
           </p>
         </div>
-        <div className="glass-card" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Streak:</span>
-            <span style={{ marginLeft: '0.5rem', fontWeight: 700, color: 'var(--color-warning)' }}>🔥 {preferences.streakCount} Days</span>
-          </div>
-          <div style={{ borderLeft: '1px solid var(--glass-border)', paddingLeft: '1rem' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Health Score:</span>
-            <span style={{ marginLeft: '0.5rem', fontWeight: 700, color: 'var(--color-fresh)' }}>⭐ {preferences.healthScore}/100</span>
-          </div>
-        </div>
       </div>
 
       {/* ── SPOILAGE ALERTS with Used / Not Used ── */}
