@@ -228,13 +228,14 @@ module.exports = {
   },
 
   // User preferences (settings-page data)
-  getUserPreference: () => {
-    if (!currentUser) return {
+  getUserPreference: (email) => {
+    const user = email ? module.exports.getUserByEmail(email) : currentUser;
+    if (!user) return {
       dietaryPreferences: [], audienceMode: 'Regular', servings: 2, membersCount: 2,
       notificationPref: { advanceNoticeDays: 2, emailAlerts: true, inAppAlerts: true },
       healthScore: 85, streakCount: 0, unlockedBadges: []
     };
-    return currentUser;
+    return user;
   },
   updateUserPreference: (updates) => {
     if (currentUser) {
@@ -312,13 +313,15 @@ module.exports = {
   },
 
 
-  getFoodItems: () => {
-    if (!currentUser) return [];
-    return [...foodItems, ...historicalItems].filter(item => item.owner === currentUser.email);
+  getFoodItems: (email) => {
+    const user = email ? module.exports.getUserByEmail(email) : currentUser;
+    if (!user) return [];
+    return [...foodItems, ...historicalItems].filter(item => item.owner.toLowerCase() === user.email.toLowerCase());
   },
-  getInventory: () => {
-    if (!currentUser) return [];
-    return foodItems.filter(item => item.state === 'Tracked' && item.owner === currentUser.email);
+  getInventory: (email) => {
+    const user = email ? module.exports.getUserByEmail(email) : currentUser;
+    if (!user) return [];
+    return foodItems.filter(item => item.state === 'Tracked' && item.owner.toLowerCase() === user.email.toLowerCase());
   },
   addFoodItem: (item) => {
     const newItem = { 

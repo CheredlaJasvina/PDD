@@ -6,7 +6,7 @@ interface ScannerProps {
   onAddManual: (item: any) => void;
 }
 
-const foodAutocompleteDB: Record<string, { category: 'fruits' | 'vegetables' | 'cooked food' | 'packaged food'; shelfLife: number; calories: number; isCooked: boolean }> = {
+const foodAutocompleteDB: Record<string, { category: 'fruits' | 'vegetables' | 'cooked food' | 'packaged food' | 'non-veg' | 'liquid'; shelfLife: number; calories: number; isCooked: boolean }> = {
   apple: { category: 'fruits', shelfLife: 14, calories: 52, isCooked: false },
   banana: { category: 'fruits', shelfLife: 7, calories: 89, isCooked: false },
   orange: { category: 'fruits', shelfLife: 10, calories: 47, isCooked: false },
@@ -33,17 +33,19 @@ const foodAutocompleteDB: Record<string, { category: 'fruits' | 'vegetables' | '
   lettuce: { category: 'vegetables', shelfLife: 5, calories: 15, isCooked: false },
   cabbage: { category: 'vegetables', shelfLife: 14, calories: 25, isCooked: false },
   mushroom: { category: 'vegetables', shelfLife: 5, calories: 22, isCooked: false },
-  milk: { category: 'packaged food', shelfLife: 7, calories: 42, isCooked: false },
   cheese: { category: 'packaged food', shelfLife: 21, calories: 402, isCooked: false },
   yogurt: { category: 'packaged food', shelfLife: 14, calories: 59, isCooked: false },
   bread: { category: 'packaged food', shelfLife: 6, calories: 265, isCooked: false },
-  eggs: { category: 'packaged food', shelfLife: 21, calories: 155, isCooked: false },
-  chicken: { category: 'packaged food', shelfLife: 3, calories: 165, isCooked: false },
-  beef: { category: 'packaged food', shelfLife: 3, calories: 250, isCooked: false },
-  fish: { category: 'packaged food', shelfLife: 2, calories: 206, isCooked: false },
+  milk: { category: 'liquid', shelfLife: 7, calories: 42, isCooked: false },
+  juice: { category: 'liquid', shelfLife: 10, calories: 50, isCooked: false },
+  water: { category: 'liquid', shelfLife: 365, calories: 0, isCooked: false },
+  eggs: { category: 'non-veg', shelfLife: 21, calories: 155, isCooked: false },
+  chicken: { category: 'non-veg', shelfLife: 3, calories: 165, isCooked: false },
+  beef: { category: 'non-veg', shelfLife: 3, calories: 250, isCooked: false },
+  fish: { category: 'non-veg', shelfLife: 2, calories: 206, isCooked: false },
   rice: { category: 'cooked food', shelfLife: 4, calories: 130, isCooked: true },
   pasta: { category: 'cooked food', shelfLife: 4, calories: 131, isCooked: true },
-  soup: { category: 'cooked food', shelfLife: 3, calories: 50, isCooked: true },
+  soup: { category: 'liquid', shelfLife: 3, calories: 50, isCooked: true },
   pizza: { category: 'cooked food', shelfLife: 3, calories: 266, isCooked: true }
 };
 

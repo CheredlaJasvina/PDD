@@ -21,8 +21,8 @@ const getDB = (req) => {
       return pref;
     }
   } : {
-    find: async (query) => fallbackDb.getFoodItems(),
-    getPreferences: async () => fallbackDb.getUserPreference()
+    find: async (query) => fallbackDb.getFoodItems(email),
+    getPreferences: async () => fallbackDb.getUserPreference(email)
   };
 };
 

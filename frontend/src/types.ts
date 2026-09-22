@@ -1,7 +1,7 @@
 export interface FoodItem {
   _id: string;
   name: string;
-  category: 'fruits' | 'vegetables' | 'cooked food' | 'packaged food';
+  category: 'fruits' | 'vegetables' | 'cooked food' | 'packaged food' | 'non-veg' | 'liquid';
   status: 'Fresh' | 'Slightly Spoiled' | 'Spoiled';
   state: 'Tracked' | 'Used' | 'Eaten' | 'Wasted';
   addedDate: string;

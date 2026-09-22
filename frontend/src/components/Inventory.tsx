@@ -169,7 +169,7 @@ export const Inventory: React.FC<InventoryProps> = ({
 
       {/* Category filters */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-        {['all', 'fruits', 'vegetables', 'cooked food', 'packaged food'].map(cat => (
+        {['all', 'fruits', 'vegetables', 'cooked food', 'packaged food', 'non-veg', 'liquid'].map(cat => (
           <button
             key={cat}
             className="btn-secondary"
