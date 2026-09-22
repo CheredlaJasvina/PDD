@@ -48,6 +48,7 @@ let foodItems = [
     ocrInfo: { brand: "Apple Farms", expiryDate: null, hasOcrMatch: false },
     storageGuidance: "Store in a cool dry place. Keep separated from citrus fruits.",
     safetyAdvisory: "Safe to eat. No spoilage indicators detected.",
+    spiceLevel: 0,
     owner: "jasvina@foodfreshness.com"
   },
   {
@@ -66,6 +67,7 @@ let foodItems = [
     ocrInfo: { brand: "DairyFresh", expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), hasOcrMatch: true },
     storageGuidance: "Refrigerate below 4°C. Keep closed tightly.",
     safetyAdvisory: "Consume soon. Perfect for baking/pancakes.",
+    spiceLevel: 0,
     owner: "jasvina@foodfreshness.com"
   },
   {
@@ -84,14 +86,15 @@ let foodItems = [
     ocrInfo: { brand: "Home Cooked", expiryDate: null, hasOcrMatch: false },
     storageGuidance: "Discard. Left cooked pasta out for too long.",
     safetyAdvisory: "WARNING: Spoiled item. Avoid consumption to prevent food poisoning. Recommended for safe disposal or composting.",
+    spiceLevel: 3,
     owner: "jasvina@foodfreshness.com"
   }
 ];
 
 let historicalItems = [
-  { _id: "h-1", name: "Fresh Bananas", category: "fruits", status: "Fresh", state: "Eaten", addedDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), originalFreshness: 90, isCooked: false, owner: "jasvina@foodfreshness.com" },
-  { _id: "h-2", name: "Leftover Pizza", category: "cooked food", status: "Slightly Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), originalFreshness: 60, isCooked: true, owner: "jasvina@foodfreshness.com" },
-  { _id: "h-3", name: "Cottage Cheese", category: "packaged food", status: "Fresh", state: "Used", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), originalFreshness: 95, isCooked: false, owner: "jasvina@foodfreshness.com" }
+  { _id: "h-1", name: "Fresh Bananas", category: "fruits", status: "Fresh", state: "Eaten", addedDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), originalFreshness: 90, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" },
+  { _id: "h-2", name: "Leftover Pizza", category: "cooked food", status: "Slightly Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), originalFreshness: 60, isCooked: true, spiceLevel: 4, owner: "jasvina@foodfreshness.com" },
+  { _id: "h-3", name: "Cottage Cheese", category: "packaged food", status: "Fresh", state: "Used", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), originalFreshness: 95, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" }
 ];
 
 // Extended Modules Database

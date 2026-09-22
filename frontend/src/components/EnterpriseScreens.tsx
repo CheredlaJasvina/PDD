@@ -51,6 +51,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
 
   // 3. Portion Scaler
   const [portionsServings, setPortionsServings] = useState(2);
+  const [checkedItems, setCheckedItems] = useState<string[]>([]);
   
   // 4. Kid-Friendly Adjuster
   const [kidsSpice, setKidsSpice] = useState("Mild");
@@ -71,19 +72,67 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
 
   // 6. Leftovers Re-purposer
   const [leftoverSearch, setLeftoverSearch] = useState("");
-  const [leftoverRecipe, setLeftoverRecipe] = useState("");
+  const [leftoverRecipes, setLeftoverRecipes] = useState<any[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>(['rice', 'milk', 'bread', 'pasta', 'chicken', 'potatoes']);
+  const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
+  
   const handleLeftoverCheck = () => {
-    if (leftoverSearch.toLowerCase().includes("rice")) {
-      setLeftoverRecipe("💡 Recipe Suggestion: Egg Fried Rice. Scale leftovers, add peas and green onions.");
-    } else if (leftoverSearch.toLowerCase().includes("milk")) {
-      setLeftoverRecipe("💡 Recipe Suggestion: Homemade French Toast. Blend with eggs and sugar.");
-    } else {
-      setLeftoverRecipe("💡 Recipe Suggestion: Leftover Stew. Simmer with potatoes and veggie broths.");
+    if (!leftoverSearch.trim()) return;
+    
+    const input = leftoverSearch.toLowerCase();
+    const isVegetarian = !input.includes('chicken') && !input.includes('beef') && !input.includes('pork') && !input.includes('meat') && !input.includes('fish');
+    const mainIngredient = input.split(',')[0].trim() || 'Leftovers';
+    
+    const recipes = [
+      {
+        id: 'r1',
+        title: `Quick ${mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1)} Stir-fry`,
+        description: `A fast and easy stir-fry utilizing your ${leftoverSearch}. Perfect for a quick dinner.`,
+        cookTime: "15 mins",
+        difficulty: "Easy",
+        diet: isVegetarian ? "Vegan" : "Non-Veg",
+      },
+      {
+        id: 'r2',
+        title: `Hearty ${mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1)} Casserole`,
+        description: `Bake your ${leftoverSearch} into a warm, comforting casserole with cheese and herbs.`,
+        cookTime: "45 mins",
+        difficulty: "Medium",
+        diet: isVegetarian ? "Vegetarian" : "Non-Veg",
+      },
+      {
+        id: 'r3',
+        title: `Creative ${mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1)} Soup`,
+        description: `Simmer ${leftoverSearch} with broth and spices to create a nutritious and filling soup.`,
+        cookTime: "30 mins",
+        difficulty: "Easy",
+        diet: isVegetarian ? "Vegan" : "Non-Veg",
+      }
+    ];
+    setLeftoverRecipes(recipes);
+    
+    if (mainIngredient && !recentSearches.includes(mainIngredient)) {
+      setRecentSearches(prev => [mainIngredient, ...prev].slice(0, 8));
     }
   };
 
   // 7. Spice Customizer
   const [spiceLevel, setSpiceLevel] = useState(5);
+  const [isSpiceAutoSet, setIsSpiceAutoSet] = useState(false);
+  const [lastScannedItemName, setLastScannedItemName] = useState("");
+
+  useEffect(() => {
+    if (inventory && inventory.length > 0) {
+      const itemsWithSpice = inventory.filter((item: any) => item.spiceLevel !== undefined && item.spiceLevel > 0);
+      if (itemsWithSpice.length > 0) {
+        const totalSpice = itemsWithSpice.reduce((sum: number, item: any) => sum + item.spiceLevel, 0);
+        const avgSpice = Math.round(totalSpice / itemsWithSpice.length);
+        setSpiceLevel(avgSpice);
+        setIsSpiceAutoSet(true);
+        setLastScannedItemName(itemsWithSpice[0].name); // Use the most recent/first as an example
+      }
+    }
+  }, [inventory]);
 
   // 8. Allergen list
   const [allergens, setAllergens] = useState<string[]>(preferences.dietaryPreferences || []);
@@ -176,20 +225,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   // 20. Volunteer Dispatch
   const [isVolunteering, setIsVolunteering] = useState(false);
 
-  // 21. Crop Storage Database
-  const cropDb = [
-    { name: "Apples", temp: "Cool (4°C)", shelf: "3-4 weeks", place: "Crisper Drawer" },
-    { name: "Bananas", temp: "Warm (18°C)", shelf: "5-7 days", place: "Countertop" },
-    { name: "Milk", temp: "Cold (2°C)", shelf: "7 days", place: "Fridge Center Shelf" },
-    { name: "Potato", temp: "Cool Dark (10°C)", shelf: "2 months", place: "Pantry Bin" }
-  ];
-
-  // 22. Spoilage Science Library
-  const scienceArticles = [
-    { title: "Ethylene Gas Breakdown", desc: "Understanding how apples release gases that accelerate banana decay." },
-    { title: "Mold Chemistry & Humidity", desc: "Why high humidity levels trigger mold spores in leafy greens." },
-    { title: "Bacterial Fermentation in Cooked Rice", desc: "The risk of Bacillus cereus in leftover rice stored above 4°C." }
-  ];
 
   // 23. Smart Meal Planner
   const [plannedMeals, setPlannedMeals] = useState<Record<string, string>>({
@@ -351,43 +386,144 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'recipes-portions':
-        const displayPortionItems = inventory.length > 0
-          ? inventory.map(item => {
-              let qty = 1;
-              let unit = "unit(s)";
-              if (item.category === 'fruits') {
-                qty = 1;
-              } else if (item.category === 'vegetables') {
-                qty = 2;
-                unit = "pcs";
-              } else if (item.category === 'cooked food') {
-                qty = 150;
-                unit = "grams";
-              }
-              return { name: item.name, qty: qty * portionsServings, unit };
-            })
-          : [
-              { name: "Gala Apples", qty: portionsServings * 1, unit: "unit(s)" },
-              { name: "Milk Base", qty: portionsServings * 100, unit: "ml" },
-              { name: "Flour mix", qty: portionsServings * 40, unit: "g" }
-            ];
+        // Process ingredients: deduplicate, standardize units, categorize
+        const rawItems = inventory.length > 0 ? inventory : [
+          { name: "Gala Apples", category: "fruits", quantity: 5, unit: "unit(s)" },
+          { name: "Milk Base", category: "dairy", quantity: 1000, unit: "ml" },
+          { name: "Flour mix", category: "others", quantity: 500, unit: "g" },
+          { name: "Broccoli", category: "vegetables", quantity: 2, unit: "pieces" },
+          { name: "Broccoli", category: "vegetables", quantity: 1, unit: "pieces" }
+        ];
+
+        // Deduplicate and aggregate base quantities (for 1 serving)
+        const ingredientMap = new Map<string, { category: string, baseQty: number, unit: string, inventoryQty: number }>();
+
+        rawItems.forEach(item => {
+          const name = item.name;
+          const category = item.category || 'others';
+          let unit = item.unit || "units";
+          
+          // Standardize unit
+          if (['pieces', 'pcs', 'unit(s)', 'units'].includes(unit.toLowerCase())) {
+            unit = 'units';
+          }
+
+          // Base quantity logic (what's needed for 1 serving)
+          let baseQty = 1;
+          if (category === 'fruits') baseQty = 0.5;
+          else if (category === 'vegetables') baseQty = 1;
+          else if (category === 'cooked food') baseQty = 75;
+          else baseQty = 1;
+
+          if (ingredientMap.has(name)) {
+            const existing = ingredientMap.get(name)!;
+            existing.inventoryQty += (item.quantity || 1);
+          } else {
+            ingredientMap.set(name, {
+              category,
+              baseQty,
+              unit,
+              inventoryQty: item.quantity || 1
+            });
+          }
+        });
+
+        // Categorize
+        const categorizedItems: Record<string, any[]> = {};
+        ingredientMap.forEach((data, name) => {
+          const cat = data.category.charAt(0).toUpperCase() + data.category.slice(1);
+          if (!categorizedItems[cat]) categorizedItems[cat] = [];
+          
+          let scaledQty = data.baseQty * portionsServings;
+          // Round to 1 decimal place
+          scaledQty = Math.round(scaledQty * 10) / 10;
+          
+          categorizedItems[cat].push({
+            name,
+            baseQty: data.baseQty,
+            scaledQty,
+            unit: data.unit,
+            inventoryQty: data.inventoryQty,
+            isInsufficient: scaledQty > data.inventoryQty
+          });
+        });
+
+        const toggleCheck = (name: string) => {
+          setCheckedItems(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
+        };
 
         return (
           <div>
             <h3>⚖️ Portions Quantity Calculator</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Adjust serving size to scale ingredients proportionally.</p>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+            
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
               <button className="btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={() => setPortionsServings(Math.max(1, portionsServings - 1))}>-</button>
               <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{portionsServings} Servings</span>
               <button className="btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={() => setPortionsServings(portionsServings + 1)}>+</button>
             </div>
-            <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-              <strong>Scaled Ingredients Needed:</strong>
-              <ul style={{ paddingLeft: '1.25rem', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                {displayPortionItems.map((item, idx) => (
-                  <li key={idx}>{item.name}: {item.qty} {item.unit}</li>
-                ))}
-              </ul>
+
+            {/* Presets */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', alignSelf: 'center', marginRight: '0.5rem' }}>Presets:</span>
+              {[2, 4, 6, 8].map(preset => (
+                <button 
+                  key={preset}
+                  className="btn-secondary" 
+                  style={{ 
+                    padding: '0.4rem 0.8rem', 
+                    fontSize: '0.85rem',
+                    background: portionsServings === preset ? 'rgba(0, 230, 118, 0.1)' : 'transparent',
+                    borderColor: portionsServings === preset ? 'var(--color-fresh)' : 'var(--glass-border)'
+                  }} 
+                  onClick={() => setPortionsServings(preset)}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+              <strong style={{ fontSize: '1.1rem' }}>Scaled Ingredients Needed:</strong>
+              
+              <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {Object.keys(categorizedItems).length === 0 ? (
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>No ingredients found.</p>
+                ) : (
+                  Object.entries(categorizedItems).map(([cat, items]) => (
+                    <div key={cat}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--color-fresh)', fontSize: '1.05rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>{cat}</h4>
+                      <ul style={{ paddingLeft: '0', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                        {items.map((item, idx) => {
+                          const isChecked = checkedItems.includes(item.name);
+                          return (
+                            <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', fontSize: '0.95rem', padding: '0.5rem', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', borderRadius: '6px' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={isChecked}
+                                onChange={() => toggleCheck(item.name)}
+                                style={{ marginTop: '0.2rem', cursor: 'pointer', transform: 'scale(1.2)' }}
+                              />
+                              <div style={{ textDecoration: isChecked ? 'line-through' : 'none', color: isChecked ? 'var(--text-muted)' : 'var(--text-main)', flex: 1 }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ fontWeight: 600, fontSize: '1rem' }}>{item.name}</span>
+                                  <span style={{ background: 'var(--glass-bg)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 700 }}>{item.scaledQty} {item.unit}</span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>(Original: {item.baseQty} {item.unit})</span>
+                                </div>
+                                {item.isInsufficient && !isChecked && (
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--color-spoiled)', marginTop: '0.4rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    ⚠️ Warning: Only {item.inventoryQty} {item.unit} available in inventory.
+                                  </div>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         );
@@ -530,19 +666,70 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
           <div>
             <h3>♻️ Leftovers Re-purposer</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Enter any leftover ingredient below to find an instant recipe.</p>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
               <input
                 type="text"
                 placeholder="e.g. rice, milk, bread"
                 value={leftoverSearch}
                 onChange={e => setLeftoverSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLeftoverCheck()}
                 style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }}
               />
               <button className="btn-primary" onClick={handleLeftoverCheck}>Search</button>
             </div>
-            {leftoverRecipe && (
-              <div style={{ padding: '1rem', background: 'rgba(0, 230, 118, 0.05)', borderRadius: '8px', border: '1px solid var(--color-fresh)', fontSize: '0.9rem' }}>
-                {leftoverRecipe}
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', alignSelf: 'center' }}>Quick-select:</span>
+              {recentSearches.map(tag => (
+                <span 
+                  key={tag}
+                  onClick={() => setLeftoverSearch(prev => prev ? `${prev}, ${tag}` : tag)}
+                  style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--glass-border)' }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            {leftoverRecipes.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <h4 style={{ marginBottom: '0.5rem', color: 'var(--color-fresh)' }}>Recipe Suggestions</h4>
+                {leftoverRecipes.map(recipe => (
+                  <div key={recipe.id} className="glass-card" style={{ padding: '1.25rem', position: 'relative' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <h5 style={{ fontSize: '1.1rem', margin: '0 0 0.5rem 0', color: '#fff' }}>{recipe.title}</h5>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>{recipe.description}</p>
+                      </div>
+                      <button 
+                        onClick={() => setSavedRecipes(prev => prev.includes(recipe.id) ? prev.filter(id => id !== recipe.id) : [...prev, recipe.id])}
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.2rem' }}
+                        title="Save Recipe"
+                      >
+                        {savedRecipes.includes(recipe.id) ? '🔖' : '📑'}
+                      </button>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                        ⏱️ {recipe.cookTime}
+                      </span>
+                      <span style={{ fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                        👨‍🍳 {recipe.difficulty}
+                      </span>
+                      <span style={{ 
+                        fontSize: '0.8rem', 
+                        background: recipe.diet === 'Vegan' ? 'rgba(0,230,118,0.1)' : recipe.diet === 'Vegetarian' ? 'rgba(255,145,0,0.1)' : 'rgba(255,50,50,0.1)',
+                        color: recipe.diet === 'Vegan' ? 'var(--color-fresh)' : recipe.diet === 'Vegetarian' ? 'var(--color-warning)' : 'var(--color-spoiled)',
+                        padding: '0.2rem 0.6rem', 
+                        borderRadius: '4px',
+                        border: `1px solid ${recipe.diet === 'Vegan' ? 'var(--color-fresh)' : recipe.diet === 'Vegetarian' ? 'var(--color-warning)' : 'var(--color-spoiled)'}`
+                      }}>
+                        🌱 {recipe.diet}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -552,6 +739,11 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         return (
           <div>
             <h3>🌶️ Spice Level Customizer</h3>
+            {isSpiceAutoSet && (
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(0, 230, 118, 0.1)', border: '1px solid var(--color-fresh)', borderRadius: '8px', fontSize: '0.85rem' }}>
+                ✨ <strong>Auto-adjusted:</strong> Spice level detected from your inventory (e.g. {lastScannedItemName}). You can fine-tune it below.
+              </div>
+            )}
             <div style={{ marginTop: '1rem' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Intensity: {spiceLevel}/10</label>
               <input
@@ -906,17 +1098,36 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'adv-storage':
+        const dynamicCropDb = inventory.length > 0 ? inventory.map(item => {
+          let temp = "Cool (4°C)";
+          let shelf = "7 days";
+          let place = "Fridge Center Shelf";
+          
+          if (item.category === 'fruits') {
+             temp = "Cool (4°C)"; shelf = "3-4 weeks"; place = "Crisper Drawer";
+          } else if (item.category === 'packaged food') {
+             temp = "Cool Dark (10°C)"; shelf = "2 months"; place = "Pantry Bin";
+          } else if (item.category === 'cooked food') {
+             temp = "Cold (2°C)"; shelf = "3-4 days"; place = "Fridge Top Shelf";
+          }
+          return { name: item.name, temp, shelf, place };
+        }) : [];
+
         return (
           <div>
             <h3>🗄️ crop storage handbook</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-              {cropDb.map((c, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', fontSize: '0.9rem' }}>
-                  <span><strong>{c.name}</strong> ({c.place})</span>
-                  <span>{c.temp} · {c.shelf}</span>
-                </div>
-              ))}
-            </div>
+            {dynamicCropDb.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Your inventory is empty. Scan items to see their storage guidance here.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                {dynamicCropDb.map((c, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', fontSize: '0.9rem' }}>
+                    <span><strong>{c.name}</strong> ({c.place})</span>
+                    <span>{c.temp} · {c.shelf}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -932,20 +1143,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
           </div>
         );
 
-      case 'adv-science':
-        return (
-          <div>
-            <h3>🔬 Spoilage chemistry library</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1rem' }}>
-              {scienceArticles.map((art, idx) => (
-                <div key={idx} className="glass-card" style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)' }}>
-                  <strong>{art.title}</strong>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{art.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+
 
       case 'adv-poisoning':
         return (

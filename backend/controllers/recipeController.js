@@ -36,7 +36,680 @@ const getDB = (req) => {
 
 // Base recipe repository indexed by ingredient keyword (lowercase matches)
 const RECIPE_DATABASE = {
+  generic: [
+  {
+    "title": "Creative Stir-fry with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Bake with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Salad with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Soup with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Casserole with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Skillet with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Roast with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Bowl with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Wrap with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Creative Curry with {ingredient}",
+    "description": "A quick and easy way to utilize your fresh ingredients before they spoil.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "{ingredient}",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Olive Oil",
+        "qty": 1,
+        "unit": "tbsp"
+      },
+      {
+        "name": "Garlic cloves",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Salt & Pepper",
+        "qty": 1,
+        "unit": "pinch"
+      },
+      {
+        "name": "Mixed Herbs",
+        "qty": 1,
+        "unit": "tsp"
+      }
+    ],
+    "steps": [
+      "Wash and prep the {ingredient}.",
+      "Heat olive oil in a pan over medium heat and add minced garlic.",
+      "Add the {ingredient} and sauté until tender.",
+      "Season with salt, pepper, and mixed herbs.",
+      "Serve warm and enjoy!"
+    ],
+    "kidFriendlyNotes": "Mild and simple flavors perfect for picky eaters.",
+    "gourmetNotes": "Finish with a drizzle of truffle oil or a sprinkle of aged parmesan.",
+    "chiliLevel": "none"
+  }
+],
   apple: [
+    ... [
+  {
+    "title": "Apple Crisp",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Tart",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Muffins",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Pancakes",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Smoothie",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Chutney",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Slaw",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  },
+  {
+    "title": "Apple Porridge",
+    "description": "Delicious apple-based recipe to reduce waste.",
+    "baseServings": 2,
+    "baseIngredients": [
+      {
+        "name": "Apples",
+        "qty": 2,
+        "unit": "pcs"
+      },
+      {
+        "name": "Cinnamon",
+        "qty": 1,
+        "unit": "tsp"
+      },
+      {
+        "name": "Honey",
+        "qty": 1,
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Prep apples",
+      "Mix ingredients",
+      "Cook until golden",
+      "Serve warm."
+    ],
+    "kidFriendlyNotes": "Sweet and delicious.",
+    "gourmetNotes": "Add fresh vanilla bean.",
+    "chiliLevel": "none"
+  }
+],
+
     {
       title: "Warm Cinnamon Baked Apples",
       description: "A cozy, caramelized sweet dessert perfect for utilizing slightly soft apples.",
@@ -551,12 +1224,20 @@ exports.getSmartSuggestions = async (req, res) => {
     const inventory = await db.find({ state: 'Tracked' });
 
     // 1. Filter: Restrict recommendations strictly to RAW (uncooked) and UNSPOILED items in the inventory
+    // Also, only generate recipes for items added in the last 7 days (auto-clearing old items weekly)
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
     const rawItems = inventory.filter(item => {
       if (item.isCooked || item.category === 'cooked food' || item.category === 'Cooked Food' || item.status === 'Spoiled' || item.state !== 'Tracked') {
         return false;
       }
-      const totalDuration = new Date(item.predictedSpoilageDate).getTime() - new Date(item.addedDate).getTime();
-      const elapsed = Date.now() - new Date(item.addedDate).getTime();
+      
+      const itemAddedTime = new Date(item.addedDate).getTime();
+      if (itemAddedTime < sevenDaysAgo) {
+        return false; // Skip items older than 7 days
+      }
+
+      const totalDuration = new Date(item.predictedSpoilageDate).getTime() - itemAddedTime;
+      const elapsed = Date.now() - itemAddedTime;
       let currentPct = item.originalFreshness;
       if (elapsed >= totalDuration) currentPct = 0;
       else if (elapsed > 0) currentPct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
@@ -568,8 +1249,8 @@ exports.getSmartSuggestions = async (req, res) => {
     rawItems.sort((a, b) => a.originalFreshness - b.originalFreshness);
 
     const recipesSuggested = [];
-    const servingsMultiplier = prefs.servings || 2;
-    const mode = prefs.audienceMode || 'Regular';
+    const servingsMultiplier = req.query.servings ? parseInt(req.query.servings, 10) : (prefs.servings || 2);
+    const mode = req.query.mode || prefs.audienceMode || 'Regular';
 
     // Loop through inventory items and check if we have recipes for them
     for (const item of rawItems) {
@@ -584,11 +1265,19 @@ exports.getSmartSuggestions = async (req, res) => {
         }
       }
 
+      if (!matchedKey) matchedKey = 'generic';
       if (matchedKey && RECIPE_DATABASE[matchedKey]) {
         // Grab recipes for this item
         const baseRecipes = RECIPE_DATABASE[matchedKey];
 
-        baseRecipes.forEach(recipe => {
+        baseRecipes.forEach(r => {
+          // Clone recipe to replace generic placeholders
+          let recipe = JSON.parse(JSON.stringify(r));
+          if (matchedKey === 'generic') {
+            recipe.title = recipe.title.replace('{ingredient}', item.name);
+            recipe.baseIngredients[0].name = item.name;
+            recipe.steps = recipe.steps.map(s => s.replace(/\{ingredient\}/g, item.name));
+          }
           // Check if this recipe fits the audience mode (skip spicy things in kid-friendly mode)
           if (mode === 'Kid-friendly' && recipe.chiliLevel === 'high') {
             return; // Skip spicy recipes for kids

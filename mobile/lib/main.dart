@@ -421,6 +421,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return GourmetUpgradeScreen(
           onNavigateBack: () => setState(() => _activeRoute = "dashboard"),
         );
+      case "recipes-spice":
+        return SpiceCustomizerScreen(inventory: _inventory);
+      case "adv-storage":
+        return CropStorageScreen(inventory: _inventory);
       default:
         return MockScreenWidget(
           activeRoute: _activeRoute,
@@ -3234,6 +3238,131 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               },
             );
           }),
+        ],
+      ),
+    );
+  }
+}
+
+class SpiceCustomizerScreen extends StatefulWidget {
+  final List<dynamic> inventory;
+  const SpiceCustomizerScreen({super.key, required this.inventory});
+  @override
+  State<SpiceCustomizerScreen> createState() => _SpiceCustomizerScreenState();
+}
+
+class _SpiceCustomizerScreenState extends State<SpiceCustomizerScreen> {
+  double spiceLevel = 5.0;
+  bool isSpiceAutoSet = false;
+  String lastScannedItemName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.inventory.isNotEmpty) {
+      final itemsWithSpice = widget.inventory.where((item) => item["spiceLevel"] != null && item["spiceLevel"] > 0).toList();
+      if (itemsWithSpice.isNotEmpty) {
+        double totalSpice = 0;
+        for (var item in itemsWithSpice) {
+          totalSpice += item["spiceLevel"];
+        }
+        spiceLevel = (totalSpice / itemsWithSpice.length).roundToDouble();
+        isSpiceAutoSet = true;
+        lastScannedItemName = itemsWithSpice.first["name"];
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("🌶️ Spice Level Customizer", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 16),
+          if (isSpiceAutoSet)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00E676).withOpacity(0.1),
+                border: Border.all(color: const Color(0xFF00E676)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                "💡 Auto-adjusted: Spice level detected from your inventory (e.g. $lastScannedItemName). You can fine-tune it below.",
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+            ),
+          Text("Intensity: ${spiceLevel.toInt()}/10", style: const TextStyle(fontSize: 14, color: Colors.white70)),
+          const SizedBox(height: 8),
+          Slider(
+            value: spiceLevel,
+            min: 1,
+            max: 10,
+            divisions: 9,
+            activeColor: const Color(0xFF00E676),
+            onChanged: (val) => setState(() => spiceLevel = val),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            "Selected spiciness profile: ${spiceLevel <= 3 ? 'Mild' : spiceLevel <= 7 ? 'Medium Spiced' : 'Extra Hot (Vindaloo)'}.",
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CropStorageScreen extends StatelessWidget {
+  final List<dynamic> inventory;
+  const CropStorageScreen({super.key, required this.inventory});
+
+  @override
+  Widget build(BuildContext context) {
+    final dynamicCropDb = inventory.isNotEmpty ? inventory.map((item) {
+      String temp = "Cool (4°C)";
+      String shelf = "7 days";
+      String place = "Fridge Center Shelf";
+      
+      if (item["category"] == 'fruits') {
+        temp = "Cool (4°C)"; shelf = "3-4 weeks"; place = "Crisper Drawer";
+      } else if (item["category"] == 'packaged food') {
+        temp = "Cool Dark (10°C)"; shelf = "2 months"; place = "Pantry Bin";
+      } else if (item["category"] == 'cooked food') {
+        temp = "Cold (2°C)"; shelf = "3-4 days"; place = "Fridge Top Shelf";
+      }
+      return {"name": item["name"], "temp": temp, "shelf": shelf, "place": place};
+    }).toList() : [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("🗄️ Crop Storage Handbook", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 16),
+          if (dynamicCropDb.isEmpty)
+            const Text("Your inventory is empty. Scan items to see their storage guidance here.", style: TextStyle(color: Colors.grey, fontSize: 14))
+          else
+            Column(
+              children: dynamicCropDb.map((c) => Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.white12)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text("${c['name']} (${c['place']})", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+                    Text("${c['temp']} • ${c['shelf']}", style: const TextStyle(fontSize: 14)),
+                  ],
+                ),
+              )).toList(),
+            ),
         ],
       ),
     );
