@@ -166,7 +166,10 @@ def analyse_pixels(img_path):
             hue, sat, val = rgb_to_hsv(r, g, b)
 
             # ── Skin tone (face rejection) ─────────────────────────────
-            if 0 <= hue <= 50 and 0.20 <= sat <= 0.75 and val > 0.35:
+            # Hue 0-35 covers human skin tones. Hue 35-50 includes orange/yellow
+            # food colours (mango, carrot, sweet potato) — must NOT be flagged as skin.
+            # Saturation 0.25-0.70 and value > 0.40 further narrows to actual skin.
+            if 0 <= hue <= 35 and 0.25 <= sat <= 0.70 and val > 0.40:
                 counts["skin"] += 1
 
             # ── Low-saturation pixels (white / grey / packaged) ────────
@@ -442,7 +445,7 @@ def _build_result(food_key, img_path, confidence):
     if stats is not None:
         # Face rejection via pixels (belt-and-suspenders)
         skin_pct = stats["skin"] * 100
-        if skin_pct > 38:
+        if skin_pct > 65:
             return {
                 "success": False,
                 "message": f"Non-food item detected (skin/face signature {skin_pct:.0f}%). Scanner accepts food only."
@@ -480,7 +483,7 @@ def _build_generic_result(ai_label, confidence, img_path):
 
     if stats:
         skin_pct = stats["skin"] * 100
-        if skin_pct > 38:
+        if skin_pct > 65:
             return {
                 "success": False,
                 "message": f"Non-food item detected (skin/face signature {skin_pct:.0f}%)."
@@ -527,7 +530,7 @@ def _colour_only_fallback(img_path):
         return {"success": False, "message": err or "Cannot analyse image."}
 
     skin_pct = stats["skin"] * 100
-    if skin_pct > 38:
+    if skin_pct > 65:
         return {
             "success": False,
             "message": f"Non-food item detected (skin/face {skin_pct:.0f}%)."

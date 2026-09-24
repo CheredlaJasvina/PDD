@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FoodItem, User } from './types';
+import { FoodItem, User, WasteSummary } from './types';
 import { Dashboard } from './components/Dashboard';
 import { Scanner } from './components/Scanner';
 import { Inventory } from './components/Inventory';
@@ -80,6 +80,7 @@ function App() {
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [inventory, setInventory] = useState<FoodItem[]>([]);
+  const [wasteSummary, setWasteSummary] = useState<WasteSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
@@ -121,6 +122,22 @@ function App() {
     }
   };
 
+  // Fetch waste summary separately — /api/inventory only returns Tracked items,
+  // so wasted counts must come from the dedicated waste-summary endpoint.
+  const fetchWasteSummary = async () => {
+    try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      const response = await fetch('https://pdd-9fqv.onrender.com/api/waste-summary', {
+        headers: { 'x-user-email': email }
+      });
+      const data = await response.json();
+      if (data.success) setWasteSummary(data);
+    } catch (error) {
+      console.error('Error fetching waste summary:', error);
+    }
+  };
+
   const fetchCurrentUser = async () => {
     try {
       const cachedUser = localStorage.getItem('user');
@@ -151,6 +168,7 @@ function App() {
         }
       }
       await fetchInventory();
+      await fetchWasteSummary();
       setIsLoading(false);
     };
     bootstrapSession();
@@ -160,6 +178,7 @@ function App() {
     localStorage.setItem('user', JSON.stringify(user));
     setLoggedInUser(user);
     fetchInventory();
+    fetchWasteSummary();
   };
 
   const handleLogout = async () => {
@@ -194,6 +213,7 @@ function App() {
       const data = await response.json();
       if (data.success) {
         await fetchInventory();
+        await fetchWasteSummary();
         await fetchCurrentUser(); // streak/badges might unlock
       }
     } catch (error) {
@@ -290,7 +310,8 @@ function App() {
       case 'dashboard':
         return (
           <Dashboard 
-            inventory={inventory} 
+            inventory={inventory}
+            wasteSummary={wasteSummary}
             preferences={loggedInUser} 
             onUpdateState={handleUpdateItemState} 
             onNavigate={(tab: string, status?: string) => {

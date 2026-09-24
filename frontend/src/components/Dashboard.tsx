@@ -3,6 +3,7 @@ import { FoodItem, User, WasteSummary } from '../types';
 
 interface DashboardProps {
   inventory: FoodItem[];
+  wasteSummary: WasteSummary | null;
   preferences: User;
   onUpdateState: (id: string, state: 'Used' | 'Eaten' | 'Wasted') => void;
   onNavigate: (tab: string, status?: string) => void;
@@ -10,53 +11,32 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({
   inventory,
+  wasteSummary: wasteSummaryProp,
   preferences,
   onUpdateState,
   onNavigate
 }) => {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
-  // Compute waste summary live from the inventory prop so it always reflects
-  // the latest state without waiting for an API response.
+  // Use the prop (fetched from backend with full history including wasted items).
+  // If the prop hasn't loaded yet, fall back to a local computation from inventory
+  // so the widget is never blank on first render.
   const wasteSummary: WasteSummary = useMemo(() => {
-    const now = Date.now();
-    const sevenDaysAgo  = now - 7  * 24 * 60 * 60 * 1000;
-    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+    if (wasteSummaryProp) return wasteSummaryProp;
 
-    const wastedItems = inventory.filter(i => (i as any).state === 'Wasted');
-    const weeklyWasted  = wastedItems.filter(i => new Date(i.addedDate).getTime() >= sevenDaysAgo);
-    const monthlyWasted = wastedItems.filter(i => new Date(i.addedDate).getTime() >= thirtyDaysAgo);
-
-    const itemFrequency: Record<string, number> = {};
-    monthlyWasted.forEach(i => {
-      itemFrequency[i.name] = (itemFrequency[i.name] || 0) + 1;
-    });
-
+    // Fallback: derive from tracked inventory only (wasted items won't be here,
+    // so counts will be 0 until the prop arrives — better than crashing).
     const members = preferences.membersCount || 2;
-    const buyAdvice = Object.entries(itemFrequency).map(([name, count]) => ({
-      name,
-      timesWasted: count,
-      advice: `You wasted "${name}" ${count} time(s) this month. For ${members} member(s), try buying only ${Math.max(1, Math.ceil(members * 0.5))} unit(s) at a time.`
-    }));
-
     return {
-      weeklyWastedCount:  weeklyWasted.length,
-      monthlyWastedCount: monthlyWasted.length,
-      weeklyWastedItems:  weeklyWasted.map(i => ({ name: i.name, category: i.category, addedDate: i.addedDate })),
-      monthlyWastedItems: monthlyWasted.map(i => ({ name: i.name, category: i.category, addedDate: i.addedDate })),
-      categoryBreakdown:  (() => {
-        const bd: Record<string, { count: number; names: string[] }> = {};
-        monthlyWasted.forEach(i => {
-          if (!bd[i.category]) bd[i.category] = { count: 0, names: [] };
-          bd[i.category].count++;
-          if (!bd[i.category].names.includes(i.name)) bd[i.category].names.push(i.name);
-        });
-        return bd;
-      })(),
-      buyAdvice,
+      weeklyWastedCount: 0,
+      monthlyWastedCount: 0,
+      weeklyWastedItems: [],
+      monthlyWastedItems: [],
+      categoryBreakdown: {},
+      buyAdvice: [],
       membersCount: members
     };
-  }, [inventory, preferences.membersCount]);
+  }, [wasteSummaryProp, preferences.membersCount]);
 
   // Compute key metrics
   const totalTracked = inventory.length;
