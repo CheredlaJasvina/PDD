@@ -333,44 +333,59 @@ module.exports = {
     return foodItems.filter(item => item.state === 'Tracked' && item.owner.toLowerCase() === user.email.toLowerCase());
   },
   addFoodItem: (item) => {
-    const newItem = { 
-      _id: `mock-item-${Date.now()}`, 
-      addedDate: new Date(), 
-      owner: currentUser ? currentUser.email : 'jasvina@foodfreshness.com',
-      ...item 
+    const newItem = {
+      _id: `mock-item-${Date.now()}`,
+      addedDate: new Date(),
+      // Use owner already set by the controller (from x-user-email header).
+      // Only fall back to currentUser / default when item has no owner at all.
+      owner: item.owner || (currentUser ? currentUser.email : 'jasvina@foodfreshness.com'),
+      ...item  // spread after so explicit item.owner wins over the default above
     };
     foodItems.push(newItem);
     return newItem;
   },
   updateFoodItemState: (id, state, ownerEmail) => {
     const userEmail = ownerEmail || (currentUser ? currentUser.email : '');
-    const itemIndex = foodItems.findIndex(i => i._id === id && i.owner.toLowerCase() === userEmail.toLowerCase());
-    if (itemIndex > -1) {
-      foodItems[itemIndex].state = state;
-      foodItems[itemIndex].addedDate = new Date();
-      // Increment CO2 and savings indicators
+
+    // Search both active and historical arrays so no item is ever "lost"
+    const allArrays = [foodItems, historicalItems];
+    let found = null;
+    for (const arr of allArrays) {
+      const idx = arr.findIndex(
+        i => i._id === id &&
+             i.owner &&
+             i.owner.toLowerCase() === userEmail.toLowerCase()
+      );
+      if (idx > -1) {
+        arr[idx].state = state;
+        // Do NOT overwrite addedDate — the original scan date is used by
+        // getWasteSummary's weekly/monthly window filters.
+        found = arr[idx];
+        break;
+      }
+    }
+
+    if (!found) return null;
+
+    // Update health score / streak / eco metrics
+    const user = module.exports.getUserByEmail(userEmail);
+    if (user) {
       if (state === 'Eaten' || state === 'Used') {
-        const user = module.exports.getUserByEmail(userEmail);
-        if (user) {
-          user.healthScore = Math.min(100, user.healthScore + 2);
-          user.streakCount += 1;
-          const eco = getEcoMetricsForUser(user.email);
-          eco.co2SavedKg += 0.4;
-          eco.moneySaved += 4.5;
-          if (user.streakCount >= 7 && !user.unlockedBadges.includes('Consistency King')) {
-            user.unlockedBadges.push('Consistency King');
-          }
+        user.healthScore = Math.min(100, user.healthScore + 2);
+        user.streakCount += 1;
+        const eco = getEcoMetricsForUser(user.email);
+        eco.co2SavedKg += 0.4;
+        eco.moneySaved += 4.5;
+        if (user.streakCount >= 7 && !user.unlockedBadges.includes('Consistency King')) {
+          user.unlockedBadges.push('Consistency King');
         }
       } else if (state === 'Wasted') {
-        const user = module.exports.getUserByEmail(userEmail);
-        if (user) {
-          user.healthScore = Math.max(0, user.healthScore - 5);
-          user.streakCount = 0;
-        }
+        user.healthScore = Math.max(0, user.healthScore - 5);
+        user.streakCount = 0;
       }
-      return foodItems[itemIndex];
     }
-    return null;
+
+    return found;
   },
   deleteFoodItem: (id) => {
     const initialLen = foodItems.length;

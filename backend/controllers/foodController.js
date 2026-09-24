@@ -502,8 +502,13 @@ exports.updateSettings = async (req, res) => {
 // Save a scanned food item to inventory
 exports.saveFoodItem = async (req, res) => {
   try {
+    const email = getActiveUserEmail(req);
     const db = getDB(req);
-    const saved = await db.create(req.body);
+    // Always stamp the correct owner from the request header so
+    // updateFoodItemState can find the item even after a server cold-start
+    // (in-memory currentUser is null after Render restarts).
+    const itemData = { ...req.body, owner: email };
+    const saved = await db.create(itemData);
     res.json({ success: true, item: saved });
   } catch (error) {
     res.status(500).json({ error: error.message });
