@@ -92,9 +92,15 @@ let foodItems = [
 ];
 
 let historicalItems = [
+  // Eaten items (older)
   { _id: "h-1", name: "Fresh Bananas", category: "fruits", status: "Fresh", state: "Eaten", addedDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), originalFreshness: 90, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" },
-  { _id: "h-2", name: "Leftover Pizza", category: "cooked food", status: "Slightly Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), originalFreshness: 60, isCooked: true, spiceLevel: 4, owner: "jasvina@foodfreshness.com" },
-  { _id: "h-3", name: "Cottage Cheese", category: "packaged food", status: "Fresh", state: "Used", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), originalFreshness: 95, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" }
+  { _id: "h-3", name: "Cottage Cheese", category: "packaged food", status: "Fresh", state: "Used", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), originalFreshness: 95, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" },
+  // Wasted items THIS WEEK (within 7 days) — so the waste report shows real counts
+  { _id: "h-2", name: "Leftover Pizza", category: "cooked food", status: "Slightly Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), originalFreshness: 35, isCooked: true, spiceLevel: 4, owner: "jasvina@foodfreshness.com" },
+  { _id: "h-4", name: "Spinach Bunch", category: "vegetables", status: "Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), originalFreshness: 10, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" },
+  { _id: "h-5", name: "Strawberries", category: "fruits", status: "Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), originalFreshness: 8, isCooked: false, spiceLevel: 0, owner: "jasvina@foodfreshness.com" },
+  // Wasted items - second user
+  { _id: "h-6", name: "Greek Yogurt", category: "packaged food", status: "Spoiled", state: "Wasted", addedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), predictedSpoilageDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), originalFreshness: 12, isCooked: false, spiceLevel: 0, owner: "ram@gmail.com" }
 ];
 
 // Extended Modules Database

@@ -167,6 +167,9 @@ function App() {
           console.error(e);
         }
       }
+      // fetchCurrentUser first so the email is set in localStorage before
+      // fetchWasteSummary reads it to filter wasted items by owner.
+      await fetchCurrentUser();
       await fetchInventory();
       await fetchWasteSummary();
       setIsLoading(false);
@@ -242,6 +245,7 @@ function App() {
   // Callback when scanner saves a scanned item
   const handleScanComplete = (_scannedItems: FoodItem[]) => {
     fetchInventory();
+    fetchWasteSummary();
     fetchCurrentUser();
   };
 

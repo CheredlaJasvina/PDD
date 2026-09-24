@@ -351,12 +351,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   ) : (
                     <div style={{ display: 'flex', height: '18px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
                       {healthyPct > 0 && (
-                        <div style={{ width: `${healthyPct}%`, background: 'linear-gradient(90deg, var(--cat-vegetables), var(--cat-fruits))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0b0c10', fontWeight: 700, transition: 'width 0.4s' }}>
+                        <div style={{ width: `${healthyPct}%`, background: 'linear-gradient(90deg, #00c853, #69f0ae)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0b0c10', fontWeight: 700, transition: 'width 0.4s' }}>
                           {healthyPct >= 20 ? `Healthy (${healthyPct}%)` : ''}
                         </div>
                       )}
                       {processedPct > 0 && (
-                        <div style={{ width: `${processedPct}%`, background: 'linear-gradient(90deg, var(--cat-packaged), var(--cat-cooked))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff', fontWeight: 700, transition: 'width 0.4s' }}>
+                        <div style={{ width: `${processedPct}%`, background: 'linear-gradient(90deg, #ff6d00, #d500f9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff', fontWeight: 700, transition: 'width 0.4s' }}>
                           {processedPct >= 20 ? `Processed (${processedPct}%)` : ''}
                         </div>
                       )}
