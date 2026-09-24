@@ -59,7 +59,6 @@ const sidebarCategories: SidebarCategory[] = [
     title: "Advisories & Library",
     icon: "📖",
     screens: [
-      { id: "adv-storage", name: "Crop Storage Database", icon: "🗄️" },
       { id: "adv-poisoning", name: "Food Poisoning Prevention", icon: "🧼" },
       { id: "adv-meal", name: "Smart Meal Planner", icon: "📅" },
       { id: "adv-nutrition", name: "Nutrition Profiler", icon: "🍎" }
