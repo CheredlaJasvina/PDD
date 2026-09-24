@@ -41,6 +41,16 @@ export const Recipes: React.FC<RecipesProps> = ({
     }
   };
 
+  // Weekly auto-clear: reset deleted recipes once per week so the list stays fresh
+  useEffect(() => {
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const lastClear = Number(localStorage.getItem('recipes_deleted_clear') || '0');
+    if (Date.now() - lastClear > WEEK_MS) {
+      setDeletedRecipes([]);
+      localStorage.setItem('recipes_deleted_clear', String(Date.now()));
+    }
+  }, []);
+
   useEffect(() => {
     fetchRecipes();
   }, [preferences.servings, preferences.audienceMode]);
@@ -158,10 +168,11 @@ export const Recipes: React.FC<RecipesProps> = ({
           <p style={{ color: 'var(--color-spoiled)' }}>{error}</p>
           <button className="btn-secondary" style={{ marginTop: '1rem' }} onClick={fetchRecipes}>Retry Sync</button>
         </div>
-      ) : activeRecipes.length === 0 ? (
+      ) : activeRecipes.length === 0 && viewMode === 'suggestions' ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
           <p style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>No recipe matches available.</p>
-          <p style={{ fontSize: '0.9rem' }}>Recipes are only generated for raw (uncooked) and unspoiled food items. Add uncooked fruits/vegetables to view suggestions.</p>
+          <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>Recipes are generated for raw, uncooked, unspoiled items in your inventory. Scan or add food items first.</p>
+          <button className="btn-secondary" onClick={fetchRecipes} style={{ padding: '0.5rem 1.2rem' }}>🔄 Refresh Suggestions</button>
         </div>
       ) : (
         <div>

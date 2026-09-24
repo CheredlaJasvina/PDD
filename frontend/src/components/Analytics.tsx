@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { AnalyticsReport, WasteSummary } from '../types';
+import { AnalyticsReport, WasteSummary, FoodItem } from '../types';
 
-export const Analytics: React.FC = () => {
+interface AnalyticsProps {
+  inventory?: FoodItem[];
+}
+
+export const Analytics: React.FC<AnalyticsProps> = ({ inventory = [] }) => {
   const [data, setData] = useState<AnalyticsReport | null>(null);
   const [wasteSummary, setWasteSummary] = useState<WasteSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -32,9 +36,10 @@ export const Analytics: React.FC = () => {
     }
   };
 
+  // Re-fetch whenever inventory changes (item marked wasted/eaten from Dashboard or Inventory)
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [inventory.length]);
 
   const changeMonth = (direction: number) => {
     const nextDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
@@ -102,9 +107,14 @@ export const Analytics: React.FC = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1>Wastage & Consumption Analytics</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Visualize healthy food ratios, calendar grids, and waste prevention metrics.</p>
+      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1>Wastage &amp; Consumption Analytics</h1>
+          <p style={{ color: 'var(--text-muted)' }}>Visualize healthy food ratios, calendar grids, and waste prevention metrics.</p>
+        </div>
+        <button className="btn-secondary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={fetchAnalytics}>
+          🔄 Refresh
+        </button>
       </div>
 
       <div className="dashboard-grid">

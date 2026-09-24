@@ -79,38 +79,91 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   const handleLeftoverCheck = () => {
     if (!leftoverSearch.trim()) return;
     
-    const input = leftoverSearch.toLowerCase();
-    const isVegetarian = !input.includes('chicken') && !input.includes('beef') && !input.includes('pork') && !input.includes('meat') && !input.includes('fish');
-    const mainIngredient = input.split(',')[0].trim() || 'Leftovers';
-    
-    const recipes = [
-      {
-        id: 'r1',
-        title: `Quick ${mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1)} Stir-fry`,
-        description: `A fast and easy stir-fry utilizing your ${leftoverSearch}. Perfect for a quick dinner.`,
-        cookTime: "15 mins",
-        difficulty: "Easy",
-        diet: isVegetarian ? "Vegan" : "Non-Veg",
-      },
-      {
-        id: 'r2',
-        title: `Hearty ${mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1)} Casserole`,
-        description: `Bake your ${leftoverSearch} into a warm, comforting casserole with cheese and herbs.`,
-        cookTime: "45 mins",
-        difficulty: "Medium",
-        diet: isVegetarian ? "Vegetarian" : "Non-Veg",
-      },
-      {
-        id: 'r3',
-        title: `Creative ${mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1)} Soup`,
-        description: `Simmer ${leftoverSearch} with broth and spices to create a nutritious and filling soup.`,
-        cookTime: "30 mins",
-        difficulty: "Easy",
-        diet: isVegetarian ? "Vegan" : "Non-Veg",
+    const input = leftoverSearch.toLowerCase().trim();
+    const ingredients = input.split(',').map(s => s.trim()).filter(Boolean);
+    const mainIngredient = ingredients[0] || 'leftovers';
+    const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+    const mainCap = cap(mainIngredient);
+
+    // Determine diet type from ALL ingredients entered
+    const meatWords = ['chicken', 'beef', 'pork', 'meat', 'fish', 'mutton', 'prawn', 'shrimp', 'lamb', 'turkey', 'bacon'];
+    const hasNonVeg = ingredients.some(ing => meatWords.some(m => ing.includes(m)));
+    const dietVegan = hasNonVeg ? 'Non-Veg' : 'Vegan';
+    const dietVeg   = hasNonVeg ? 'Non-Veg' : 'Vegetarian';
+
+    // Ingredient-specific recipe templates
+    const recipeTemplates: Record<string, any[]> = {
+      rice: [
+        { title: 'Fried Rice with Egg & Veggies', desc: 'Day-old rice tossed in soy sauce with scrambled egg, spring onion and sesame oil.', cookTime: '15 mins', difficulty: 'Easy' },
+        { title: 'Rice Pudding with Coconut Milk', desc: 'Creamy sweet dessert made with leftover rice, coconut milk and a pinch of cardamom.', cookTime: '25 mins', difficulty: 'Easy' },
+        { title: 'Stuffed Bell Peppers with Rice', desc: 'Hollowed peppers packed with herbed rice, cheese and baked until golden.', cookTime: '40 mins', difficulty: 'Medium' },
+      ],
+      milk: [
+        { title: 'Classic White Sauce Pasta', desc: 'Silky béchamel sauce with garlic, nutmeg, and parmesan over your favourite pasta.', cookTime: '20 mins', difficulty: 'Easy' },
+        { title: 'Milk & Banana Smoothie Bowl', desc: 'Blended banana, milk, and honey topped with granola, chia seeds, and berries.', cookTime: '5 mins', difficulty: 'Easy' },
+        { title: 'Homemade Paneer (Cottage Cheese)', desc: 'Curdle milk with lemon juice, drain and press to make fresh paneer for curries.', cookTime: '30 mins', difficulty: 'Medium' },
+      ],
+      bread: [
+        { title: 'French Toast with Cinnamon Sugar', desc: 'Stale bread dipped in egg-milk batter and pan-fried with cinnamon and maple syrup.', cookTime: '10 mins', difficulty: 'Easy' },
+        { title: 'Bread Upma (Indian Style)', desc: 'Toasted bread cubes sautéed with onion, mustard seeds, curry leaves and spices.', cookTime: '15 mins', difficulty: 'Easy' },
+        { title: 'Bread Pizza', desc: 'Toasted bread topped with tomato sauce, cheese, capsicum and jalapeños.', cookTime: '15 mins', difficulty: 'Easy' },
+      ],
+      pasta: [
+        { title: 'Pasta Frittata', desc: 'Leftover pasta bound with beaten eggs and cheese, fried into a golden omelette cake.', cookTime: '20 mins', difficulty: 'Easy' },
+        { title: 'Cold Pasta Salad', desc: 'Chilled pasta tossed with olives, sun-dried tomatoes, feta, and Italian dressing.', cookTime: '10 mins', difficulty: 'Easy' },
+        { title: 'Baked Pasta Casserole', desc: 'Layered pasta with white sauce, vegetables and mozzarella baked until bubbly.', cookTime: '35 mins', difficulty: 'Medium' },
+      ],
+      chicken: [
+        { title: 'Chicken Fried Rice', desc: 'Shredded leftover chicken stir-fried with day-old rice, soy sauce and spring onion.', cookTime: '15 mins', difficulty: 'Easy' },
+        { title: 'Chicken Quesadilla', desc: 'Shredded chicken, cheese and salsa folded in a flour tortilla and pan-toasted.', cookTime: '10 mins', difficulty: 'Easy' },
+        { title: 'Creamy Chicken Soup', desc: 'Tender chicken pieces simmered with cream, carrots, celery and thyme.', cookTime: '30 mins', difficulty: 'Easy' },
+      ],
+      potato: [
+        { title: 'Crispy Potato Hash', desc: 'Diced boiled potatoes pan-fried with onion, paprika and fresh herbs until golden.', cookTime: '15 mins', difficulty: 'Easy' },
+        { title: 'Potato Soup', desc: 'Mashed potato blended with stock, cream and chives into a velvety soup.', cookTime: '25 mins', difficulty: 'Easy' },
+        { title: 'Loaded Potato Patties', desc: 'Mashed potato cakes stuffed with cheese, pan-fried until crisp on both sides.', cookTime: '20 mins', difficulty: 'Easy' },
+      ],
+      egg: [
+        { title: 'Classic Shakshuka', desc: 'Eggs poached in a spiced tomato and pepper sauce, served with crusty bread.', cookTime: '20 mins', difficulty: 'Easy' },
+        { title: 'Egg Fried Rice', desc: 'Scrambled eggs tossed with day-old rice, soy sauce and sesame oil.', cookTime: '10 mins', difficulty: 'Easy' },
+        { title: 'Spanish Omelette', desc: 'Thick egg and potato tortilla cooked slowly until set, served in wedges.', cookTime: '30 mins', difficulty: 'Medium' },
+      ],
+      spinach: [
+        { title: 'Creamy Palak Paneer', desc: 'Pureed spinach cooked with cumin, ginger and cottage cheese in a rich gravy.', cookTime: '25 mins', difficulty: 'Medium' },
+        { title: 'Spinach & Feta Stuffed Pastry', desc: 'Wilted spinach and feta folded into puff pastry and baked golden.', cookTime: '30 mins', difficulty: 'Medium' },
+        { title: 'Spinach Smoothie', desc: 'Blended spinach with banana, apple and ginger for a nutritious green drink.', cookTime: '5 mins', difficulty: 'Easy' },
+      ],
+      tomato: [
+        { title: 'Fresh Tomato Bruschetta', desc: 'Diced tomatoes with basil, garlic and olive oil on toasted baguette slices.', cookTime: '10 mins', difficulty: 'Easy' },
+        { title: 'Homemade Tomato Soup', desc: 'Roasted tomatoes blended with cream, basil and garlic into a silky soup.', cookTime: '35 mins', difficulty: 'Easy' },
+        { title: 'Tomato Rice (Tomato Bath)', desc: 'Spiced rice cooked with tomatoes, onions and whole spices.', cookTime: '25 mins', difficulty: 'Easy' },
+      ],
+    };
+
+    // Find matching template or build generic ones
+    let matched: any[] | null = null;
+    for (const key of Object.keys(recipeTemplates)) {
+      if (mainIngredient.includes(key) || key.includes(mainIngredient)) {
+        matched = recipeTemplates[key];
+        break;
       }
-    ];
+    }
+
+    const recipes = (matched || [
+      { title: `Quick ${mainCap} Stir-fry`, desc: `A fast stir-fry utilizing your ${leftoverSearch} with garlic, soy sauce and sesame oil.`, cookTime: '15 mins', difficulty: 'Easy' },
+      { title: `Hearty ${mainCap} Casserole`, desc: `Bake your ${leftoverSearch} with cheese, herbs and a creamy white sauce into a warm casserole.`, cookTime: '45 mins', difficulty: 'Medium' },
+      { title: `Nourishing ${mainCap} Soup`, desc: `Simmer ${leftoverSearch} with broth, onion and spices into a warming nutritious soup.`, cookTime: '30 mins', difficulty: 'Easy' },
+    ]).map((r: any, i: number) => ({
+      id: `r${i + 1}`,
+      title: r.title,
+      description: r.desc,
+      cookTime: r.cookTime,
+      difficulty: r.difficulty,
+      diet: i === 1 ? dietVeg : dietVegan,
+    }));
+
     setLeftoverRecipes(recipes);
-    
+
     if (mainIngredient && !recentSearches.includes(mainIngredient)) {
       setRecentSearches(prev => [mainIngredient, ...prev].slice(0, 8));
     }
@@ -119,7 +172,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   // 7. Spice Customizer
   const [spiceLevel, setSpiceLevel] = useState(5);
   const [isSpiceAutoSet, setIsSpiceAutoSet] = useState(false);
-  const [lastScannedItemName, setLastScannedItemName] = useState("");
 
   useEffect(() => {
     if (inventory && inventory.length > 0) {
@@ -129,7 +181,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         const avgSpice = Math.round(totalSpice / itemsWithSpice.length);
         setSpiceLevel(avgSpice);
         setIsSpiceAutoSet(true);
-        setLastScannedItemName(itemsWithSpice[0].name); // Use the most recent/first as an example
       }
     }
   }, [inventory]);
@@ -737,28 +788,87 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         );
 
       case 'recipes-spice':
+        const spiceProfile = spiceLevel <= 2 ? { label: 'Mild', emoji: '🌿', color: '#00c853' }
+          : spiceLevel <= 4 ? { label: 'Low Heat', emoji: '🌶️', color: '#69f0ae' }
+          : spiceLevel <= 6 ? { label: 'Medium Spiced', emoji: '🌶️🌶️', color: '#ffb300' }
+          : spiceLevel <= 8 ? { label: 'Hot', emoji: '🌶️🌶️🌶️', color: '#ff6d00' }
+          : { label: 'Extra Hot (Vindaloo)', emoji: '🔥🌶️🔥', color: '#ff1744' };
+
+        // Sort inventory items by spice level descending to show in list
+        const spicyItems = [...inventory]
+          .filter((item: any) => item.spiceLevel !== undefined && item.spiceLevel > 0)
+          .sort((a: any, b: any) => b.spiceLevel - a.spiceLevel);
+
         return (
           <div>
             <h3>🌶️ Spice Level Customizer</h3>
-            {isSpiceAutoSet && (
-              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(0, 230, 118, 0.1)', border: '1px solid var(--color-fresh)', borderRadius: '8px', fontSize: '0.85rem' }}>
-                ✨ <strong>Auto-adjusted:</strong> Spice level detected from your inventory (e.g. {lastScannedItemName}). You can fine-tune it below.
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              Spice intensity is auto-detected from your scanned items. Fine-tune below.
+            </p>
+
+            {isSpiceAutoSet ? (
+              <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(0, 230, 118, 0.08)', border: '1px solid var(--color-fresh)', borderRadius: '10px', fontSize: '0.85rem' }}>
+                ✨ <strong>Auto-adjusted</strong> from your inventory
+                {spicyItems.length > 0 && (
+                  <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    {spicyItems.slice(0, 3).map((item: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        <span>{item.name}</span>
+                        <span>{'🌶️'.repeat(Math.min(item.spiceLevel, 5))}</span>
+                      </div>
+                    ))}
+                    {spicyItems.length > 1 && (
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Average spice of {spicyItems.length} item{spicyItems.length > 1 ? 's' : ''} = level {spiceLevel}/10
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ marginBottom: '1.25rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                💡 No spice data from inventory yet. Set manually or scan items with spice levels.
               </div>
             )}
-            <div style={{ marginTop: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Intensity: {spiceLevel}/10</label>
+
+            {/* Visual spice gauge */}
+            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{spiceProfile.emoji}</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: spiceProfile.color }}>{spiceProfile.label}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Intensity {spiceLevel}/10</div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.75rem', color: 'var(--text-muted)' }}>Fine-tune intensity:</label>
               <input
                 type="range"
                 min="1"
                 max="10"
                 value={spiceLevel}
-                onChange={e => setSpiceLevel(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--color-fresh)' }}
+                onChange={e => { setSpiceLevel(Number(e.target.value)); setIsSpiceAutoSet(true); }}
+                style={{ width: '100%', accentColor: spiceProfile.color }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                <span>🌿 Mild</span><span>🌶️ Medium</span><span>🔥 Extra Hot</span>
+              </div>
             </div>
-            <p style={{ marginTop: '1.5rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-              Selected spiciness profile: {spiceLevel <= 3 ? 'Mild' : spiceLevel <= 7 ? 'Medium Spiced' : 'Extra Hot (Vindaloo)'}.
-            </p>
+
+            {/* Quick preset buttons */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {[{l:1,n:'None'},{l:3,n:'Mild'},{l:5,n:'Medium'},{l:7,n:'Hot'},{l:10,n:'Vindaloo'}].map(p => (
+                <button key={p.l} className="btn-secondary"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem',
+                    background: spiceLevel === p.l ? 'rgba(0,230,118,0.1)' : 'transparent',
+                    borderColor: spiceLevel === p.l ? 'var(--color-fresh)' : 'var(--glass-border)' }}
+                  onClick={() => { setSpiceLevel(p.l); setIsSpiceAutoSet(true); }}>
+                  {p.n}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              🍽️ Recipes shown in the <strong>Smart Recipe Assistant</strong> will filter spicy dishes accordingly.
+            </div>
           </div>
         );
 

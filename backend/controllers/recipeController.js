@@ -1224,25 +1224,20 @@ exports.getSmartSuggestions = async (req, res) => {
     const inventory = await db.find({ state: 'Tracked' });
 
     // 1. Filter: Restrict recommendations strictly to RAW (uncooked) and UNSPOILED items in the inventory
-    // Also, only generate recipes for items added in the last 7 days (auto-clearing old items weekly)
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    // Generate recipes for all tracked raw/unspoiled items (no date cutoff — 
+    // the frontend handles weekly clearing of the deleted list so old dismissed 
+    // recipes don't reappear). We still skip cooked, spoiled, and non-tracked items.
     const rawItems = inventory.filter(item => {
       if (item.isCooked || item.category === 'cooked food' || item.category === 'Cooked Food' || item.status === 'Spoiled' || item.state !== 'Tracked') {
         return false;
       }
-      
       const itemAddedTime = new Date(item.addedDate).getTime();
-      if (itemAddedTime < sevenDaysAgo) {
-        return false; // Skip items older than 7 days
-      }
-
       const totalDuration = new Date(item.predictedSpoilageDate).getTime() - itemAddedTime;
       const elapsed = Date.now() - itemAddedTime;
       let currentPct = item.originalFreshness;
       if (elapsed >= totalDuration) currentPct = 0;
       else if (elapsed > 0) currentPct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
-
-      return currentPct > 50;
+      return currentPct > 10; // include slightly spoiled (>10%) — user can decide
     });
 
     // Sort raw items by remaining freshness (ascending) so items nearing expiry appear first

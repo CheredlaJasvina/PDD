@@ -6,47 +6,75 @@ interface ScannerProps {
   onAddManual: (item: any) => void;
 }
 
-const foodAutocompleteDB: Record<string, { category: 'fruits' | 'vegetables' | 'cooked food' | 'packaged food' | 'non-veg' | 'liquid'; shelfLife: number; calories: number; isCooked: boolean }> = {
-  apple: { category: 'fruits', shelfLife: 14, calories: 52, isCooked: false },
-  banana: { category: 'fruits', shelfLife: 7, calories: 89, isCooked: false },
-  orange: { category: 'fruits', shelfLife: 10, calories: 47, isCooked: false },
-  strawberry: { category: 'fruits', shelfLife: 4, calories: 32, isCooked: false },
-  grape: { category: 'fruits', shelfLife: 7, calories: 67, isCooked: false },
-  mango: { category: 'fruits', shelfLife: 5, calories: 60, isCooked: false },
-  blueberry: { category: 'fruits', shelfLife: 6, calories: 57, isCooked: false },
-  pineapple: { category: 'fruits', shelfLife: 5, calories: 50, isCooked: false },
-  watermelon: { category: 'fruits', shelfLife: 7, calories: 30, isCooked: false },
-  lemon: { category: 'fruits', shelfLife: 14, calories: 29, isCooked: false },
-  peach: { category: 'fruits', shelfLife: 5, calories: 39, isCooked: false },
-  pear: { category: 'fruits', shelfLife: 6, calories: 57, isCooked: false },
-  cherry: { category: 'fruits', shelfLife: 4, calories: 50, isCooked: false },
-  kiwi: { category: 'fruits', shelfLife: 7, calories: 61, isCooked: false },
-  avocado: { category: 'fruits', shelfLife: 4, calories: 160, isCooked: false },
-  carrot: { category: 'vegetables', shelfLife: 21, calories: 41, isCooked: false },
-  broccoli: { category: 'vegetables', shelfLife: 7, calories: 34, isCooked: false },
-  spinach: { category: 'vegetables', shelfLife: 5, calories: 23, isCooked: false },
-  tomato: { category: 'vegetables', shelfLife: 7, calories: 18, isCooked: false },
-  potato: { category: 'vegetables', shelfLife: 30, calories: 77, isCooked: false },
-  onion: { category: 'vegetables', shelfLife: 30, calories: 40, isCooked: false },
-  garlic: { category: 'vegetables', shelfLife: 60, calories: 149, isCooked: false },
-  cucumber: { category: 'vegetables', shelfLife: 7, calories: 15, isCooked: false },
-  lettuce: { category: 'vegetables', shelfLife: 5, calories: 15, isCooked: false },
-  cabbage: { category: 'vegetables', shelfLife: 14, calories: 25, isCooked: false },
-  mushroom: { category: 'vegetables', shelfLife: 5, calories: 22, isCooked: false },
-  cheese: { category: 'packaged food', shelfLife: 21, calories: 402, isCooked: false },
-  yogurt: { category: 'packaged food', shelfLife: 14, calories: 59, isCooked: false },
-  bread: { category: 'packaged food', shelfLife: 6, calories: 265, isCooked: false },
-  milk: { category: 'liquid', shelfLife: 7, calories: 42, isCooked: false },
-  juice: { category: 'liquid', shelfLife: 10, calories: 50, isCooked: false },
-  water: { category: 'liquid', shelfLife: 365, calories: 0, isCooked: false },
-  eggs: { category: 'non-veg', shelfLife: 21, calories: 155, isCooked: false },
-  chicken: { category: 'non-veg', shelfLife: 3, calories: 165, isCooked: false },
-  beef: { category: 'non-veg', shelfLife: 3, calories: 250, isCooked: false },
-  fish: { category: 'non-veg', shelfLife: 2, calories: 206, isCooked: false },
-  rice: { category: 'cooked food', shelfLife: 4, calories: 130, isCooked: true },
-  pasta: { category: 'cooked food', shelfLife: 4, calories: 131, isCooked: true },
-  soup: { category: 'liquid', shelfLife: 3, calories: 50, isCooked: true },
-  pizza: { category: 'cooked food', shelfLife: 3, calories: 266, isCooked: true }
+const foodAutocompleteDB: Record<string, {
+  category: 'fruits' | 'vegetables' | 'cooked food' | 'packaged food' | 'non-veg' | 'liquid';
+  shelfLife: number; calories: number; protein: number; carbs: number; fat: number; isCooked: boolean;
+}> = {
+  // ── Fruits ──────────────────────────────────────────────────────────────────
+  apple:       { category: 'fruits',        shelfLife: 14,  calories: 52,  protein: 0.3, carbs: 14,  fat: 0.2, isCooked: false },
+  banana:      { category: 'fruits',        shelfLife: 7,   calories: 89,  protein: 1.1, carbs: 23,  fat: 0.3, isCooked: false },
+  orange:      { category: 'fruits',        shelfLife: 10,  calories: 47,  protein: 0.9, carbs: 12,  fat: 0.1, isCooked: false },
+  strawberry:  { category: 'fruits',        shelfLife: 4,   calories: 32,  protein: 0.7, carbs: 8,   fat: 0.3, isCooked: false },
+  grape:       { category: 'fruits',        shelfLife: 7,   calories: 67,  protein: 0.6, carbs: 17,  fat: 0.4, isCooked: false },
+  mango:       { category: 'fruits',        shelfLife: 5,   calories: 60,  protein: 0.8, carbs: 15,  fat: 0.4, isCooked: false },
+  blueberry:   { category: 'fruits',        shelfLife: 6,   calories: 57,  protein: 0.7, carbs: 14,  fat: 0.3, isCooked: false },
+  pineapple:   { category: 'fruits',        shelfLife: 5,   calories: 50,  protein: 0.5, carbs: 13,  fat: 0.1, isCooked: false },
+  watermelon:  { category: 'fruits',        shelfLife: 7,   calories: 30,  protein: 0.6, carbs: 8,   fat: 0.2, isCooked: false },
+  lemon:       { category: 'fruits',        shelfLife: 14,  calories: 29,  protein: 1.1, carbs: 9,   fat: 0.3, isCooked: false },
+  peach:       { category: 'fruits',        shelfLife: 5,   calories: 39,  protein: 0.9, carbs: 10,  fat: 0.3, isCooked: false },
+  pear:        { category: 'fruits',        shelfLife: 6,   calories: 57,  protein: 0.4, carbs: 15,  fat: 0.1, isCooked: false },
+  cherry:      { category: 'fruits',        shelfLife: 4,   calories: 50,  protein: 1.0, carbs: 12,  fat: 0.3, isCooked: false },
+  kiwi:        { category: 'fruits',        shelfLife: 7,   calories: 61,  protein: 1.1, carbs: 15,  fat: 0.5, isCooked: false },
+  avocado:     { category: 'fruits',        shelfLife: 4,   calories: 160, protein: 2.0, carbs: 9,   fat: 15,  isCooked: false },
+  papaya:      { category: 'fruits',        shelfLife: 5,   calories: 43,  protein: 0.5, carbs: 11,  fat: 0.3, isCooked: false },
+  pomegranate: { category: 'fruits',        shelfLife: 14,  calories: 83,  protein: 1.7, carbs: 19,  fat: 1.2, isCooked: false },
+  guava:       { category: 'fruits',        shelfLife: 5,   calories: 68,  protein: 2.6, carbs: 14,  fat: 1.0, isCooked: false },
+  // ── Vegetables ──────────────────────────────────────────────────────────────
+  carrot:      { category: 'vegetables',    shelfLife: 21,  calories: 41,  protein: 0.9, carbs: 10,  fat: 0.2, isCooked: false },
+  broccoli:    { category: 'vegetables',    shelfLife: 7,   calories: 34,  protein: 2.8, carbs: 7,   fat: 0.4, isCooked: false },
+  spinach:     { category: 'vegetables',    shelfLife: 5,   calories: 23,  protein: 2.9, carbs: 4,   fat: 0.4, isCooked: false },
+  tomato:      { category: 'vegetables',    shelfLife: 7,   calories: 18,  protein: 0.9, carbs: 4,   fat: 0.2, isCooked: false },
+  potato:      { category: 'vegetables',    shelfLife: 30,  calories: 77,  protein: 2.0, carbs: 17,  fat: 0.1, isCooked: false },
+  onion:       { category: 'vegetables',    shelfLife: 30,  calories: 40,  protein: 1.1, carbs: 9,   fat: 0.1, isCooked: false },
+  garlic:      { category: 'vegetables',    shelfLife: 60,  calories: 149, protein: 6.4, carbs: 33,  fat: 0.5, isCooked: false },
+  cucumber:    { category: 'vegetables',    shelfLife: 7,   calories: 15,  protein: 0.7, carbs: 4,   fat: 0.1, isCooked: false },
+  lettuce:     { category: 'vegetables',    shelfLife: 5,   calories: 15,  protein: 1.4, carbs: 3,   fat: 0.2, isCooked: false },
+  cabbage:     { category: 'vegetables',    shelfLife: 14,  calories: 25,  protein: 1.3, carbs: 6,   fat: 0.1, isCooked: false },
+  mushroom:    { category: 'vegetables',    shelfLife: 5,   calories: 22,  protein: 3.1, carbs: 3,   fat: 0.3, isCooked: false },
+  capsicum:    { category: 'vegetables',    shelfLife: 7,   calories: 31,  protein: 1.0, carbs: 6,   fat: 0.3, isCooked: false },
+  cauliflower: { category: 'vegetables',    shelfLife: 7,   calories: 25,  protein: 1.9, carbs: 5,   fat: 0.3, isCooked: false },
+  peas:        { category: 'vegetables',    shelfLife: 3,   calories: 81,  protein: 5.4, carbs: 14,  fat: 0.4, isCooked: false },
+  corn:        { category: 'vegetables',    shelfLife: 3,   calories: 86,  protein: 3.3, carbs: 19,  fat: 1.4, isCooked: false },
+  pumpkin:     { category: 'vegetables',    shelfLife: 90,  calories: 26,  protein: 1.0, carbs: 7,   fat: 0.1, isCooked: false },
+  eggplant:    { category: 'vegetables',    shelfLife: 5,   calories: 25,  protein: 1.0, carbs: 6,   fat: 0.2, isCooked: false },
+  // ── Packaged Food ──────────────────────────────────────────────────────────
+  cheese:      { category: 'packaged food', shelfLife: 21,  calories: 402, protein: 25,  carbs: 1,   fat: 33,  isCooked: false },
+  yogurt:      { category: 'packaged food', shelfLife: 14,  calories: 59,  protein: 3.5, carbs: 5,   fat: 3.3, isCooked: false },
+  bread:       { category: 'packaged food', shelfLife: 6,   calories: 265, protein: 9.0, carbs: 51,  fat: 3.2, isCooked: false },
+  butter:      { category: 'packaged food', shelfLife: 30,  calories: 717, protein: 0.9, carbs: 0.1, fat: 81,  isCooked: false },
+  cereal:      { category: 'packaged food', shelfLife: 180, calories: 379, protein: 8.0, carbs: 84,  fat: 2.0, isCooked: false },
+  chocolate:   { category: 'packaged food', shelfLife: 90,  calories: 546, protein: 5.0, carbs: 60,  fat: 31,  isCooked: false },
+  biscuit:     { category: 'packaged food', shelfLife: 60,  calories: 423, protein: 6.0, carbs: 64,  fat: 15,  isCooked: false },
+  // ── Liquids ────────────────────────────────────────────────────────────────
+  milk:        { category: 'liquid',        shelfLife: 7,   calories: 42,  protein: 3.4, carbs: 5,   fat: 1.0, isCooked: false },
+  juice:       { category: 'liquid',        shelfLife: 10,  calories: 50,  protein: 0.7, carbs: 12,  fat: 0.2, isCooked: false },
+  water:       { category: 'liquid',        shelfLife: 365, calories: 0,   protein: 0,   carbs: 0,   fat: 0,   isCooked: false },
+  coconut_water:{ category: 'liquid',       shelfLife: 3,   calories: 19,  protein: 0.7, carbs: 4,   fat: 0.2, isCooked: false },
+  // ── Non-Veg ────────────────────────────────────────────────────────────────
+  eggs:        { category: 'non-veg',       shelfLife: 21,  calories: 155, protein: 13,  carbs: 1,   fat: 11,  isCooked: false },
+  chicken:     { category: 'non-veg',       shelfLife: 3,   calories: 165, protein: 31,  carbs: 0,   fat: 3.6, isCooked: false },
+  beef:        { category: 'non-veg',       shelfLife: 3,   calories: 250, protein: 26,  carbs: 0,   fat: 15,  isCooked: false },
+  fish:        { category: 'non-veg',       shelfLife: 2,   calories: 206, protein: 22,  carbs: 0,   fat: 12,  isCooked: false },
+  mutton:      { category: 'non-veg',       shelfLife: 2,   calories: 294, protein: 25,  carbs: 0,   fat: 21,  isCooked: false },
+  prawn:       { category: 'non-veg',       shelfLife: 2,   calories: 99,  protein: 24,  carbs: 0,   fat: 0.3, isCooked: false },
+  // ── Cooked Food ────────────────────────────────────────────────────────────
+  rice:        { category: 'cooked food',   shelfLife: 4,   calories: 130, protein: 2.7, carbs: 28,  fat: 0.3, isCooked: true },
+  pasta:       { category: 'cooked food',   shelfLife: 4,   calories: 131, protein: 5.0, carbs: 25,  fat: 1.1, isCooked: true },
+  soup:        { category: 'liquid',        shelfLife: 3,   calories: 50,  protein: 2.0, carbs: 8,   fat: 1.5, isCooked: true },
+  pizza:       { category: 'cooked food',   shelfLife: 3,   calories: 266, protein: 11,  carbs: 33,  fat: 10,  isCooked: true },
+  curry:       { category: 'cooked food',   shelfLife: 2,   calories: 180, protein: 8.0, carbs: 20,  fat: 9.0, isCooked: true },
+  biryani:     { category: 'cooked food',   shelfLife: 2,   calories: 290, protein: 12,  carbs: 45,  fat: 8.0, isCooked: true },
+  sandwich:    { category: 'cooked food',   shelfLife: 1,   calories: 250, protein: 10,  carbs: 35,  fat: 8.0, isCooked: true },
 };
 
 export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual }) => {
@@ -141,6 +169,9 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
   const [manualShelfLife, setManualShelfLife] = useState(5);
   const [manualIsCooked, setManualIsCooked]   = useState(false);
   const [manualCalories, setManualCalories]   = useState(100);
+  const [manualProtein, setManualProtein]     = useState(2);
+  const [manualCarbs, setManualCarbs]         = useState(10);
+  const [manualFat, setManualFat]             = useState(1);
   const [manualSpiceLevel, setManualSpiceLevel] = useState<'none' | 'low' | 'medium' | 'high'>('none');
 
   const handleNameChange = (val: string) => {
@@ -153,6 +184,9 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       setManualCategory(match.category);
       setManualShelfLife(match.shelfLife);
       setManualCalories(match.calories);
+      setManualProtein(match.protein);
+      setManualCarbs(match.carbs);
+      setManualFat(match.fat);
       setManualIsCooked(match.isCooked);
       return;
     }
@@ -166,6 +200,9 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       setManualCategory(match.category);
       setManualShelfLife(match.shelfLife);
       setManualCalories(match.calories);
+      setManualProtein(match.protein);
+      setManualCarbs(match.carbs);
+      setManualFat(match.fat);
       setManualIsCooked(match.isCooked);
     }
   };
@@ -239,6 +276,9 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       shelfLifeDays: Number(manualShelfLife),
       isCooked: manualIsCooked,
       calories: Number(manualCalories),
+      protein: Number(manualProtein),
+      carbs: Number(manualCarbs),
+      fat: Number(manualFat),
       spiceLevel: manualSpiceLevel,
     });
     setManualName('');
@@ -861,6 +901,31 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                     borderRadius: '8px',
                     color: '#fff',
                   }}
+                />
+              </div>
+            </div>
+
+            {/* Nutrition row: Protein / Carbs / Fat */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.9rem', fontWeight: 600 }}>Protein (g)</label>
+                <input type="number" min="0" step="0.1" value={manualProtein}
+                  onChange={(e) => setManualProtein(Number(e.target.value))}
+                  style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem', borderRadius: '8px', color: '#fff' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.9rem', fontWeight: 600 }}>Carbs (g)</label>
+                <input type="number" min="0" step="0.1" value={manualCarbs}
+                  onChange={(e) => setManualCarbs(Number(e.target.value))}
+                  style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem', borderRadius: '8px', color: '#fff' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.9rem', fontWeight: 600 }}>Fat (g)</label>
+                <input type="number" min="0" step="0.1" value={manualFat}
+                  onChange={(e) => setManualFat(Number(e.target.value))}
+                  style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem', borderRadius: '8px', color: '#fff' }}
                 />
               </div>
             </div>

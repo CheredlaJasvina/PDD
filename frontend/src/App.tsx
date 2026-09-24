@@ -350,7 +350,7 @@ function App() {
           />
         );
       case 'analytics':
-        return <Analytics />;
+        return <Analytics inventory={inventory} />;
       case 'eco-tracker':
         return <EcoImpact />;
       case 'household':

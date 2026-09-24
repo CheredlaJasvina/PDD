@@ -391,8 +391,9 @@ Required JSON structure:
 // Add manual food item (Fallback when visual recognition fails)
 exports.addManualItem = async (req, res) => {
   try {
-    const { name, category, shelfLifeDays, isCooked, calories, dietaryPreferences, spiceLevel } = req.body;
+    const { name, category, shelfLifeDays, isCooked, calories, protein, carbs, fat, dietaryPreferences, spiceLevel } = req.body;
     const db = getDB(req);
+    const email = getActiveUserEmail(req);
 
     const addedDate = new Date();
     const predictedSpoilageDate = new Date(Date.now() + Number(shelfLifeDays || 5) * 24 * 60 * 60 * 1000);
@@ -402,13 +403,14 @@ exports.addManualItem = async (req, res) => {
     if (shelfLifeDays <= 0) status = 'Spoiled';
     else if (shelfLifeDays <= 2) status = 'Slightly Spoiled';
 
-    // Mock dietary tags matching the input
     const dietaryTags = dietaryPreferences || ["vegan", "vegetarian", "gluten-free", "dairy-free", "jain"];
-
-    // Specific image lookup based on food name
     const imageUrl = getFoodImageUrl(name, category);
-
     const matchedCategory = category || 'fruits';
+
+    // Use protein/carbs/fat from the request if provided; fall back to category defaults
+    const nutritionProtein = protein !== undefined ? Number(protein) : (matchedCategory === 'fruits' ? 1.0 : (matchedCategory === 'vegetables' ? 3.0 : (matchedCategory === 'cooked food' ? 15.0 : 7.0)));
+    const nutritionCarbs   = carbs   !== undefined ? Number(carbs)   : (matchedCategory === 'fruits' ? 20.0 : (matchedCategory === 'vegetables' ? 8.0 : (matchedCategory === 'cooked food' ? 40.0 : 15.0)));
+    const nutritionFat     = fat     !== undefined ? Number(fat)     : (matchedCategory === 'fruits' ? 0.5  : (matchedCategory === 'vegetables' ? 0.3  : (matchedCategory === 'cooked food' ? 12.0 : 5.0)));
 
     const itemData = {
       name,
@@ -421,18 +423,19 @@ exports.addManualItem = async (req, res) => {
       imageUrl,
       isCooked: isCooked || false,
       dietaryTags,
+      owner: email,
       nutrition: {
-        calories: Number(calories) || 100,
-        protein: matchedCategory === 'fruits' ? 1.0 : (matchedCategory === 'vegetables' ? 3.0 : (matchedCategory === 'cooked food' ? 15.0 : 7.0)),
-        carbs: matchedCategory === 'fruits' ? 20.0 : (matchedCategory === 'vegetables' ? 8.0 : (matchedCategory === 'cooked food' ? 40.0 : 15.0)),
-        fat: matchedCategory === 'fruits' ? 0.5 : (matchedCategory === 'vegetables' ? 0.3 : (matchedCategory === 'cooked food' ? 12.0 : 5.0)),
-        ingredients: `${name}`,
-        vitamins: ["Vitamin C"],
-        healthNotes: "Manually entered food item. High nutritional properties."
+        calories:   Number(calories) || 100,
+        protein:    nutritionProtein,
+        carbs:      nutritionCarbs,
+        fat:        nutritionFat,
+        ingredients: name,
+        vitamins:    ["Vitamin C"],
+        healthNotes: `Manually entered: ${name}. Check nutrition label for exact values.`
       },
-      storageGuidance: "Store in normal temperature. Keep checked.",
+      storageGuidance: "Store appropriately based on category. Check expiry dates.",
       safetyAdvisory: status === 'Spoiled' ? "Discard safely." : "Safe to consume.",
-      spiceLevel: spiceLevel !== undefined ? Number(spiceLevel) : 5
+      spiceLevel: spiceLevel !== undefined ? Number(spiceLevel) : 0
     };
 
     const saved = await db.create(itemData);
