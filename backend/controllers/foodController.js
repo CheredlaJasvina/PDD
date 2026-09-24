@@ -141,66 +141,67 @@ exports.scanFoodItem = async (req, res) => {
     const imagePath = req.file.path;
 
     // ── Groq Vision API (primary path) ────────────────────────────────────
-    // Model priority:
-    //   1. qwen/qwen3.8-27b          — current active vision model on Groq
-    //   2. meta-llama/llama-4-scout-17b-16e-instruct — multimodal fallback
-    // Python classifier is last resort when both fail or key is absent.
+    // qwen/qwen3.8-27b only accepts public image URLs (not base64 inline data).
+    // We serve the uploaded file via /uploads/<filename> on this same server
+    // and pass that URL to Groq. The file is deleted immediately after.
     if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'YOUR_GROQ_API_KEY') {
       const { Groq } = require('groq-sdk');
       const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-      const imageBuffer = fs.readFileSync(imagePath);
-      const base64Image = imageBuffer.toString('base64');
-      const mimeType = req.file.mimetype || 'image/jpeg';
+      // Build the public URL for the uploaded temp file
+      const filename   = path.basename(imagePath);
+      const backendHost = process.env.BACKEND_URL || 'https://pdd-9fqv.onrender.com';
+      const publicImageUrl = `${backendHost}/uploads/${filename}`;
 
-      const FOOD_PROMPT = `You are a food freshness analysis AI. Analyze the food item in this image carefully.
-You MUST respond with ONLY a valid JSON object — no markdown, no explanation, just raw JSON.
+      const FOOD_PROMPT = `You are a food freshness analysis AI. Look at this food image carefully and return a JSON object.
 
-Return exactly this structure:
+Rules:
+- Return ONLY valid JSON — no markdown, no explanation.
+- "success" must be true if the image contains food, false otherwise.
+- Identify the EXACT food (e.g. "Carrot", "Red Apple", "Broccoli") not just "vegetable".
+- "category" must be one of: fruits | vegetables | cooked food | packaged food | liquid | non-veg
+- "status" must be one of: Fresh | Slightly Spoiled | Spoiled
+- "originalFreshness" is a number 5-100 (100 = perfectly fresh, 5 = fully rotten)
+- "shelfLifeDays" is estimated days remaining before spoilage
+
+Required JSON structure:
 {
   "success": true,
   "message": "Food identified successfully",
-  "name": "Exact food name (e.g. Carrot, Red Apple, Broccoli, Pizza)",
-  "category": "one of exactly: fruits | vegetables | cooked food | packaged food | liquid | non-veg",
-  "status": "one of exactly: Fresh | Slightly Spoiled | Spoiled",
-  "originalFreshness": 90,
-  "shelfLifeDays": 7,
+  "name": "Carrot",
+  "category": "vegetables",
+  "status": "Fresh",
+  "originalFreshness": 92,
+  "shelfLifeDays": 14,
   "nutrition": {
     "calories": 41,
     "protein": 0.9,
     "carbs": 9.6,
     "fat": 0.2,
     "vitamins": ["Vitamin A", "Vitamin K"],
-    "healthNotes": "High in beta-carotene and fibre, supports eye health."
+    "healthNotes": "High in beta-carotene, supports vision and immune health."
   },
   "storageGuidance": "Refrigerate in water with tops removed. Keeps up to 3 weeks.",
   "safetyAdvisory": "Safe to eat raw or cooked. Wash thoroughly before use."
-}
-
-If the image does NOT contain food (e.g. person, object, skin, text), return:
-{ "success": false, "message": "Describe what you see and why it is not food." }
-
-Be precise with the name — do not say 'vegetable', say 'Carrot' or 'Broccoli'.`;
+}`;
 
       const buildPayload = (model) => ({
         model,
         temperature: 0.1,
         max_completion_tokens: 1024,
-        response_format: { type: "json_object" },
+        response_format: { type: 'json_object' },
         messages: [{
-          role: "user",
+          role: 'user',
           content: [
-            { type: "text", text: FOOD_PROMPT },
-            { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Image}` } }
+            { type: 'text', text: FOOD_PROMPT },
+            { type: 'image_url', image_url: { url: publicImageUrl } }
           ]
         }]
       });
 
-      // Helper: call one model, return parsed result or throw
       const tryGroqModel = async (model) => {
         const completion = await groq.chat.completions.create(buildPayload(model));
         const raw = completion.choices[0].message.content || '';
-        // Strip any accidental markdown fences
         const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
         return JSON.parse(jsonStr);
       };
@@ -208,11 +209,9 @@ Be precise with the name — do not say 'vegetable', say 'Carrot' or 'Broccoli'.
       let result = null;
       let groqModelUsed = null;
 
-      // Try qwen first, then llama-4-scout
-      const VISION_MODELS = [
-        'qwen/qwen3.8-27b',
-        'meta-llama/llama-4-scout-17b-16e-instruct'
-      ];
+      // qwen/qwen3.8-27b is the only confirmed working vision model on this account.
+      // Keep a second entry for future-proofing; errors are caught individually.
+      const VISION_MODELS = ['qwen/qwen3.8-27b'];
 
       for (const model of VISION_MODELS) {
         try {
@@ -224,14 +223,14 @@ Be precise with the name — do not say 'vegetable', say 'Carrot' or 'Broccoli'.
         }
       }
 
-      // Clean up temp file now that we have the result (or failed)
+      // Always delete the temp file after Groq is done (success or failure)
       try { if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath); } catch (_) {}
 
       if (result) {
         if (!result.success) {
           return res.status(400).json({
             success: false,
-            message: result.message || "Visual analysis rejected: Non-food item detected."
+            message: result.message || 'Visual analysis rejected: Non-food item detected.'
           });
         }
 
@@ -245,35 +244,34 @@ Be precise with the name — do not say 'vegetable', say 'Carrot' or 'Broccoli'.
         const imageUrl = getFoodImageUrl(result.name, result.category);
 
         const newItemData = {
-          name: result.name,
-          category: result.category,
-          status: result.status,
-          state: 'Tracked',
+          name:             result.name,
+          category:         result.category,
+          status:           result.status,
+          state:            'Tracked',
           addedDate,
           predictedSpoilageDate,
           originalFreshness: result.originalFreshness || 90,
           imageUrl,
-          isCooked: result.category === 'cooked food',
-          dietaryTags: ["vegan", "vegetarian", "gluten-free", "dairy-free"],
+          isCooked:         result.category === 'cooked food',
+          dietaryTags:      ['vegan', 'vegetarian', 'gluten-free', 'dairy-free'],
           nutrition: {
-            calories:   (result.nutrition && result.nutrition.calories)  || 100,
-            protein:    (result.nutrition && result.nutrition.protein)   || 1,
-            carbs:      (result.nutrition && result.nutrition.carbs)     || 10,
-            fat:        (result.nutrition && result.nutrition.fat)       || 0,
-            ingredients: result.name,
-            vitamins:   (result.nutrition && result.nutrition.vitamins)  || ["Vitamin C"],
-            healthNotes:(result.nutrition && result.nutrition.healthNotes) || `Freshly analysed ${result.name}.`
+            calories:    (result.nutrition?.calories)    || 100,
+            protein:     (result.nutrition?.protein)     || 1,
+            carbs:       (result.nutrition?.carbs)       || 10,
+            fat:         (result.nutrition?.fat)         || 0,
+            ingredients:  result.name,
+            vitamins:    (result.nutrition?.vitamins)    || ['Vitamin C'],
+            healthNotes: (result.nutrition?.healthNotes) || `Freshly analysed ${result.name}.`
           },
           storageGuidance: result.storageGuidance || 'Store appropriately.',
           safetyAdvisory:  result.safetyAdvisory  || 'Safe to eat.',
-          _model: groqModelUsed
+          _model:          groqModelUsed
         };
 
         return res.json({ success: true, scannedItems: [newItemData] });
       }
 
-      // Both Groq models failed — fall through to Python
-      console.error("All Groq vision models failed. Falling back to Python classifier.");
+      console.error('Groq vision failed — falling back to Python classifier.');
     }
 
     // --- FALLBACK TO LOCAL PYTHON CLASSIFIER ---

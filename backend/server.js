@@ -28,6 +28,10 @@ app.get('/api/health', (req, res) => {
 // Bind API routes under '/api' prefix
 app.use('/api', apiRoutes);
 
+// Serve uploaded files temporarily so Groq Vision can fetch them by URL
+// Files are deleted by the scan handler immediately after use
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
+
 // General route catch-all
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
