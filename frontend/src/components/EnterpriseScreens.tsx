@@ -401,7 +401,8 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
         rawItems.forEach(item => {
           const name = item.name;
           const category = item.category || 'others';
-          let unit = item.unit || "units";
+          const anyItem = item as any;
+          let unit = anyItem.unit || "units";
           
           // Standardize unit
           if (['pieces', 'pcs', 'unit(s)', 'units'].includes(unit.toLowerCase())) {
@@ -417,13 +418,13 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
 
           if (ingredientMap.has(name)) {
             const existing = ingredientMap.get(name)!;
-            existing.inventoryQty += (item.quantity || 1);
+            existing.inventoryQty += (anyItem.quantity || 1);
           } else {
             ingredientMap.set(name, {
               category,
               baseQty,
               unit,
-              inventoryQty: item.quantity || 1
+              inventoryQty: anyItem.quantity || 1
             });
           }
         });

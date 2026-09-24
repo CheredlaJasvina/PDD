@@ -250,7 +250,18 @@ exports.scanFoodItem = async (req, res) => {
 
     // --- FALLBACK TO LOCAL PYTHON CLASSIFIER ---
     const scriptPath = path.join(__dirname, '..', 'scripts', 'classify_food.py');
-    exec(`python "${scriptPath}" "${imagePath}"`, async (error, stdout, stderr) => {
+
+    /**
+     * Try running the Python classifier.
+     * On Windows / some Linux setups the binary is "python3"; on others it's "python".
+     * We try "python" first; if it exits with an error we retry with "python3".
+     * If both fail we return a clear, actionable error message.
+     */
+    const runPythonClassifier = (cmd, callback) => {
+      exec(`${cmd} "${scriptPath}" "${imagePath}"`, callback);
+    };
+
+    const handleClassifierResult = async (error, stdout, stderr) => {
       // Clean up local temp file to avoid clutter
       try {
         if (fs.existsSync(imagePath)) {
@@ -261,10 +272,10 @@ exports.scanFoodItem = async (req, res) => {
       }
 
       if (error) {
-        console.error("Python Model classification error:", stderr || error);
+        console.error("Python Model classification error:", stderr || error.message);
         return res.status(500).json({
           success: false,
-          message: "AI Model classification failed. Make sure Python dependencies (Pillow) are configured."
+          message: "AI Visual Scanner is unavailable. No Groq API key is configured and the local Python classifier could not run. To use the scanner please either add a GROQ_API_KEY to the backend .env file, or install Python with Pillow and (optionally) PyTorch: pip install Pillow torch torchvision"
         });
       }
 
@@ -333,6 +344,16 @@ exports.scanFoodItem = async (req, res) => {
           success: false,
           message: "Failed to parse classification model outputs."
         });
+      }
+    };
+
+    // Try "python" first; if that fails, retry with "python3"
+    runPythonClassifier('python', (err, stdout, stderr) => {
+      if (err) {
+        // "python" not found or crashed — try "python3" (common on Linux/macOS)
+        runPythonClassifier('python3', handleClassifierResult);
+      } else {
+        handleClassifierResult(null, stdout, stderr);
       }
     });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FoodItem, User, WasteSummary } from '../types';
 
 interface DashboardProps {
@@ -14,17 +14,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onUpdateState,
   onNavigate
 }) => {
-  const [wasteSummary, setWasteSummary] = useState<WasteSummary | null>(null);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetch('https://pdd-9fqv.onrender.com/api/waste-summary', {
-      headers: { 'x-user-email': preferences.email }
-    })
-      .then(r => r.json())
-      .then(d => { if (d.success) setWasteSummary(d); })
-      .catch(() => null);
-  }, [inventory, preferences.email]); // refresh when inventory changes
+  // Compute waste summary live from the inventory prop so it always reflects
+  // the latest state without waiting for an API response.
+  const wasteSummary: WasteSummary = useMemo(() => {
+    const now = Date.now();
+    const sevenDaysAgo  = now - 7  * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+    const wastedItems = inventory.filter(i => (i as any).state === 'Wasted');
+    const weeklyWasted  = wastedItems.filter(i => new Date(i.addedDate).getTime() >= sevenDaysAgo);
+    const monthlyWasted = wastedItems.filter(i => new Date(i.addedDate).getTime() >= thirtyDaysAgo);
+
+    const itemFrequency: Record<string, number> = {};
+    monthlyWasted.forEach(i => {
+      itemFrequency[i.name] = (itemFrequency[i.name] || 0) + 1;
+    });
+
+    const members = preferences.membersCount || 2;
+    const buyAdvice = Object.entries(itemFrequency).map(([name, count]) => ({
+      name,
+      timesWasted: count,
+      advice: `You wasted "${name}" ${count} time(s) this month. For ${members} member(s), try buying only ${Math.max(1, Math.ceil(members * 0.5))} unit(s) at a time.`
+    }));
+
+    return {
+      weeklyWastedCount:  weeklyWasted.length,
+      monthlyWastedCount: monthlyWasted.length,
+      weeklyWastedItems:  weeklyWasted.map(i => ({ name: i.name, category: i.category, addedDate: i.addedDate })),
+      monthlyWastedItems: monthlyWasted.map(i => ({ name: i.name, category: i.category, addedDate: i.addedDate })),
+      categoryBreakdown:  (() => {
+        const bd: Record<string, { count: number; names: string[] }> = {};
+        monthlyWasted.forEach(i => {
+          if (!bd[i.category]) bd[i.category] = { count: 0, names: [] };
+          bd[i.category].count++;
+          if (!bd[i.category].names.includes(i.name)) bd[i.category].names.push(i.name);
+        });
+        return bd;
+      })(),
+      buyAdvice,
+      membersCount: members
+    };
+  }, [inventory, preferences.membersCount]);
 
   // Compute key metrics
   const totalTracked = inventory.length;
@@ -265,71 +297,101 @@ export const Dashboard: React.FC<DashboardProps> = ({
             style={{ borderLeft: '4px solid var(--color-spoiled)', cursor: 'pointer' }}
           >
             <h2 style={{ marginBottom: '1rem' }}>🗑️ Waste Report This Week</h2>
-            {wasteSummary ? (
-              <>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', background: 'rgba(255,23,68,0.06)', borderRadius: '10px', border: '1px solid rgba(255,23,68,0.15)' }}>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-spoiled)' }}>{wasteSummary.weeklyWastedCount}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>WASTED THIS WEEK</div>
-                  </div>
-                  <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', background: 'rgba(255,145,0,0.06)', borderRadius: '10px', border: '1px solid rgba(255,145,0,0.15)' }}>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-warning)' }}>{wasteSummary.monthlyWastedCount}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>WASTED THIS MONTH</div>
-                  </div>
+            <>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', background: 'rgba(255,23,68,0.06)', borderRadius: '10px', border: '1px solid rgba(255,23,68,0.15)' }}>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-spoiled)' }}>{wasteSummary.weeklyWastedCount}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>WASTED THIS WEEK</div>
                 </div>
+                <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', background: 'rgba(255,145,0,0.06)', borderRadius: '10px', border: '1px solid rgba(255,145,0,0.15)' }}>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-warning)' }}>{wasteSummary.monthlyWastedCount}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>WASTED THIS MONTH</div>
+                </div>
+              </div>
 
-                {wasteSummary.weeklyWastedItems.length > 0 ? (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>Items wasted this week:</p>
-                    {wasteSummary.weeklyWastedItems.slice(0, 3).map((it, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--glass-border)' }}>
-                        <span>🗑️ {it.name}</span>
-                        <span style={{ textTransform: 'capitalize', color: 'var(--text-muted)' }}>{it.category}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p style={{ fontSize: '0.82rem', color: 'var(--color-fresh)', marginBottom: '1rem' }}>✅ Zero waste this week — great job!</p>
-                )}
+              {wasteSummary.weeklyWastedItems.length > 0 ? (
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>Items wasted this week:</p>
+                  {wasteSummary.weeklyWastedItems.slice(0, 3).map((it, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--glass-border)' }}>
+                      <span>🗑️ {it.name}</span>
+                      <span style={{ textTransform: 'capitalize', color: 'var(--text-muted)' }}>{it.category}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: '0.82rem', color: 'var(--color-fresh)', marginBottom: '1rem' }}>✅ Zero waste this week — great job!</p>
+              )}
 
-                {wasteSummary.buyAdvice.length > 0 && (
-                  <div style={{ background: 'rgba(255,234,0,0.04)', border: '1px solid rgba(255,234,0,0.12)', borderRadius: '8px', padding: '0.75rem' }}>
-                    <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-warning)', marginBottom: '0.4rem' }}>💡 Buy Less Next Time:</p>
-                    {wasteSummary.buyAdvice.slice(0, 2).map((adv, i) => (
-                      <p key={i} style={{ fontSize: '0.77rem', color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: '0.3rem' }}>{adv.advice}</p>
-                    ))}
-                  </div>
-                )}
+              {wasteSummary.buyAdvice.length > 0 && (
+                <div style={{ background: 'rgba(255,234,0,0.04)', border: '1px solid rgba(255,234,0,0.12)', borderRadius: '8px', padding: '0.75rem' }}>
+                  <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-warning)', marginBottom: '0.4rem' }}>💡 Buy Less Next Time:</p>
+                  {wasteSummary.buyAdvice.slice(0, 2).map((adv, i) => (
+                    <p key={i} style={{ fontSize: '0.77rem', color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: '0.3rem' }}>{adv.advice}</p>
+                  ))}
+                </div>
+              )}
 
-                <button className="btn-secondary" style={{ width: '100%', marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => onNavigate('analytics')}>
-                  View Full Waste Report →
+              <button className="btn-secondary" style={{ width: '100%', marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); onNavigate('analytics'); }}>
+                  View Full Waste Report &#8594;
                 </button>
-              </>
-            ) : (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading waste data...</p>
-            )}
+            </>
           </div>
 
-          {/* Weekly score summary */}
-          <div className="glass-card">
-            <h2>Weekly Scan Summary</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Healthy vs Packaged Scans:</span>
-                <span style={{ fontWeight: 600, color: 'var(--color-fresh)' }}>⭐ Outstanding Balance</span>
+          {/* Weekly score summary — computed live from inventory */}
+          {(() => {
+            const healthyCount = inventory.filter(i =>
+              i.category === 'fruits' || i.category === 'vegetables' || i.category === 'non-veg'
+            ).length;
+            const processedCount = inventory.filter(i =>
+              i.category === 'packaged food' || i.category === 'cooked food' || i.category === 'liquid'
+            ).length;
+            const total = healthyCount + processedCount || 1;
+            const healthyPct  = Math.round((healthyCount  / total) * 100);
+            const processedPct = 100 - healthyPct;
+            const balanceLabel =
+              healthyPct >= 70 ? '⭐ Outstanding Balance' :
+              healthyPct >= 50 ? '👍 Good Balance' :
+                                 '⚠️ Too Much Processed';
+            const balanceColor =
+              healthyPct >= 70 ? 'var(--color-fresh)' :
+              healthyPct >= 50 ? 'var(--color-warning)' :
+                                 'var(--color-spoiled)';
+
+            return (
+              <div className="glass-card">
+                <h2>Weekly Scan Summary</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Healthy vs Packaged Scans:</span>
+                    <span style={{ fontWeight: 600, color: balanceColor }}>{balanceLabel}</span>
+                  </div>
+                  {inventory.length === 0 ? (
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>No items scanned yet. Add food to see your ratio.</p>
+                  ) : (
+                    <div style={{ display: 'flex', height: '18px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+                      {healthyPct > 0 && (
+                        <div style={{ width: `${healthyPct}%`, background: 'linear-gradient(90deg, var(--cat-vegetables), var(--cat-fruits))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0b0c10', fontWeight: 700, transition: 'width 0.4s' }}>
+                          {healthyPct >= 20 ? `Healthy (${healthyPct}%)` : ''}
+                        </div>
+                      )}
+                      {processedPct > 0 && (
+                        <div style={{ width: `${processedPct}%`, background: 'linear-gradient(90deg, var(--cat-packaged), var(--cat-cooked))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff', fontWeight: 700, transition: 'width 0.4s' }}>
+                          {processedPct >= 20 ? `Processed (${processedPct}%)` : ''}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    Keep eating whole food elements like fresh fruits and vegetables to keep your scores high.
+                  </p>
+                  <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => onNavigate('analytics')}>
+                    Open Detailed Analytics
+                  </button>
+                </div>
               </div>
-              <div style={{ display: 'flex', height: '18px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-                <div style={{ width: '70%', background: 'linear-gradient(90deg, var(--cat-vegetables), var(--cat-fruits))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0b0c10', fontWeight: 700 }}>Healthy (70%)</div>
-                <div style={{ width: '30%', background: 'linear-gradient(90deg, var(--cat-packaged), var(--cat-cooked))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff', fontWeight: 700 }}>Processed (30%)</div>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                Keep eating whole food elements like fresh fruits and vegetables to keep your scores high.
-              </p>
-              <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => onNavigate('analytics')}>
-                Open Detailed Analytics
-              </button>
-            </div>
-          </div>
+            );
+          })()}
 
 
 
