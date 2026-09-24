@@ -17,7 +17,11 @@ from PIL import Image
 
 
 # ── Minimum confidence to accept an AI prediction ──────────────────────────
-MIN_CONFIDENCE = 0.22   # 22 %  (ImageNet is 1000 classes — 30 % is already high)
+# ImageNet has 1000 classes — even the correct food class often scores 5-15%.
+# We accept FOOD_DB-matched predictions at 12% and use colour rescue below that.
+# Unmatched / generic predictions keep the stricter 22% gate.
+MIN_CONFIDENCE        = 0.12   # 12% — for matched FOOD_DB keys
+MIN_CONFIDENCE_GENERIC = 0.22  # 22% — for unmatched / generic labels
 
 # ── Comprehensive food knowledge base ───────────────────────────────────────
 # key  = substring matched against ImageNet class label (lowercase)
@@ -264,13 +268,17 @@ def colour_cross_validate(stats, food_key, ai_label):
             )
 
     # ── Green vegetables claimed but image is clearly red/orange ──────
+    # Note: this check is skipped for orange-coloured vegetables like carrot,
+    # sweet potato, pumpkin — they are legitimately orange.
+    orange_veg = ("carrot", "sweet potato", "pumpkin", "squash")
     if any(k in food_key for k in ("broccoli", "spinach", "lettuce", "cucumber",
                                     "celery", "kale", "pea", "zucchini")):
-        if red_ratio > 0.45 and green_ratio < 0.08:
-            return False, (
-                f"Colour mismatch: AI predicted '{ai_label}' but image has heavy red "
-                f"tones ({red_ratio*100:.0f}% red). Please re-scan."
-            )
+        if not any(k in food_key for k in orange_veg):
+            if red_ratio > 0.45 and green_ratio < 0.08:
+                return False, (
+                    f"Colour mismatch: AI predicted '{ai_label}' but image has heavy red "
+                    f"tones ({red_ratio*100:.0f}% red). Please re-scan."
+                )
 
     # ── Banana / yellow fruit but image is green or red ───────────────
     if "banana" in food_key:
@@ -414,9 +422,25 @@ def run_deep_learning_classification(img_path):
                 }
             # It looks like food but we don't have a specific entry → use top label
             # as display name and default to packaged food
+            if top_confidence < MIN_CONFIDENCE_GENERIC:
+                return {
+                    "success": False,
+                    "message": (
+                        f"Low AI confidence ({top_confidence*100:.1f}%) for unrecognised food. "
+                        "Try better lighting, remove background clutter, or use Manual Entry."
+                    )
+                }
             return _build_generic_result(top_label, top_confidence, img_path)
 
         if matched_conf < MIN_CONFIDENCE:
+            # ── Colour-rescue: before rejecting, check if pixel colours
+            #    strongly agree with the matched food key. If so, accept it.
+            colour_key = _colour_rescue(img_path, matched_key)
+            if colour_key:
+                # Use the colour-confirmed key (may differ from AI if AI was wrong)
+                rescue_conf = max(matched_conf, 0.55)  # report reasonable confidence
+                return _build_result(colour_key, img_path, rescue_conf)
+
             return {
                 "success": False,
                 "message": (
@@ -433,6 +457,80 @@ def run_deep_learning_classification(img_path):
 
     except Exception as e:
         return _colour_only_fallback(img_path)
+
+
+def _colour_rescue(img_path, ai_matched_key):
+    """
+    When PyTorch confidence is below MIN_CONFIDENCE, analyse pixel colours
+    to either confirm the AI match or correct it to a better food key.
+    Returns a FOOD_DB key if colour analysis is confident, or None to reject.
+
+    Colour → food mappings (dominant hue → most likely food):
+      orange-heavy  → carrot (or sweet potato / pumpkin)
+      green-heavy   → broccoli / cucumber / zucchini
+      red-heavy     → tomato / strawberry / apple
+      yellow-heavy  → banana / lemon / corn
+      white/neutral → cauliflower / potato / onion / garlic / mushroom
+    """
+    stats, err = analyse_pixels(img_path)
+    if stats is None:
+        return None
+
+    # Reject obvious skin/face images
+    if stats["skin"] * 100 > 65:
+        return None
+
+    orange = stats["orange"]
+    green  = stats["green"]
+    red    = stats["red"]
+    yellow = stats["yellow"]
+    white  = stats["white"] + stats["neutral"]
+
+    COLOUR_THRESHOLD = 0.12  # at least 12% of pixels must be the dominant colour
+
+    # ── Orange dominant → carrot (most common orange vegetable in photos) ──
+    if orange > COLOUR_THRESHOLD and orange > green and orange > red and orange > yellow:
+        # Could also be sweet potato or pumpkin — carrot is the most common
+        # but if AI already matched pumpkin/sweet potato, trust that
+        if ai_matched_key in ("pumpkin", "sweet potato", "squash", "mango",
+                               "cantaloupe", "peach", "orange", "papaya"):
+            return ai_matched_key
+        return "carrot"
+
+    # ── Green dominant → confirm or pick best green veg ──────────────────
+    if green > COLOUR_THRESHOLD and green > orange and green > red and green > yellow:
+        if ai_matched_key in ("broccoli", "cucumber", "zucchini", "spinach",
+                               "lettuce", "kale", "celery", "pea", "bean",
+                               "cabbage", "asparagus", "lime", "avocado",
+                               "granny smith"):
+            return ai_matched_key
+        return "broccoli"  # most common green whole-food photo
+
+    # ── Red dominant → tomato / red fruits ───────────────────────────────
+    if red > COLOUR_THRESHOLD and red > green and red > orange and red > yellow:
+        if ai_matched_key in ("tomato", "apple", "strawberry", "cherry",
+                               "raspberry", "pomegranate", "beetroot",
+                               "bell pepper", "capsicum", "chili", "plum",
+                               "watermelon"):
+            return ai_matched_key
+        return "tomato"
+
+    # ── Yellow dominant → banana / lemon / corn ──────────────────────────
+    if yellow > COLOUR_THRESHOLD and yellow > green and yellow > red and yellow > orange:
+        if ai_matched_key in ("banana", "lemon", "corn", "pineapple",
+                               "mango", "cantaloupe", "papaya", "peach"):
+            return ai_matched_key
+        return "banana"
+
+    # ── Predominantly white/neutral → cauliflower / potato / mushroom ────
+    if white > 0.50 and orange < 0.05 and green < 0.05 and red < 0.05:
+        if ai_matched_key in ("cauliflower", "potato", "onion", "garlic",
+                               "mushroom", "egg", "milk", "cheese"):
+            return ai_matched_key
+        return "cauliflower"
+
+    # Not enough colour signal to rescue
+    return None
 
 
 def _build_result(food_key, img_path, confidence):
@@ -523,7 +621,7 @@ def _build_generic_result(ai_label, confidence, img_path):
 def _colour_only_fallback(img_path):
     """
     Pure colour analysis — used only when PyTorch is not installed.
-    More conservative than before: requires stronger colour signal.
+    Covers the most visually distinct common foods by dominant hue.
     """
     stats, err = analyse_pixels(img_path)
     if stats is None:
@@ -536,29 +634,42 @@ def _colour_only_fallback(img_path):
             "message": f"Non-food item detected (skin/face {skin_pct:.0f}%)."
         }
 
-    g = stats["green"]
-    r = stats["red"] + stats["orange"] * 0.5
-    y = stats["yellow"]
-    total_colour = g + r + y
+    g      = stats["green"]
+    r      = stats["red"]
+    y      = stats["yellow"]
+    o      = stats["orange"]
+    white  = stats["white"] + stats["neutral"]
 
-    # Require a minimum colour signal — reject bland/ambiguous images
-    if total_colour < 0.08:
+    # Score each colour channel — orange + red combined for warm foods
+    warm   = o + r * 0.6   # carrot, tomato, bell pepper, sweet potato
+    total_colour = g + warm + y
+
+    # Require a minimum colour signal
+    if total_colour < 0.06:
         return {
             "success": False,
             "message": (
                 "Scan Rejected: Image does not contain enough colour to identify food. "
-                "PyTorch is required for accurate identification. "
-                "Use Manual Entry instead."
+                "Install PyTorch for accurate AI scanning, or use Manual Entry."
             )
         }
 
-    if g > r and g > y and g > 0.08:
-        key = "broccoli"
-    elif r > g and r > y and r > 0.08:
-        key = "tomato"
-    elif y > g and y > r and y > 0.08:
-        key = "banana"
-    else:
+    # Dominant colour → food key
+    scores = {
+        "broccoli": g,      # green
+        "carrot":   o,      # orange
+        "tomato":   r,      # red
+        "banana":   y,      # yellow
+    }
+
+    # White/neutral-dominant images → cauliflower
+    if white > 0.55 and max(scores.values()) < 0.08:
+        return _build_result("cauliflower", img_path, 0.55)
+
+    best_key  = max(scores, key=scores.get)
+    best_val  = scores[best_key]
+
+    if best_val < 0.06:
         return {
             "success": False,
             "message": (
@@ -567,7 +678,7 @@ def _colour_only_fallback(img_path):
             )
         }
 
-    return _build_result(key, img_path, 0.60)
+    return _build_result(best_key, img_path, 0.60)
 
 
 # ── Entry point ──────────────────────────────────────────────────────────────
