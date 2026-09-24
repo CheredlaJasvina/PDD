@@ -274,8 +274,21 @@ export const Recipes: React.FC<RecipesProps> = ({
                       <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-warning)', fontWeight: 700, letterSpacing: '1px' }}>
                         💡 Matches: {recipe.primaryIngredient} ({recipe.daysToExpiry} days left)
                       </span>
-                      <h2 style={{ margin: '0.25rem 0 0.5rem', fontSize: '1.6rem' }}>{recipe.title}</h2>
+                      <h2 style={{ margin: '0.25rem 0 0.5rem', fontSize: '1.4rem' }}>{recipe.title}</h2>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{recipe.description}</p>
+                      {/* Audience mode badge */}
+                      {recipe.audienceMode && recipe.audienceMode !== 'Regular' && (
+                        <span style={{
+                          display: 'inline-block', marginTop: '0.4rem',
+                          fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem',
+                          borderRadius: '12px',
+                          background: recipe.audienceMode === 'Kid-friendly' ? 'rgba(0,230,118,0.12)' : 'rgba(255,234,0,0.12)',
+                          color: recipe.audienceMode === 'Kid-friendly' ? 'var(--color-fresh)' : 'var(--color-warning)',
+                          border: `1px solid ${recipe.audienceMode === 'Kid-friendly' ? 'var(--color-fresh)' : 'var(--color-warning)'}`,
+                        }}>
+                          {recipe.audienceMode === 'Kid-friendly' ? '🧒 Kid-Friendly Mode' : '👨‍🍳 Gourmet Mode'}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       {recipe.chiliLevel === 'high' && (

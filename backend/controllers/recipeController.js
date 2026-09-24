@@ -1223,102 +1223,133 @@ exports.getSmartSuggestions = async (req, res) => {
     const prefs = await db.getPreferences();
     const inventory = await db.find({ state: 'Tracked' });
 
-    // 1. Filter: Restrict recommendations strictly to RAW (uncooked) and UNSPOILED items in the inventory
-    // Generate recipes for all tracked raw/unspoiled items (no date cutoff — 
-    // the frontend handles weekly clearing of the deleted list so old dismissed 
-    // recipes don't reappear). We still skip cooked, spoiled, and non-tracked items.
+    // 1. Filter: raw, uncooked, unspoiled, tracked items only.
+    //    Also exclude non-cookable packaged snacks and branded items that have
+    //    no meaningful cook-from-scratch recipe (oreo, chocolate, biscuit, etc.)
+    const NON_COOKABLE = new Set([
+      'oreo', 'biscuit', 'biscuits', 'cookie', 'cookies', 'chips', 'crisps',
+      'chocolate', 'candy', 'sweets', 'soda', 'cola', 'pepsi', 'coke', 'sprite',
+      'water', 'mineral water', 'energy drink', 'protein bar', 'granola bar',
+      'cereal', 'cornflakes', 'crackers', 'popcorn', 'jam', 'ketchup', 'sauce'
+    ]);
+
+    const isNonCookable = (name) => {
+      const n = name.toLowerCase();
+      return Array.from(NON_COOKABLE).some(k => n.includes(k));
+    };
+
     const rawItems = inventory.filter(item => {
-      if (item.isCooked || item.category === 'cooked food' || item.category === 'Cooked Food' || item.status === 'Spoiled' || item.state !== 'Tracked') {
-        return false;
-      }
+      if (item.isCooked || item.category === 'cooked food' || item.category === 'Cooked Food') return false;
+      if (item.status === 'Spoiled' || item.state !== 'Tracked') return false;
+      if (isNonCookable(item.name)) return false; // skip non-cookable packaged snacks
+
       const itemAddedTime = new Date(item.addedDate).getTime();
       const totalDuration = new Date(item.predictedSpoilageDate).getTime() - itemAddedTime;
       const elapsed = Date.now() - itemAddedTime;
       let currentPct = item.originalFreshness;
       if (elapsed >= totalDuration) currentPct = 0;
       else if (elapsed > 0) currentPct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
-      return currentPct > 10; // include slightly spoiled (>10%) — user can decide
+      return currentPct > 10;
     });
 
-    // Sort raw items by remaining freshness (ascending) so items nearing expiry appear first
+    // Sort by remaining freshness ascending (nearing expiry first)
     rawItems.sort((a, b) => a.originalFreshness - b.originalFreshness);
 
     const recipesSuggested = [];
     const servingsMultiplier = req.query.servings ? parseInt(req.query.servings, 10) : (prefs.servings || 2);
     const mode = req.query.mode || prefs.audienceMode || 'Regular';
 
-    // Loop through inventory items and check if we have recipes for them
+    // Helper: build a mode-specific recipe variant from a base recipe entry
+    const buildModeVariant = (recipe, item, matchedKey) => {
+      let r = JSON.parse(JSON.stringify(recipe));
+
+      // Replace {ingredient} placeholders for generic recipes
+      if (matchedKey === 'generic') {
+        r.title = r.title.replace('{ingredient}', item.name);
+        r.baseIngredients[0].name = item.name;
+        r.steps = r.steps.map(s => s.replace(/\{ingredient\}/g, item.name));
+      }
+
+      // Skip spicy recipes for kids
+      if (mode === 'Kid-friendly' && r.chiliLevel === 'high') return null;
+
+      // Build mode-specific title, description, steps and advice
+      let title = r.title;
+      let description = r.description;
+      let steps = [...r.steps];
+      let advice = '';
+
+      if (mode === 'Kid-friendly') {
+        // Prepend "Kid-Friendly" to title and adapt steps
+        title = `🧒 Kid-Friendly ${r.title}`;
+        description = `A child-approved, mild version of ${r.title}. ${r.kidFriendlyNotes}`;
+        // Replace any hot/spicy ingredients in steps
+        steps = steps.map(s =>
+          s.replace(/szechuan chili paste/gi, 'mild sweet sauce')
+           .replace(/jalapeno/gi, 'mild bell pepper')
+           .replace(/chili powder/gi, 'a pinch of mild paprika')
+           .replace(/chili/gi, 'mild seasoning')
+        );
+        advice = `👶 Child Mode: ${r.kidFriendlyNotes}`;
+      } else if (mode === 'Gourmet') {
+        // Elevate the title and add gourmet finishing step
+        title = `👨‍🍳 Chef's ${r.title}`;
+        description = `An elevated, restaurant-quality take on ${r.title}. ${r.gourmetNotes}`;
+        // Add a gourmet finishing step if one isn't already there
+        const gourmetStep = `Chef's finishing touch: ${r.gourmetNotes}`;
+        if (!steps.some(s => s.toLowerCase().includes('truffle') || s.toLowerCase().includes('drizzle'))) {
+          steps = [...steps, gourmetStep];
+        }
+        advice = `⭐ Gourmet Upgrade: ${r.gourmetNotes}`;
+      }
+      // Regular mode — use as-is
+
+      // Scale ingredients
+      const scaledIngredients = r.baseIngredients.map(ing => ({
+        name: ing.name,
+        qty: parseFloat(((ing.qty / r.baseServings) * servingsMultiplier).toFixed(2)),
+        unit: ing.unit
+      }));
+
+      return {
+        title,
+        primaryIngredient: item.name,
+        itemId: item._id,
+        daysToExpiry: Math.max(0, Math.ceil((new Date(item.predictedSpoilageDate) - new Date()) / (1000 * 60 * 60 * 24))),
+        description,
+        servings: servingsMultiplier,
+        ingredients: scaledIngredients,
+        steps,
+        audienceMode: mode,
+        chiliLevel: r.chiliLevel,
+        advice
+      };
+    };
+
+    // Loop through inventory items — max 3 recipes per item, 12 total
     for (const item of rawItems) {
-      // Find key matching item name (e.g. "Gala Apples" matches "apple")
+      if (recipesSuggested.length >= 12) break;
+
       const itemNameLower = item.name.toLowerCase();
       let matchedKey = null;
-
       for (const dbKey of Object.keys(RECIPE_DATABASE)) {
-        if (itemNameLower.includes(dbKey)) {
+        if (dbKey !== 'generic' && itemNameLower.includes(dbKey)) {
           matchedKey = dbKey;
           break;
         }
       }
-
       if (!matchedKey) matchedKey = 'generic';
-      if (matchedKey && RECIPE_DATABASE[matchedKey]) {
-        // Grab recipes for this item
-        const baseRecipes = RECIPE_DATABASE[matchedKey];
 
-        baseRecipes.forEach(r => {
-          // Clone recipe to replace generic placeholders
-          let recipe = JSON.parse(JSON.stringify(r));
-          if (matchedKey === 'generic') {
-            recipe.title = recipe.title.replace('{ingredient}', item.name);
-            recipe.baseIngredients[0].name = item.name;
-            recipe.steps = recipe.steps.map(s => s.replace(/\{ingredient\}/g, item.name));
-          }
-          // Check if this recipe fits the audience mode (skip spicy things in kid-friendly mode)
-          if (mode === 'Kid-friendly' && recipe.chiliLevel === 'high') {
-            return; // Skip spicy recipes for kids
-          }
+      const baseRecipes = RECIPE_DATABASE[matchedKey];
+      let addedForItem = 0;
 
-          // 2. Dynamic servings scaling: scale ingredient quantity
-          const scaledIngredients = recipe.baseIngredients.map(ing => {
-            const scaledQty = (ing.qty / recipe.baseServings) * servingsMultiplier;
-            return {
-              name: ing.name,
-              qty: parseFloat(scaledQty.toFixed(2)),
-              unit: ing.unit
-            };
-          });
-
-          // 3. Customize instructions and notes based on audience mode
-          let audienceSteps = [...recipe.steps];
-          let warningNote = "";
-
-          if (mode === 'Kid-friendly') {
-            warningNote = `Child Mode: ${recipe.kidFriendlyNotes}`;
-            // Adjust step descriptions to make them milder if needed
-            if (recipe.chiliLevel === 'high') {
-              audienceSteps = audienceSteps.map(step => 
-                step.replace("Szechuan chili paste", "sweet soy reduction")
-                    .replace("jalapeno", "bell pepper")
-              );
-            }
-          } else if (mode === 'Gourmet') {
-            warningNote = `Chef Touch: ${recipe.gourmetNotes}`;
-          }
-
-          recipesSuggested.push({
-            title: recipe.title,
-            primaryIngredient: item.name,
-            itemId: item._id,
-            daysToExpiry: Math.max(0, Math.ceil((new Date(item.predictedSpoilageDate) - new Date()) / (1000 * 60 * 60 * 24))),
-            description: recipe.description,
-            servings: servingsMultiplier,
-            ingredients: scaledIngredients,
-            steps: audienceSteps,
-            audienceMode: mode,
-            chiliLevel: recipe.chiliLevel,
-            advice: warningNote
-          });
-        });
+      for (const r of baseRecipes) {
+        if (addedForItem >= 3) break;
+        const variant = buildModeVariant(r, item, matchedKey);
+        if (variant) {
+          recipesSuggested.push(variant);
+          addedForItem++;
+        }
       }
     }
 
