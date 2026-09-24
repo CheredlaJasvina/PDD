@@ -313,11 +313,10 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
             }}>
               <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🤖</span>
               <span>
-                <strong style={{ color: '#fff' }}>How it works:</strong> The AI runs
-                MobileNetV3 (trained on 1 000 ImageNet classes) on your photo.
-                It identifies the food, cross-checks the result against the image
-                colours, and rejects mismatches — so a cauliflower photo will
-                never be accepted as an apple.
+                <strong style={{ color: '#fff' }}>How it works:</strong> The AI uses
+                Qwen 27B Vision (multimodal) to identify the food in your photo,
+                estimate its freshness from visual cues, and return detailed nutrition
+                and storage guidance — no labels or manual input needed.
               </span>
             </div>
 
@@ -456,7 +455,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
                         }}/>
                         <h2 style={{ fontSize: '1.1rem' }}>Analysing food composition…</h2>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
-                          Running MobileNetV3 · cross-validating colours · estimating freshness
+                          Sending to Qwen 27B Vision · analysing food · estimating freshness
                         </p>
                       </div>
                     </>

@@ -140,67 +140,94 @@ exports.scanFoodItem = async (req, res) => {
 
     const imagePath = req.file.path;
 
-    // Check if Groq API Key is configured in environment
+    // ── Groq Vision API (primary path) ────────────────────────────────────
+    // Model priority:
+    //   1. qwen/qwen3.8-27b          — current active vision model on Groq
+    //   2. meta-llama/llama-4-scout-17b-16e-instruct — multimodal fallback
+    // Python classifier is last resort when both fail or key is absent.
     if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'YOUR_GROQ_API_KEY') {
-      try {
-        const { Groq } = require('groq-sdk');
-        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+      const { Groq } = require('groq-sdk');
+      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-        // Convert uploaded image to base64
-        const imageBuffer = fs.readFileSync(imagePath);
-        const base64Image = imageBuffer.toString('base64');
-        const mimeType = req.file.mimetype || 'image/jpeg';
+      const imageBuffer = fs.readFileSync(imagePath);
+      const base64Image = imageBuffer.toString('base64');
+      const mimeType = req.file.mimetype || 'image/jpeg';
 
-        // Prompt Groq to return JSON output matching our database structure
-        const chatCompletion = await groq.chat.completions.create({
-          model: "llama-3.2-90b-vision-preview",
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: `Analyze the uploaded food image. You MUST return a JSON object with the following fields:
-                  {
-                    "success": true (or false if the image is NOT food, or skin/face/non-food is detected),
-                    "message": "reason for failure or success message",
-                    "name": "Specific Food Name (e.g., Red Apple, Cauliflower, Broccoli, Banana, Pizza)",
-                    "category": "one of: 'fruits', 'vegetables', 'cooked food', 'packaged food', 'liquid', 'non-veg'",
-                    "status": "one of: 'Fresh', 'Slightly Spoiled', 'Spoiled' based on visual decay/browning status",
-                    "originalFreshness": 100 (a percentage score from 5 to 100 estimating overall freshness, e.g. fresh=95%, browning=50%, rotten=10%),
-                    "shelfLifeDays": 5 (average shelf-life days left before this item completely spoils),
-                    "nutrition": {
-                      "calories": 100,
-                      "protein": 5,
-                      "carbs": 20,
-                      "fat": 2,
-                      "vitamins": ["Vitamin C", "Calcium"],
-                      "healthNotes": "A short sentence highlighting the health benefits of this specific food item."
-                    },
-                    "storageGuidance": "Detailed storage instruction.",
-                    "safetyAdvisory": "Detailed safety advisory about consumption."
-                  }`
-                },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:${mimeType};base64,${base64Image}`
-                  }
-                }
-              ]
-            }
+      const FOOD_PROMPT = `You are a food freshness analysis AI. Analyze the food item in this image carefully.
+You MUST respond with ONLY a valid JSON object — no markdown, no explanation, just raw JSON.
+
+Return exactly this structure:
+{
+  "success": true,
+  "message": "Food identified successfully",
+  "name": "Exact food name (e.g. Carrot, Red Apple, Broccoli, Pizza)",
+  "category": "one of exactly: fruits | vegetables | cooked food | packaged food | liquid | non-veg",
+  "status": "one of exactly: Fresh | Slightly Spoiled | Spoiled",
+  "originalFreshness": 90,
+  "shelfLifeDays": 7,
+  "nutrition": {
+    "calories": 41,
+    "protein": 0.9,
+    "carbs": 9.6,
+    "fat": 0.2,
+    "vitamins": ["Vitamin A", "Vitamin K"],
+    "healthNotes": "High in beta-carotene and fibre, supports eye health."
+  },
+  "storageGuidance": "Refrigerate in water with tops removed. Keeps up to 3 weeks.",
+  "safetyAdvisory": "Safe to eat raw or cooked. Wash thoroughly before use."
+}
+
+If the image does NOT contain food (e.g. person, object, skin, text), return:
+{ "success": false, "message": "Describe what you see and why it is not food." }
+
+Be precise with the name — do not say 'vegetable', say 'Carrot' or 'Broccoli'.`;
+
+      const buildPayload = (model) => ({
+        model,
+        temperature: 0.1,
+        max_completion_tokens: 1024,
+        response_format: { type: "json_object" },
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: FOOD_PROMPT },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Image}` } }
           ]
-        });
+        }]
+      });
 
-        // Clean up temp file
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
+      // Helper: call one model, return parsed result or throw
+      const tryGroqModel = async (model) => {
+        const completion = await groq.chat.completions.create(buildPayload(model));
+        const raw = completion.choices[0].message.content || '';
+        // Strip any accidental markdown fences
+        const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        return JSON.parse(jsonStr);
+      };
+
+      let result = null;
+      let groqModelUsed = null;
+
+      // Try qwen first, then llama-4-scout
+      const VISION_MODELS = [
+        'qwen/qwen3.8-27b',
+        'meta-llama/llama-4-scout-17b-16e-instruct'
+      ];
+
+      for (const model of VISION_MODELS) {
+        try {
+          result = await tryGroqModel(model);
+          groqModelUsed = model;
+          break;
+        } catch (modelErr) {
+          console.error(`Groq model ${model} failed:`, modelErr.message || modelErr);
         }
+      }
 
-        const responseContent = chatCompletion.choices[0].message.content;
-        const result = JSON.parse(responseContent);
+      // Clean up temp file now that we have the result (or failed)
+      try { if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath); } catch (_) {}
 
+      if (result) {
         if (!result.success) {
           return res.status(400).json({
             success: false,
@@ -208,10 +235,13 @@ exports.scanFoodItem = async (req, res) => {
           });
         }
 
-        const shelfLifeDays = result.shelfLifeDays || (result.category === 'fruits' ? 7 : (result.category === 'vegetables' ? 5 : 3));
+        const shelfLifeDays = result.shelfLifeDays || (
+          result.category === 'fruits' ? 7 :
+          result.category === 'vegetables' ? 5 :
+          result.category === 'non-veg' ? 2 : 3
+        );
         const addedDate = new Date();
         const predictedSpoilageDate = new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000);
-
         const imageUrl = getFoodImageUrl(result.name, result.category);
 
         const newItemData = {
@@ -221,31 +251,29 @@ exports.scanFoodItem = async (req, res) => {
           state: 'Tracked',
           addedDate,
           predictedSpoilageDate,
-          originalFreshness: result.originalFreshness,
+          originalFreshness: result.originalFreshness || 90,
           imageUrl,
           isCooked: result.category === 'cooked food',
           dietaryTags: ["vegan", "vegetarian", "gluten-free", "dairy-free"],
           nutrition: {
-            calories: result.nutrition.calories || 100,
-            protein: result.nutrition.protein || 1,
-            carbs: result.nutrition.carbs || 10,
-            fat: result.nutrition.fat || 0,
+            calories:   (result.nutrition && result.nutrition.calories)  || 100,
+            protein:    (result.nutrition && result.nutrition.protein)   || 1,
+            carbs:      (result.nutrition && result.nutrition.carbs)     || 10,
+            fat:        (result.nutrition && result.nutrition.fat)       || 0,
             ingredients: result.name,
-            vitamins: result.nutrition.vitamins || ["Vitamin C"],
-            healthNotes: result.nutrition.healthNotes || `Freshly analyzed ${result.name}.`
+            vitamins:   (result.nutrition && result.nutrition.vitamins)  || ["Vitamin C"],
+            healthNotes:(result.nutrition && result.nutrition.healthNotes) || `Freshly analysed ${result.name}.`
           },
-          storageGuidance: result.storageGuidance,
-          safetyAdvisory: result.safetyAdvisory
+          storageGuidance: result.storageGuidance || 'Store appropriately.',
+          safetyAdvisory:  result.safetyAdvisory  || 'Safe to eat.',
+          _model: groqModelUsed
         };
 
-        return res.json({
-          success: true,
-          scannedItems: [newItemData]
-        });
-
-      } catch (groqErr) {
-        console.error("Groq vision API failed, falling back to local Python classifier:", groqErr);
+        return res.json({ success: true, scannedItems: [newItemData] });
       }
+
+      // Both Groq models failed — fall through to Python
+      console.error("All Groq vision models failed. Falling back to Python classifier.");
     }
 
     // --- FALLBACK TO LOCAL PYTHON CLASSIFIER ---
