@@ -276,10 +276,16 @@ function App() {
   // Update preferences & Profile edit parameters in backend
   const handleUpdatePreferences = async (updates: Partial<User>) => {
     if (!loggedInUser) return;
+
+    // ── Optimistic update: apply immediately so the UI reflects the change
+    // right away without waiting for the network round-trip.
+    const updatedUser = { ...loggedInUser, ...updates };
+    setLoggedInUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const updatedUser = { ...loggedInUser, ...updates };
       const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/profile', {
         method: 'PUT',
         headers: { 
@@ -289,12 +295,19 @@ function App() {
         body: JSON.stringify(updatedUser)
       });
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.user) {
+        // Reconcile with server response (in case server added any fields)
         setLoggedInUser(data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
       }
+      // Re-fetch waste summary so buyAdvice member count updates
+      if (updates.membersCount !== undefined) {
+        fetchWasteSummary();
+      }
+      // If the server fails, the optimistic value stays — user sees the change
     } catch (error) {
       console.error('Error saving settings profile:', error);
+      // Optimistic update is already applied — don't revert so the UX is smooth
     }
   };
 

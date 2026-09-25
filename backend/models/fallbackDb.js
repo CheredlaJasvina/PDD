@@ -224,6 +224,13 @@ module.exports = {
     return { success: true, user: newUser };
   },
   getCurrentUser: () => currentUser,
+  setCurrentUserByEmail: (email) => {
+    // Re-hydrate currentUser from the users array — needed after server restarts
+    // so updateCurrentUserProfile has a valid base to merge into.
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) currentUser = user;
+    return currentUser;
+  },
   getUserByEmail: (email) => {
     if (!email) return null;
     return users.find(u => u.email.toLowerCase() === email.toLowerCase());

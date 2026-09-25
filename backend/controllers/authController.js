@@ -98,8 +98,21 @@ exports.logout = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const db = getDB();
-    const updated = await db.updateProfile(req.body);
+    // Identify the user by their email from the request header or body.
+    // This is critical: after a Render cold-start currentUser is null.
+    // We look up the user by email first so the update always targets
+    // the correct record regardless of session state.
+    const email = (req.headers && req.headers['x-user-email']) || req.body.email || '';
+    if (email) {
+      // Re-hydrate currentUser from the users array so updateCurrentUserProfile
+      // has a valid base to merge into even after a server restart.
+      const existingUser = fallbackDb.getUserByEmail(email);
+      if (existingUser) {
+        // Temporarily set currentUser so the update targets the right record
+        fallbackDb.setCurrentUserByEmail(email);
+      }
+    }
+    const updated = fallbackDb.updateCurrentUserProfile(req.body);
     res.json({ success: true, user: updated });
   } catch (error) {
     res.status(500).json({ error: error.message });
