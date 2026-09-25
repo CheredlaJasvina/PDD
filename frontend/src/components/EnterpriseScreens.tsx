@@ -1208,40 +1208,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
           </div>
         );
 
-      case 'adv-storage':
-        const dynamicCropDb = inventory.length > 0 ? inventory.map(item => {
-          let temp = "Cool (4°C)";
-          let shelf = "7 days";
-          let place = "Fridge Center Shelf";
-          
-          if (item.category === 'fruits') {
-             temp = "Cool (4°C)"; shelf = "3-4 weeks"; place = "Crisper Drawer";
-          } else if (item.category === 'packaged food') {
-             temp = "Cool Dark (10°C)"; shelf = "2 months"; place = "Pantry Bin";
-          } else if (item.category === 'cooked food') {
-             temp = "Cold (2°C)"; shelf = "3-4 days"; place = "Fridge Top Shelf";
-          }
-          return { name: item.name, temp, shelf, place };
-        }) : [];
-
-        return (
-          <div>
-            <h3>🗄️ crop storage handbook</h3>
-            {dynamicCropDb.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Your inventory is empty. Scan items to see their storage guidance here.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-                {dynamicCropDb.map((c, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', fontSize: '0.9rem' }}>
-                    <span><strong>{c.name}</strong> ({c.place})</span>
-                    <span>{c.temp} · {c.shelf}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-
       case 'adv-temp':
         const tempItemName = inventory.length > 0 ? inventory[0].name : "apples";
         return (

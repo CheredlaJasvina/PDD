@@ -88,7 +88,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "title": "Advisories & Library",
       "icon": "📖",
       "screens": [
-        {"id": "adv-storage", "name": "Crop Storage Database", "icon": "🗄️"},
         {"id": "adv-poisoning", "name": "Food Poisoning Prevention", "icon": "🧼"},
         {"id": "adv-meal", "name": "Smart Meal Planner", "icon": "📅"},
         {"id": "adv-nutrition", "name": "Nutrition Profiler", "icon": "🍎"}
@@ -423,8 +422,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         );
       case "recipes-spice":
         return SpiceCustomizerScreen(inventory: _inventory);
-      case "adv-storage":
-        return CropStorageScreen(inventory: _inventory);
       default:
         return MockScreenWidget(
           activeRoute: _activeRoute,
@@ -3311,58 +3308,6 @@ class _SpiceCustomizerScreenState extends State<SpiceCustomizerScreen> {
             "Selected spiciness profile: ${spiceLevel <= 3 ? 'Mild' : spiceLevel <= 7 ? 'Medium Spiced' : 'Extra Hot (Vindaloo)'}.",
             style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class CropStorageScreen extends StatelessWidget {
-  final List<dynamic> inventory;
-  const CropStorageScreen({super.key, required this.inventory});
-
-  @override
-  Widget build(BuildContext context) {
-    final dynamicCropDb = inventory.isNotEmpty ? inventory.map((item) {
-      String temp = "Cool (4°C)";
-      String shelf = "7 days";
-      String place = "Fridge Center Shelf";
-      
-      if (item["category"] == 'fruits') {
-        temp = "Cool (4°C)"; shelf = "3-4 weeks"; place = "Crisper Drawer";
-      } else if (item["category"] == 'packaged food') {
-        temp = "Cool Dark (10°C)"; shelf = "2 months"; place = "Pantry Bin";
-      } else if (item["category"] == 'cooked food') {
-        temp = "Cold (2°C)"; shelf = "3-4 days"; place = "Fridge Top Shelf";
-      }
-      return {"name": item["name"], "temp": temp, "shelf": shelf, "place": place};
-    }).toList() : [];
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("🗄️ Crop Storage Handbook", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          if (dynamicCropDb.isEmpty)
-            const Text("Your inventory is empty. Scan items to see their storage guidance here.", style: TextStyle(color: Colors.grey, fontSize: 14))
-          else
-            Column(
-              children: dynamicCropDb.map((c) => Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.white12)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(child: Text("${c['name']} (${c['place']})", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-                    Text("${c['temp']} • ${c['shelf']}", style: const TextStyle(fontSize: 14)),
-                  ],
-                ),
-              )).toList(),
-            ),
         ],
       ),
     );
