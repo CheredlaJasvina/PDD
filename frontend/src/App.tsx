@@ -41,7 +41,6 @@ const sidebarCategories: SidebarCategory[] = [
     screens: [
       { id: "recipes", name: "Dish Suggestion Hub", icon: "🥣" },
       { id: "recipes-portions", name: "Cooking Portion Scaler", icon: "⚖️" },
-      { id: "recipes-kids", name: "Kid-Friendly Adjuster", icon: "👶" },
       { id: "recipes-leftovers", name: "Leftovers Re-purposer", icon: "♻️" },
       { id: "recipes-spice", name: "Spice Customizer", icon: "🌶️" }
     ]

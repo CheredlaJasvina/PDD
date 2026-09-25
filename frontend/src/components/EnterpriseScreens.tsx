@@ -53,9 +53,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   const [portionsServings, setPortionsServings] = useState(2);
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   
-  // 4. Kid-Friendly Adjuster
-  const [kidsSpice, setKidsSpice] = useState("Mild");
-  
   // 5. Gourmet Upgrade
   const [gourmetLevel, setGourmetLevel] = useState("Home Cook");
   const [gourmetMsg, setGourmetMsg] = useState("");
@@ -577,32 +574,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
                 )}
               </div>
             </div>
-          </div>
-        );
-
-      case 'recipes-kids':
-        const kidsAdaptItem = inventory.filter(i => !i.isCooked).length > 0 
-          ? inventory.filter(i => !i.isCooked)[0].name 
-          : "dish recipes";
-        return (
-          <div>
-            <h3>👶 Kid-Friendly Flavor Safe-guard</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Adjust flavor profiles to match mild, kid-approved textures.</p>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {["Mild", "Sweet", "Creamy"].map(mode => (
-                <button
-                  key={mode}
-                  className="btn-secondary"
-                  style={{ background: kidsSpice === mode ? 'rgba(0, 230, 118, 0.1)' : 'transparent', borderColor: kidsSpice === mode ? 'var(--color-fresh)' : 'var(--glass-border)' }}
-                  onClick={() => setKidsSpice(mode)}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
-            <p style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(0,230,118,0.03)', borderRadius: '8px', fontSize: '0.9rem' }}>
-              💡 Selected configuration: <strong>{kidsSpice} Mode</strong>. Spices in recipe suggestions for <strong>{kidsAdaptItem}</strong> will be automatically scaled down.
-            </p>
           </div>
         );
 
