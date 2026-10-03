@@ -35,87 +35,139 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
 
   void _go(String v) => setState(() { _view = v; _error = null; _success = null; });
 
+  // Longer timeout — Render free-tier cold starts take up to 50s
+  static const _timeout = Duration(seconds: 60);
+
   Future<void> _login() async {
+    final email = _emailCtrl.text.trim();
+    final pass  = _passCtrl.text;
+    if (email.isEmpty || pass.isEmpty) {
+      setState(() => _error = 'Email and password are required.');
+      return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
-      final res = await http.post(Uri.parse('${widget.backendUrl}/auth/login'),
+      final res = await http.post(
+        Uri.parse('${widget.backendUrl}/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _emailCtrl.text.trim(), 'password': _passCtrl.text}),
-      ).timeout(const Duration(seconds: 15));
+        body: jsonEncode({'email': email, 'password': pass}),
+      ).timeout(_timeout);
       final d = jsonDecode(res.body) as Map<String, dynamic>;
       if (res.statusCode == 200 && d['success'] == true) {
-        widget.onLoginSuccess(d['user'], d['token'] ?? '');
+        widget.onLoginSuccess(d['user'] as Map<String, dynamic>, d['token'] as String? ?? '');
       } else {
-        setState(() => _error = d['message'] ?? 'Invalid credentials.');
+        setState(() => _error = d['message'] as String? ?? 'Invalid email or password.');
       }
-    } catch (_) {
-      final e = _emailCtrl.text.trim(); final p = _passCtrl.text;
-      if (e == 'jasvina@foodfreshness.com' && p == 'password123') {
+    } on Exception catch (e) {
+      // Offline demo accounts – always available without network
+      if (email == 'jasvina@foodfreshness.com' && pass == 'password123') {
         widget.onLoginSuccess(_demoJasvina(), 'mock'); return;
       }
-      if (e == 'ram@gmail.com' && p == 'Ram@1234') {
+      if (email == 'ram@gmail.com' && pass == 'Ram@1234') {
         widget.onLoginSuccess(_demoRam(), 'mock'); return;
       }
-      setState(() => _error = 'Cannot reach server. Check your connection.');
+      setState(() => _error = 'Server unreachable (${_friendlyError(e)}). Try the demo account: jasvina@foodfreshness.com / password123');
     } finally { if (mounted) setState(() => _loading = false); }
   }
 
   Future<void> _signup() async {
-    final name = _nameCtrl.text.trim();
-    if (name.isEmpty) { setState(() => _error = 'Name is required.'); return; }
+    final name  = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final pass  = _passCtrl.text;
+
+    // Client-side validation
+    if (name.isEmpty)  { setState(() => _error = 'Full name is required.'); return; }
     if (!RegExp(r'^[a-zA-Z\s.\-]+$').hasMatch(name)) {
-      setState(() => _error = 'Name must contain letters only.'); return;
+      setState(() => _error = 'Name must contain letters only (no numbers or symbols).'); return;
     }
+    if (email.isEmpty) { setState(() => _error = 'Email address is required.'); return; }
+    if (!RegExp(r'^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
+      setState(() => _error = 'Please enter a valid email address.'); return;
+    }
+    if (pass.length < 6) { setState(() => _error = 'Password must be at least 6 characters.'); return; }
+
     setState(() { _loading = true; _error = null; });
     try {
-      final res = await http.post(Uri.parse('${widget.backendUrl}/auth/signup'),
+      final res = await http.post(
+        Uri.parse('${widget.backendUrl}/auth/signup'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _emailCtrl.text.trim(), 'password': _passCtrl.text, 'name': name}),
-      ).timeout(const Duration(seconds: 15));
+        body: jsonEncode({'email': email, 'password': pass, 'name': name}),
+      ).timeout(_timeout);
       final d = jsonDecode(res.body) as Map<String, dynamic>;
       if (res.statusCode == 200 && d['success'] == true) {
-        setState(() { _success = 'Verification code sent to your email.'; _view = 'otp'; });
+        // Success — move to OTP screen
+        setState(() {
+          _success = 'Verification code sent to $email. Check your inbox (and spam folder).';
+          _view = 'otp';
+        });
       } else {
-        setState(() => _error = d['message'] ?? 'Registration failed.');
+        // Server returned a business-logic error (e.g. email already registered)
+        setState(() => _error = d['message'] as String? ?? 'Registration failed. Please try again.');
       }
-    } catch (_) {
-      setState(() { _success = 'Offline mode – use code 8844 to verify.'; _view = 'otp'; _otpCtrl.text = '8844'; });
+    } on Exception catch (e) {
+      // Network / timeout — let user know clearly; don't silently fall into offline OTP
+      setState(() => _error =
+          'Cannot reach the server (${_friendlyError(e)}).\n\n'
+          'The server may be waking up (free-tier cold start takes ~30s). '
+          'Please wait a moment and try again.');
     } finally { if (mounted) setState(() => _loading = false); }
   }
 
   Future<void> _forgot() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) { setState(() => _error = 'Please enter your registered email.'); return; }
     setState(() { _loading = true; _error = null; });
     try {
-      final res = await http.post(Uri.parse('${widget.backendUrl}/auth/send-otp'),
+      final res = await http.post(
+        Uri.parse('${widget.backendUrl}/auth/send-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _emailCtrl.text.trim()}),
-      ).timeout(const Duration(seconds: 15));
+        body: jsonEncode({'email': email}),
+      ).timeout(_timeout);
       final d = jsonDecode(res.body) as Map<String, dynamic>;
       if (res.statusCode == 200 && d['success'] == true) {
-        setState(() { _success = d['message'] ?? 'Code sent.'; _view = 'otp'; });
-      } else { setState(() => _error = d['message'] ?? 'Failed to send OTP.'); }
-    } catch (_) { setState(() => _error = 'Cannot reach server.'); }
-    finally { if (mounted) setState(() => _loading = false); }
+        setState(() { _success = d['message'] as String? ?? 'Recovery code sent to $email.'; _view = 'otp'; });
+      } else {
+        setState(() => _error = d['message'] as String? ?? 'Failed to send OTP. Check the email address.');
+      }
+    } on Exception catch (e) {
+      setState(() => _error = 'Cannot reach server (${_friendlyError(e)}). Please try again.');
+    } finally { if (mounted) setState(() => _loading = false); }
   }
 
   Future<void> _verifyOtp() async {
-    if (_otpCtrl.text.length != 4) { setState(() => _error = 'Code must be 4 digits.'); return; }
+    final code = _otpCtrl.text.trim();
+    if (code.length != 4) { setState(() => _error = 'Code must be exactly 4 digits.'); return; }
     setState(() { _loading = true; _error = null; });
     try {
-      final res = await http.post(Uri.parse('${widget.backendUrl}/auth/verify-otp'),
+      final res = await http.post(
+        Uri.parse('${widget.backendUrl}/auth/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _emailCtrl.text.trim(), 'code': _otpCtrl.text}),
-      ).timeout(const Duration(seconds: 15));
+        body: jsonEncode({'email': _emailCtrl.text.trim(), 'code': code}),
+      ).timeout(_timeout);
       final d = jsonDecode(res.body) as Map<String, dynamic>;
       if (res.statusCode == 200 && d['success'] == true) {
-        widget.onLoginSuccess(_newUser(), 'mock');
-      } else { setState(() => _error = d['message'] ?? 'Invalid code.'); }
-    } catch (_) {
-      if (_otpCtrl.text == '8844' || _otpCtrl.text == '1234') {
+        // Use server-returned user if available, otherwise build from form data
+        final user = d['user'] as Map<String, dynamic>? ?? _newUser();
+        widget.onLoginSuccess(user, d['token'] as String? ?? '');
+      } else {
+        setState(() => _error = d['message'] as String? ?? 'Invalid verification code. Check your email.');
+      }
+    } on Exception catch (e) {
+      // Offline bypass codes for testing without network
+      if (code == '8844' || code == '1234') {
         widget.onLoginSuccess(_newUser(), 'mock'); return;
       }
-      setState(() => _error = 'Cannot connect. Check network.');
+      setState(() => _error = 'Cannot connect (${_friendlyError(e)}). Use code 8844 to test offline.');
     } finally { if (mounted) setState(() => _loading = false); }
+  }
+
+  /// Converts a network exception into a short human-readable label.
+  String _friendlyError(Exception e) {
+    final msg = e.toString().toLowerCase();
+    if (msg.contains('timeout'))        return 'timeout – server may be starting up';
+    if (msg.contains('socketexception')) return 'no internet connection';
+    if (msg.contains('handshake'))      return 'SSL error';
+    return 'network error';
   }
 
   Map<String, dynamic> _newUser() => {
@@ -349,7 +401,11 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
     ),
     onPressed: _loading ? null : onTap,
     child: _loading
-        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+        ? const Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+            SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)),
+            SizedBox(width: 12),
+            Text('Connecting to server…', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black)),
+          ])
         : Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
   );
 

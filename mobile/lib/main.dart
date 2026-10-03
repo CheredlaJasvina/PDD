@@ -181,7 +181,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final sessionRes = await http.get(
         Uri.parse("$_backendUrl/auth/me"),
         headers: _getHeaders(),
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 45));
       final Map<String, dynamic> sessionData = jsonDecode(sessionRes.body);
 
       if (sessionRes.statusCode == 200 && sessionData["success"] == true) {
@@ -217,7 +217,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final res = await http.get(
         Uri.parse("$_backendUrl/inventory"),
         headers: _getHeaders(),
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 45));
       if (res.statusCode == 200) {
         setState(() {
           _inventory = jsonDecode(res.body);
@@ -2182,7 +2182,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
           "Content-Type": "application/json",
           "x-user-email": email,
         },
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 45));
       final Map<String, dynamic> data = jsonDecode(res.body);
 
       if (data["success"] == true) {
@@ -2435,7 +2435,7 @@ class _CoOpHouseholdScreenState extends State<CoOpHouseholdScreen> {
 
   Future<void> _fetchHousehold() async {
     try {
-      final res = await http.get(Uri.parse("${widget.backendUrl}/household")).timeout(const Duration(seconds: 3));
+      final res = await http.get(Uri.parse("${widget.backendUrl}/household")).timeout(const Duration(seconds: 45));
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (data["success"] == true) {
         setState(() {
@@ -2661,8 +2661,8 @@ class _CommunityCatalogScreenState extends State<CommunityCatalogScreen> {
 
   Future<void> _fetchData() async {
     try {
-      final donRes = await http.get(Uri.parse("${widget.backendUrl}/donations")).timeout(const Duration(seconds: 3));
-      final catRes = await http.get(Uri.parse("${widget.backendUrl}/catalog")).timeout(const Duration(seconds: 3));
+      final donRes = await http.get(Uri.parse("${widget.backendUrl}/donations")).timeout(const Duration(seconds: 45));
+      final catRes = await http.get(Uri.parse("${widget.backendUrl}/catalog")).timeout(const Duration(seconds: 45));
 
       if (donRes.statusCode == 200 && catRes.statusCode == 200) {
         setState(() {
