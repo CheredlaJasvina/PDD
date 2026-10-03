@@ -94,22 +94,20 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
         body: jsonEncode({'email': email, 'password': pass, 'name': name}),
       ).timeout(_timeout);
       final d = jsonDecode(res.body) as Map<String, dynamic>;
-      if (res.statusCode == 200 && d['success'] == true) {
-        // Success — move to OTP screen
-        setState(() {
-          _success = 'Verification code sent to $email. Check your inbox (and spam folder).';
-          _view = 'otp';
-        });
+      if ((res.statusCode == 200 || res.statusCode == 201) && d['success'] == true) {
+        // Backend logs the user in directly on signup — no OTP step needed.
+        // Use the returned user object; fall back to locally-built one if absent.
+        final user  = (d['user']  as Map<String, dynamic>?) ?? _newUser();
+        final token = (d['token'] as String?)               ?? '';
+        widget.onLoginSuccess(user, token);
       } else {
         // Server returned a business-logic error (e.g. email already registered)
         setState(() => _error = d['message'] as String? ?? 'Registration failed. Please try again.');
       }
     } on Exception catch (e) {
-      // Network / timeout — let user know clearly; don't silently fall into offline OTP
       setState(() => _error =
           'Cannot reach the server (${_friendlyError(e)}).\n\n'
-          'The server may be waking up (free-tier cold start takes ~30s). '
-          'Please wait a moment and try again.');
+          'The server may be waking up. Please wait a moment and try again.');
     } finally { if (mounted) setState(() => _loading = false); }
   }
 
