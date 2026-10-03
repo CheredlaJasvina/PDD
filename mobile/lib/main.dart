@@ -172,43 +172,68 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedUserJson = prefs.getString("logged_in_user");
-      if (savedUserJson != null) {
-        setState(() {
-          _loggedInUser = jsonDecode(savedUserJson) as Map<String, dynamic>;
-        });
-      }
 
-      final sessionRes = await http.get(
-        Uri.parse("$_backendUrl/auth/me"),
-        headers: _getHeaders(),
-      ).timeout(const Duration(seconds: 45));
-      final Map<String, dynamic> sessionData = jsonDecode(sessionRes.body);
-
-      if (sessionRes.statusCode == 200 && sessionData["success"] == true) {
+      // ── CRITICAL: If no saved session exists on this device, always show
+      // the login screen. Never call /auth/me with an empty email because
+      // the backend returns another user's data for empty-email requests.
+      if (savedUserJson == null) {
         setState(() {
-          _loggedInUser = sessionData["user"];
-        });
-        await prefs.setString("logged_in_user", jsonEncode(sessionData["user"]));
-        await _fetchInventory();
-      } else {
-        if (_loggedInUser != null) {
-          await _fetchInventory();
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      if (_loggedInUser != null) {
-        await _fetchInventory();
-      } else {
-        setState(() {
-          _inventory = _localInventoryFallback;
+          _loggedInUser = null;
           _isLoading = false;
-          _connError = "Offline mode active";
         });
+        return;
       }
+
+      // Restore cached user from this device's own storage
+      final cachedUser = jsonDecode(savedUserJson) as Map<String, dynamic>;
+      final cachedEmail = cachedUser["email"] as String? ?? "";
+
+      // Guard: if the cached user has no email it's corrupted — clear it
+      if (cachedEmail.isEmpty) {
+        await prefs.remove("logged_in_user");
+        setState(() { _loggedInUser = null; _isLoading = false; });
+        return;
+      }
+
+      // Show the cached user immediately while we verify with the server
+      setState(() { _loggedInUser = cachedUser; });
+
+      // Verify the saved session is still valid on the server
+      try {
+        final sessionRes = await http.get(
+          Uri.parse("$_backendUrl/auth/me"),
+          headers: {"Content-Type": "application/json", "x-user-email": cachedEmail},
+        ).timeout(const Duration(seconds: 45));
+
+        final Map<String, dynamic> sessionData = jsonDecode(sessionRes.body);
+
+        if (sessionRes.statusCode == 200 && sessionData["success"] == true) {
+          final serverUser = sessionData["user"] as Map<String, dynamic>? ?? cachedUser;
+          final serverEmail = serverUser["email"] as String? ?? "";
+
+          // ── CRITICAL: Only accept the server response if the email matches
+          // what we sent. The backend may return a different user for some
+          // emails, so we verify the response belongs to THIS user.
+          if (serverEmail.toLowerCase() == cachedEmail.toLowerCase()) {
+            setState(() { _loggedInUser = serverUser; });
+            await prefs.setString("logged_in_user", jsonEncode(serverUser));
+          }
+          // else: keep the cached user as-is (server returned wrong user)
+        }
+        // else: keep cached user (session expired but stay logged in offline)
+      } catch (_) {
+        // Network error — stay with cached user (offline mode)
+        setState(() => _connError = "Offline mode active");
+      }
+
+      await _fetchInventory();
+
+    } catch (e) {
+      setState(() {
+        _inventory = _localInventoryFallback;
+        _isLoading = false;
+        _connError = "Offline mode active";
+      });
     }
   }
 
@@ -345,7 +370,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Future<void> _handleLogout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove("logged_in_user");
+      await prefs.clear(); // Wipe ALL stored session data for this device
     } catch (_) {}
     try {
       await http.post(
@@ -357,6 +382,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
     setState(() {
       _loggedInUser = null;
+      _inventory = [];
       _activeRoute = "dashboard";
     });
   }
