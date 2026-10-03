@@ -5,6 +5,14 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ── New full-featured screens ──────────────────────────────────────────────
+import 'screens/landing_auth.dart' as auth_screen;
+import 'screens/dashboard_screen.dart' as dash_screen;
+import 'screens/analytics_screen.dart' as analytics_screen;
+import 'screens/profile_settings_screen.dart' as profile_screen;
+import 'screens/eco_impact_screen.dart' as eco_screen;
+import 'screens/enterprise_screens.dart' as enterprise_screen;
+
 void main() {
   runApp(const FoodFreshnessApp());
 }
@@ -139,15 +147,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    try {
-      if (Platform.isAndroid) {
-        _backendUrl = "http://10.0.2.2:5000/api";
-      } else if (Platform.isIOS || Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-        _backendUrl = "http://localhost:5000/api";
-      }
-    } catch (e) {
-      _backendUrl = "http://localhost:5000/api";
-    }
+    // Always use the production Render backend.
+    // The localhost/emulator override was causing auth failures on real devices
+    // because http://10.0.2.2:5000 is only reachable from Android emulators,
+    // not physical phones.
+    _backendUrl = "https://pdd-9fqv.onrender.com/api";
     _fetchSession();
   }
 
@@ -358,47 +362,54 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   Widget _buildActiveView() {
+    // ── Auth gate: show new full-featured landing screen ──────────────────
     if (_loggedInUser == null) {
-      return LandingAuthScreen(
+      return auth_screen.LandingAuthScreen(
         onLoginSuccess: _handleLoginSuccess,
         backendUrl: _backendUrl,
       );
     }
 
+    final email = _loggedInUser!["email"] as String? ?? "";
+
+    void navigate(String route, {String? status}) {
+      setState(() {
+        _activeRoute = route;
+        if (status != null) _pantryStatusFilter = status;
+      });
+    }
+
     switch (_activeRoute) {
+      // ── Dashboard (new full-featured version) ────────────────────────────
       case "dashboard":
-        return DashboardScreen(
+        return dash_screen.DashboardScreen(
           inventory: _inventory,
           preferences: _loggedInUser!,
           onUpdateState: _updateItemStatus,
-          onNavigate: (route, {status}) {
-            setState(() {
-              _activeRoute = route;
-              if (status != null) {
-                _pantryStatusFilter = status;
-              }
-            });
-          },
+          onNavigate: navigate,
+          backendUrl: _backendUrl,
         );
+
+      // ── Scanner (existing rich scanner – kept from main.dart) ────────────
       case "scanner":
         return ScannerScreen(
           onScanComplete: (scans) => _fetchInventory(),
           onAddManual: _addManualItem,
           backendUrl: _backendUrl,
-          email: _loggedInUser != null ? _loggedInUser!["email"] as String? ?? "" : "",
+          email: email,
         );
+
+      // ── Inventory (existing rich inventory screen – kept from main.dart) ─
       case "inventory":
         return InventoryScreen(
           inventory: _inventory,
           onUpdateState: _updateItemStatus,
           onDeleteItem: _deleteItem,
           initialStatusFilter: _pantryStatusFilter,
-          onClearStatusFilter: () {
-            setState(() {
-              _pantryStatusFilter = "all";
-            });
-          },
+          onClearStatusFilter: () => setState(() => _pantryStatusFilter = "all"),
         );
+
+      // ── Recipes (existing screen – kept from main.dart) ─────────────────
       case "recipes":
         return RecipesScreen(
           preferences: _loggedInUser!,
@@ -406,25 +417,49 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           backendUrl: _backendUrl,
           inventory: _inventory,
         );
+
+      // ── Analytics (new version with donut chart + calendar) ──────────────
       case "analytics":
-        return AnalyticsScreen(backendUrl: _backendUrl);
+        return analytics_screen.AnalyticsScreen(
+          backendUrl: _backendUrl,
+          email: email,
+          inventory: _inventory,
+        );
+
+      // ── Eco & Carbon Tracker ─────────────────────────────────────────────
+      case "eco-tracker":
+        return eco_screen.EcoImpactScreen(
+          backendUrl: _backendUrl,
+          email: email,
+        );
+
+      // ── Co-op Household (existing screen – kept) ─────────────────────────
       case "household":
-        return CoOpHouseholdScreen(backendUrl: _backendUrl, userName: _loggedInUser!["name"]);
+        return CoOpHouseholdScreen(
+          backendUrl: _backendUrl,
+          userName: _loggedInUser!["name"] as String? ?? "User",
+        );
+
+      // ── Profile / Settings (new full-featured version) ───────────────────
       case "settings":
-        return ProfileSettingsScreen(
+        return profile_screen.ProfileSettingsScreen(
           preferences: _loggedInUser!,
           onUpdatePreferences: _updatePreferences,
+          theme: _loggedInUser!["theme"] as String? ?? "emerald-aurora",
+          onThemeChange: (t) => _updatePreferences({"theme": t}),
         );
-      case "recipes-gourmet":
-        return GourmetUpgradeScreen(
-          onNavigateBack: () => setState(() => _activeRoute = "dashboard"),
-        );
-      case "recipes-spice":
-        return SpiceCustomizerScreen(inventory: _inventory);
+
+      // ── All enterprise / sidebar sub-screens route through EnterpriseScreen
       default:
-        return MockScreenWidget(
-          activeRoute: _activeRoute,
+        return enterprise_screen.EnterpriseScreen(
+          screenId: _activeRoute,
           screenName: _getScreenName(_activeRoute),
+          inventory: _inventory,
+          preferences: _loggedInUser!,
+          onUpdatePreferences: _updatePreferences,
+          theme: _loggedInUser!["theme"] as String? ?? "emerald-aurora",
+          onThemeChange: (t) => _updatePreferences({"theme": t}),
+          onUpdateState: _updateItemStatus,
           onNavigateBack: () => setState(() => _activeRoute = "dashboard"),
         );
     }
@@ -463,12 +498,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             if (_connError != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                 child: const Text("OFFLINE", style: TextStyle(fontSize: 8, color: Colors.orange, fontWeight: FontWeight.bold)),
               )
           ],
         ),
-        backgroundColor: const Color(0xFF0F1420).withOpacity(0.6),
+        backgroundColor: const Color(0xFF0F1420).withValues(alpha: 0.6),
         actions: [
           if (showDrawer)
             IconButton(
@@ -537,7 +572,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                               ),
                             ),
                             selected: isSelected,
-                            selectedTileColor: Colors.white.withOpacity(0.03),
+                            selectedTileColor: Colors.white.withValues(alpha: 0.03),
                             onTap: () {
                               Navigator.pop(context);
                               setState(() {
@@ -548,7 +583,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         }).toList(),
                       ),
                     );
-                  }).toList(),
+                  }),
                   const Divider(color: Colors.white12),
                   ListTile(
                     leading: const Icon(Icons.exit_to_app, color: Color(0xFFFF1744)),
@@ -565,21 +600,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
           : _buildActiveView(),
-    );
-  }
-
-  Widget _buildDrawerTile(String title, String route) {
-    final isSelected = _activeRoute == route;
-    return ListTile(
-      title: Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00E676) : Colors.white70, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-      selected: isSelected,
-      selectedTileColor: Colors.white.withOpacity(0.03),
-      onTap: () {
-        Navigator.pop(context);
-        setState(() {
-          _activeRoute = route;
-        });
-      },
     );
   }
 }
@@ -618,40 +638,44 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/login"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": _emailCtrl.text, "password": _passCtrl.text})
-      );
+        body: jsonEncode({"email": _emailCtrl.text.trim(), "password": _passCtrl.text})
+      ).timeout(const Duration(seconds: 15));
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {
-        widget.onLoginSuccess(data["user"], data["token"]);
+        widget.onLoginSuccess(data["user"], data["token"] ?? "");
       } else {
-        setState(() => _error = data["message"] ?? "Invalid credentials");
+        setState(() => _error = data["message"] ?? "Invalid email or password.");
       }
     } catch (e) {
-      setState(() => _error = "Offline database login. Use matching seeds.");
-      if (_emailCtrl.text == "jasvina@foodfreshness.com" && _passCtrl.text == "password123") {
+      // Network unreachable — try the two demo seed accounts as offline fallback
+      if (_emailCtrl.text.trim() == "jasvina@foodfreshness.com" && _passCtrl.text == "password123") {
         widget.onLoginSuccess({
           "email": "jasvina@foodfreshness.com",
           "name": "C. Jasvina",
           "dietaryPreferences": ["vegetarian"],
           "audienceMode": "Regular",
           "servings": 2,
+          "membersCount": 2,
           "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
           "healthScore": 88,
           "streakCount": 5,
           "unlockedBadges": ["Fresh Starter", "Waste Warrior"]
         }, "mock-token");
-      } else if (_emailCtrl.text == "ram@gmail.com" && _passCtrl.text == "Ram@1234") {
+      } else if (_emailCtrl.text.trim() == "ram@gmail.com" && _passCtrl.text == "Ram@1234") {
         widget.onLoginSuccess({
           "email": "ram@gmail.com",
           "name": "Ram",
           "dietaryPreferences": ["vegetarian"],
           "audienceMode": "Regular",
           "servings": 2,
+          "membersCount": 2,
           "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
           "healthScore": 100,
           "streakCount": 1,
           "unlockedBadges": ["Fresh Starter"]
         }, "mock-token");
+      } else {
+        setState(() => _error = "Cannot reach server. Check your internet connection and try again.");
       }
     }
   }
@@ -674,8 +698,8 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/signup"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": _emailCtrl.text, "password": _passCtrl.text, "name": name})
-      );
+        body: jsonEncode({"email": _emailCtrl.text.trim(), "password": _passCtrl.text, "name": name})
+      ).timeout(const Duration(seconds: 15));
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {
         setState(() {
@@ -683,13 +707,14 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
           _state = "otp";
         });
       } else {
-        setState(() => _error = data["message"] ?? "Registration failed");
+        setState(() => _error = data["message"] ?? "Registration failed. Please try again.");
       }
     } catch (e) {
+      // Server unreachable — register locally and allow OTP bypass with code 8844
       setState(() {
-        _success = "Verification code sent to your email address.";
+        _success = "Account created in offline mode. Use OTP code 8844 to verify.";
         _state = "otp";
-        _otpCtrl.text = "1234";
+        _otpCtrl.text = "8844";
       });
     }
   }
@@ -700,8 +725,8 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/send-otp"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": _emailCtrl.text})
-      );
+        body: jsonEncode({"email": _emailCtrl.text.trim()})
+      ).timeout(const Duration(seconds: 15));
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {
         setState(() {
@@ -712,7 +737,7 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
         setState(() => _error = data["message"] ?? "Failed to send recovery OTP.");
       }
     } catch (e) {
-      setState(() => _error = "Cannot connect to server. Check your network.");
+      setState(() => _error = "Cannot reach server. Check your internet connection.");
     }
   }
 
@@ -726,8 +751,8 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/verify-otp"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": _emailCtrl.text, "code": _otpCtrl.text})
-      );
+        body: jsonEncode({"email": _emailCtrl.text.trim(), "code": _otpCtrl.text})
+      ).timeout(const Duration(seconds: 15));
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {
         widget.onLoginSuccess({
@@ -745,7 +770,8 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
         setState(() => _error = data["message"] ?? "Invalid verification code.");
       }
     } catch (e) {
-      if (_otpCtrl.text == "1234") {
+      // Server unreachable — allow bypass with the offline OTP code
+      if (_otpCtrl.text == "8844" || _otpCtrl.text == "1234") {
         widget.onLoginSuccess({
           "email": _emailCtrl.text,
           "name": _nameCtrl.text.isEmpty ? "New User" : _nameCtrl.text,
@@ -836,7 +862,7 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: const Color(0xFFFF1744).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                   child: Text(_error!, style: const TextStyle(color: Color(0xFFFF1744), fontSize: 11)),
                 ),
 
@@ -997,7 +1023,7 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
               Container(
-                decoration: BoxDecoration(color: const Color(0xFF00E676).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Text("Health score: ${preferences["healthScore"]}", style: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
               )
@@ -1008,9 +1034,9 @@ class DashboardScreen extends StatelessWidget {
           if (alarms.isNotEmpty) ...[
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFFF1744).withOpacity(0.05),
+                color: const Color(0xFFFF1744).withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.3)),
+                border: Border.all(color: const Color(0xFFFF1744).withValues(alpha: 0.3)),
               ),
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.only(bottom: 20),
@@ -1035,7 +1061,7 @@ class DashboardScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withOpacity(0.1), foregroundColor: const Color(0xFFFF1744), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero, side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
+                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withValues(alpha: 0.1), foregroundColor: const Color(0xFFFF1744), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero, side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
                                     onPressed: () => onUpdateState(alarm["id"]!, "Wasted"),
                                     child: const Text("🗑️ Not Used", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                                   )
@@ -1116,9 +1142,9 @@ class DashboardScreen extends StatelessWidget {
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.02),
+                    color: Colors.white.withValues(alpha: 0.02),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.05))
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.05))
                   ),
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -1143,7 +1169,7 @@ class DashboardScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text("$freshnessPct%", style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                              Text(item["status"], style: TextStyle(color: statusColor.withOpacity(0.8), fontSize: 11)),
+                              Text(item["status"], style: TextStyle(color: statusColor.withValues(alpha: 0.8), fontSize: 11)),
                             ],
                           )
                         ],
@@ -1171,9 +1197,9 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildMetricTile(String label, int val, Color color) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2), width: 1.5)
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5)
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -1422,9 +1448,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF00E676).withOpacity(0.05),
+          color: const Color(0xFF00E676).withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF00E676).withOpacity(0.2)),
+          border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.2)),
         ),
         child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text("?? ", style: TextStyle(fontSize: 16)),
@@ -1494,9 +1520,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFFF1744).withOpacity(0.06),
+            color: const Color(0xFFFF1744).withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.3)),
+            border: Border.all(color: const Color(0xFFFF1744).withValues(alpha: 0.3)),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Row(children: [
@@ -1550,7 +1576,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.015),
+        color: Colors.white.withValues(alpha: 0.015),
         borderRadius: BorderRadius.circular(14),
         border: Border(left: BorderSide(color: statusColor, width: 5)),
       ),
@@ -1581,9 +1607,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: statusColor.withOpacity(0.4)),
+                border: Border.all(color: statusColor.withValues(alpha: 0.4)),
               ),
               child: Text("$status   $freshness%",
                   style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -1659,9 +1685,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFEA00).withOpacity(0.04),
+          color: const Color(0xFFFFEA00).withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFFFEA00).withOpacity(0.15)),
+          border: Border.all(color: const Color(0xFFFFEA00).withValues(alpha: 0.15)),
         ),
         child: const Text(
           "?? Use this when the AI scanner can't identify an item (poor lighting, unusual packaging, etc.).",
@@ -1680,7 +1706,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
-        value: _cat,
+        initialValue: _cat,
         decoration: const InputDecoration(labelText: "Category", border: OutlineInputBorder()),
         dropdownColor: const Color(0xFF13151B),
         items: cats.map((c) => DropdownMenuItem(
@@ -1716,7 +1742,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
-        value: _spiceLevel,
+        initialValue: _spiceLevel,
         decoration: const InputDecoration(labelText: "Spice Level", border: OutlineInputBorder()),
         dropdownColor: const Color(0xFF13151B),
         items: ["none", "low", "medium", "high"].map((c) => DropdownMenuItem(
@@ -1753,7 +1779,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget _modeBtn(String label, bool active, VoidCallback onTap) => ElevatedButton(
     style: ElevatedButton.styleFrom(
       backgroundColor: active
-          ? const Color(0xFF00E676).withOpacity(0.15)
+          ? const Color(0xFF00E676).withValues(alpha: 0.15)
           : Colors.transparent,
       foregroundColor: active ? const Color(0xFF00E676) : Colors.grey,
       side: BorderSide(
@@ -1849,8 +1875,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             margin: const EdgeInsets.only(left: 16, right: 16, top: 16),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF00E676).withOpacity(0.04),
-              border: Border.all(color: const Color(0xFF00E676).withOpacity(0.15)),
+              color: const Color(0xFF00E676).withValues(alpha: 0.04),
+              border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.15)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -1890,7 +1916,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _tempMode == "Cool" ? const Color(0xFF00E676).withOpacity(0.2) : Colors.transparent,
+                      backgroundColor: _tempMode == "Cool" ? const Color(0xFF00E676).withValues(alpha: 0.2) : Colors.transparent,
                       foregroundColor: _tempMode == "Cool" ? const Color(0xFF00E676) : Colors.grey,
                       minimumSize: const Size(60, 36),
                       padding: EdgeInsets.zero,
@@ -1901,7 +1927,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   const SizedBox(width: 6),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _tempMode == "Hot" ? Colors.orange.withOpacity(0.2) : Colors.transparent,
+                      backgroundColor: _tempMode == "Hot" ? Colors.orange.withValues(alpha: 0.2) : Colors.transparent,
                       foregroundColor: _tempMode == "Hot" ? Colors.orange : Colors.grey,
                       minimumSize: const Size(60, 36),
                       padding: EdgeInsets.zero,
@@ -1926,7 +1952,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 child: ChoiceChip(
                   label: Text(cat[0].toUpperCase() + cat.substring(1)),
                   selected: isSelected,
-                  selectedColor: const Color(0xFF00E676).withOpacity(0.15),
+                  selectedColor: const Color(0xFF00E676).withValues(alpha: 0.15),
                   labelStyle: TextStyle(color: isSelected ? const Color(0xFF00E676) : Colors.white, fontSize: 11),
                   onSelected: (val) => setState(() => _activeCategory = cat),
                 ),
@@ -1960,9 +1986,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     return Container(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.015),
+                        color: Colors.white.withValues(alpha: 0.015),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withOpacity(0.06))
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.06))
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -1985,7 +2011,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         const SizedBox(width: 6),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                          decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                          decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                                           child: Text("${item["status"]} ($freshnessPct%)", style: TextStyle(color: statusColor, fontSize: 8, fontWeight: FontWeight.bold)),
                                         )
                                       ],
@@ -1994,7 +2020,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     if (freshnessPct <= 50 || item["status"] == "Spoiled") ...[
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.08), borderRadius: BorderRadius.circular(6)),
+                                        decoration: BoxDecoration(color: const Color(0xFFFF1744).withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
                                         child: const Text("⚠️ WARNING: This item is spoiled. Do not eat!", style: TextStyle(color: Color(0xFFFF1744), fontSize: 10, fontWeight: FontWeight.bold)),
                                       ),
                                     ] else ...[
@@ -2013,7 +2039,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             if (freshnessPct > 50 && item["status"] != "Spoiled") ...[
                               Container(
                                 padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.02), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white12)),
+                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.02), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white12)),
                                 child: Column(
                                   children: [
                                     const Text("Did you use this item?", style: TextStyle(fontSize: 10, color: Colors.grey)),
@@ -2033,7 +2059,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withOpacity(0.1), foregroundColor: const Color(0xFFFF1744), padding: EdgeInsets.zero, minimumSize: const Size(0, 34), side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
+                                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1744).withValues(alpha: 0.1), foregroundColor: const Color(0xFFFF1744), padding: EdgeInsets.zero, minimumSize: const Size(0, 34), side: const BorderSide(color: Color(0xFFFF1744), width: 0.5)),
                                             onPressed: () => widget.onUpdateState(item["_id"], "Wasted"),
                                             child: const Text("🗑️ Not Used", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                           ),
@@ -2063,7 +2089,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ] else ...[
                               Container(
                                 padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.2))),
+                                decoration: BoxDecoration(color: const Color(0xFFFF1744).withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFFF1744).withValues(alpha: 0.2))),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -2081,7 +2107,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ] else ...[
                             Container(
                               padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(color: const Color(0xFF00E676).withOpacity(0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E676).withOpacity(0.2))),
+                              decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.2))),
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -2310,9 +2336,9 @@ class _RecipesScreenState extends State<RecipesScreen> {
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.015),
+                            color: Colors.white.withValues(alpha: 0.015),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.06))
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.06))
                           ),
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -2328,7 +2354,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  decoration: BoxDecoration(color: const Color(0xFF00E676).withOpacity(0.06), borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.06), borderRadius: BorderRadius.circular(8)),
                                   child: Text(recipe["advice"], style: const TextStyle(color: Color(0xFF00E676), fontSize: 11)),
                                 ),
 
@@ -2505,7 +2531,7 @@ class _CoOpHouseholdScreenState extends State<CoOpHouseholdScreen> {
 
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.015), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.06))),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.015), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withValues(alpha: 0.06))),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2537,7 +2563,7 @@ class _CoOpHouseholdScreenState extends State<CoOpHouseholdScreen> {
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.01), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.05))),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.01), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
             child: Column(
               children: [
                 Row(
@@ -2917,9 +2943,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFF1744).withOpacity(0.04),
+              color: const Color(0xFFFF1744).withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.2)),
+              border: Border.all(color: const Color(0xFFFF1744).withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2935,7 +2961,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: _wasteView == "weekly" ? const Color(0xFF00E676).withOpacity(0.15) : Colors.transparent,
+                              color: _wasteView == "weekly" ? const Color(0xFF00E676).withValues(alpha: 0.15) : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: _wasteView == "weekly" ? const Color(0xFF00E676) : Colors.white24),
                             ),
@@ -2948,7 +2974,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: _wasteView == "monthly" ? const Color(0xFF00E676).withOpacity(0.15) : Colors.transparent,
+                              color: _wasteView == "monthly" ? const Color(0xFF00E676).withValues(alpha: 0.15) : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: _wasteView == "monthly" ? const Color(0xFF00E676) : Colors.white24),
                             ),
@@ -2967,7 +2993,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(color: const Color(0xFFFF1744).withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
                         child: Column(
                           children: [
                             Text("${_wasteView == "weekly" ? weekCount : monthCount}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFFFF1744))),
@@ -2980,7 +3006,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: const Color(0xFF00E676).withOpacity(0.06), borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.06), borderRadius: BorderRadius.circular(10)),
                         child: Column(
                           children: [
                             Text("$members", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF00E676))),
@@ -2997,7 +3023,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 if (wastedItems.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: const Color(0xFF00E676).withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
                     child: const Row(
                       children: [
                         Icon(Icons.check_circle_outline, color: Color(0xFF00E676), size: 18),
@@ -3012,7 +3038,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ...wastedItems.map((it) => Container(
                     margin: const EdgeInsets.only(bottom: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                    decoration: BoxDecoration(color: const Color(0xFFFF1744).withOpacity(0.04), borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: const Color(0xFFFF1744).withValues(alpha: 0.04), borderRadius: BorderRadius.circular(6)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -3028,7 +3054,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: const Color(0xFFFFEA00).withOpacity(0.04), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFFFEA00).withOpacity(0.15))),
+                    decoration: BoxDecoration(color: const Color(0xFFFFEA00).withValues(alpha: 0.04), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFFFEA00).withValues(alpha: 0.15))),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -3057,7 +3083,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           if (_analytics != null) ...[
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.015), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.06))),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.015), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withValues(alpha: 0.06))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -3162,7 +3188,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           // Members count
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: const Color(0xFF00E676).withOpacity(0.04), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00E676).withOpacity(0.15))),
+            decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.15))),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -3283,7 +3309,7 @@ class _SpiceCustomizerScreenState extends State<SpiceCustomizerScreen> {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF00E676).withOpacity(0.1),
+                color: const Color(0xFF00E676).withValues(alpha: 0.1),
                 border: Border.all(color: const Color(0xFF00E676)),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -3353,8 +3379,8 @@ class MockScreenWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00E676).withOpacity(0.04),
-                  border: Border.all(color: const Color(0xFF00E676).withOpacity(0.15)),
+                  color: const Color(0xFF00E676).withValues(alpha: 0.04),
+                  border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.15)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -3661,7 +3687,7 @@ class _GourmetUpgradeScreenState extends State<GourmetUpgradeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSelected ? const Color(0xFF00E676).withOpacity(0.15) : Colors.transparent,
+                      backgroundColor: isSelected ? const Color(0xFF00E676).withValues(alpha: 0.15) : Colors.transparent,
                       foregroundColor: isSelected ? const Color(0xFF00E676) : Colors.white60,
                       side: BorderSide(
                         color: isSelected ? const Color(0xFF00E676) : Colors.white12,
@@ -3696,9 +3722,9 @@ class _GourmetUpgradeScreenState extends State<GourmetUpgradeScreen> {
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.015),
+                    color: Colors.white.withValues(alpha: 0.015),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.06)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
