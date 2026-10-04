@@ -43,7 +43,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     {'id': 'Fresh Starter',    'label': 'Fresh Starter 🚀',    'desc': 'Scanned your first item'},
     {'id': 'Waste Warrior',    'label': 'Waste Warrior 🛡️',   'desc': 'Zero waste for 1 week'},
     {'id': 'Streak Seeker',    'label': 'Streak Seeker ⚡',    'desc': '5-day tracking streak'},
-    {'id': 'Consistency King', 'label': 'Consistency King 👑', 'desc': '30-day tracking streak'},
+    {'id': 'Consistency King', 'label': 'Consistency King 👑', 'desc': '7-day tracking streak'},
   ];
 
   @override

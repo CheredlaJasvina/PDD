@@ -68,16 +68,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (_dismissed.contains(id)) continue;
       final pct  = _pct(item);
       final days = _days(item);
-      final added = DateTime.tryParse(item['addedDate'] as String? ?? '') ?? DateTime.now();
-      final since = DateTime.now().difference(added).inDays;
       final name  = item['name'] as String? ?? 'Item';
       final status= item['status'] as String? ?? 'Fresh';
       if (status == 'Spoiled' || pct <= 50 || days <= 0) {
         out.add({'id': id, 'name': name, 'type': 'critical', 'isSpoiled': true,
           'msg': '"$name" is spoiled (freshness $pct%). Avoid consumption!'});
-      } else if (since >= 2) {
-        out.add({'id': id, 'name': name, 'type': 'critical', 'isSpoiled': false,
-          'msg': '"$name" will become spoiled today, use it before!'});
       } else if (days == 1) {
         out.add({'id': id, 'name': name, 'type': 'urgent', 'isSpoiled': false,
           'msg': '"$name" spoils in 1 day — use it today!'});

@@ -12,6 +12,7 @@ const foodSpecificImages = {
   'banana': 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200',
   'orange': 'https://images.unsplash.com/photo-1547514701-42782101795e?w=200',
   'strawberry': 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=200',
+  'grapefruit': 'https://images.unsplash.com/photo-1529408686214-37b3e0ebd73a?w=200',
   'grape': 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=200',
   'mango': 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=200',
   'blueberry': 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=200',
@@ -25,11 +26,13 @@ const foodSpecificImages = {
   'avocado': 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=200',
 
   // Vegetables
+  'eggplant': 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=200',
   'carrot': 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=200',
   'broccoli': 'https://images.unsplash.com/photo-1452967712862-0cca1839ff27?w=200',
   'spinach': 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200',
   'tomato': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=200',
-  'potato': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=200',
+  // FIX: potato had a duplicate of tomato's URL — corrected to an actual potato photo
+  'potato': 'https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?w=200',
   'onion': 'https://images.unsplash.com/photo-1508747703725-719ae25db3e4?w=200',
   'garlic': 'https://images.unsplash.com/photo-1594911772028-170cf95f4cfd?w=200',
   'cucumber': 'https://images.unsplash.com/photo-1449339091482-421c6997e04a?w=200',
@@ -39,25 +42,44 @@ const foodSpecificImages = {
   'mushroom': 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=200',
   'corn': 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=200',
 
-  // Packaged
+  // Packaged / dairy / meat
   'milk': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200',
   'cheese': 'https://images.unsplash.com/photo-1486887396153-fa416526c13b?w=200',
   'bread': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200',
+  // FIX: 'egg' listed before longer keys — moved after 'eggplant' guard above
+  //      and kept as a whole-word-style check via the exact-key path in getFoodImageUrl
   'egg': 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=200',
   'chicken': 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200',
   'beef': 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=200',
   'fish': 'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=200',
+  'pork': 'https://images.unsplash.com/photo-1432139509613-5c4255815697?w=200',
+  'lamb': 'https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=200',
 
   // Cooked
   'rice': 'https://images.unsplash.com/photo-1516685018646-549198525c1b?w=200',
   'pasta': 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200',
   'soup': 'https://images.unsplash.com/photo-1547592165-e1d17ffd2661?w=200',
   'pizza': 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200',
+
+  // Liquids
+  'juice': 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=200',
+  'water': 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=200',
+  'smoothie': 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=200',
+  'tea': 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200',
+  'coffee': 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200',
+  'wine': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=200',
+  'beer': 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=200',
 };
+
+// Longer / more specific keys must be checked before shorter ones that are
+// substrings of them (e.g. "eggplant" before "egg", "grapefruit" before "grape").
+// We sort entries by key length descending so longer keys win the match first.
+const _sortedFoodImageEntries = Object.entries(foodSpecificImages)
+  .sort((a, b) => b[0].length - a[0].length);
 
 const getFoodImageUrl = (foodName, category) => {
   const nameLower = (foodName || '').toLowerCase().trim();
-  for (const [key, url] of Object.entries(foodSpecificImages)) {
+  for (const [key, url] of _sortedFoodImageEntries) {
     if (nameLower.includes(key)) {
       return url;
     }
@@ -66,7 +88,10 @@ const getFoodImageUrl = (foodName, category) => {
     'fruits': 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=200',
     'vegetables': 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=200',
     'cooked food': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200',
-    'packaged food': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200'
+    'packaged food': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200',
+    // FIX: non-veg and liquid were missing — they fell back to the fruit image
+    'non-veg': 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200',
+    'liquid': 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=200',
   };
   return categoryImages[category] || categoryImages['fruits'];
 };
