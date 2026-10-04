@@ -40,4 +40,5 @@ app.use((req, res) => {
 // Start listening
 app.listen(PORT, () => {
   console.log(`FoodFreshness backend server running on port ${PORT}`);
+  console.log(`GROQ_API_KEY status: ${process.env.GROQ_API_KEY ? '✅ configured (' + process.env.GROQ_API_KEY.substring(0, 8) + '...)' : '❌ NOT SET — AI scanner will be unavailable'}`);
 });

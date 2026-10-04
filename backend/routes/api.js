@@ -33,9 +33,62 @@ router.get('/recipes', recipeController.getSmartSuggestions);
 router.get('/analytics', analyticsController.getWastageAnalytics);
 
 // Waste Summary: per-item weekly/monthly waste tracking + buy-less advice
-router.get('/waste-summary', (req, res) => {
+// Uses MongoDB when connected (same as analyticsController), falls back to in-memory
+router.get('/waste-summary', async (req, res) => {
   try {
     const email = req.headers['x-user-email'];
+    const dbStatus = require('../config/db');
+
+    if (dbStatus.getDbStatus()) {
+      // MongoDB is connected — query it directly so numbers match the inventory
+      const FoodItem = require('../models/FoodItem');
+      const UserPreference = require('../models/UserPreference');
+
+      const allItems = email ? await FoodItem.find({ owner: email }) : [];
+      let pref = await UserPreference.findOne({ owner: email });
+      if (!pref) pref = await new UserPreference({ owner: email }).save();
+      const members = pref.membersCount || 2;
+
+      const now = Date.now();
+      const sevenDaysAgo  = new Date(now - 7  * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+
+      const wastedItems   = allItems.filter(i => i.state === 'Wasted');
+      const weeklyWasted  = wastedItems.filter(i => new Date(i.addedDate) >= sevenDaysAgo);
+      const monthlyWasted = wastedItems.filter(i => new Date(i.addedDate) >= thirtyDaysAgo);
+
+      const categoryBreakdown = {};
+      monthlyWasted.forEach(item => {
+        if (!categoryBreakdown[item.category]) categoryBreakdown[item.category] = { count: 0, names: [] };
+        categoryBreakdown[item.category].count++;
+        if (!categoryBreakdown[item.category].names.includes(item.name))
+          categoryBreakdown[item.category].names.push(item.name);
+      });
+
+      const itemFrequency = {};
+      monthlyWasted.forEach(item => {
+        itemFrequency[item.name] = (itemFrequency[item.name] || 0) + 1;
+      });
+
+      const buyAdvice = Object.entries(itemFrequency).map(([name, count]) => ({
+        name,
+        timesWasted: count,
+        advice: `You wasted "${name}" ${count} time(s) this month. For ${members} member(s), try buying only ${Math.max(1, Math.ceil(members * 0.5))} unit(s) at a time.`
+      }));
+
+      return res.json({
+        success: true,
+        weeklyWastedCount:  weeklyWasted.length,
+        monthlyWastedCount: monthlyWasted.length,
+        weeklyWastedItems:  weeklyWasted.map(i => ({ name: i.name, category: i.category, addedDate: i.addedDate })),
+        monthlyWastedItems: monthlyWasted.map(i => ({ name: i.name, category: i.category, addedDate: i.addedDate })),
+        categoryBreakdown,
+        buyAdvice,
+        membersCount: members
+      });
+    }
+
+    // Fallback: in-memory store (used when MongoDB is unavailable)
     const summary = fallbackDb.getWasteSummary(email);
     res.json({ success: true, ...summary });
   } catch (err) {

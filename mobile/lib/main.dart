@@ -1374,7 +1374,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       request.headers["x-user-email"] = widget.email;
       request.files.add(await http.MultipartFile.fromPath("image", xFile.path));
 
-      final streamed  = await request.send().timeout(const Duration(seconds: 30));
+      final streamed  = await request.send().timeout(const Duration(seconds: 60));
       final response  = await http.Response.fromStream(streamed);
       final Map<String, dynamic> data = jsonDecode(response.body);
 
@@ -1386,14 +1386,32 @@ class _ScannerScreenState extends State<ScannerScreen> {
         // We do NOT call onScanComplete here anymore. 
         // User must explicitly tap 'Save to Pantry'.
       } else {
+        // If the AI scanner is unavailable (no API key on server), show a clear
+        // actionable message instead of a raw technical error
+        String msg = data["message"] ?? "Scan rejected.";
+        if (msg.toLowerCase().contains("groq") ||
+            msg.toLowerCase().contains("api key") ||
+            msg.toLowerCase().contains("python classifier")) {
+          msg = "AI Scanner is temporarily unavailable on the server.\n\n"
+              "Please use ✍️ Manual Entry to add your food item — "
+              "tap the 'Manual Entry' tab above.";
+        }
         setState(() {
-          _error      = data["message"] ?? "Scan rejected.";
+          _error      = msg;
           _isScanning = false;
         });
       }
     } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      String msg;
+      if (errStr.contains("timeout") || errStr.contains("timed out")) {
+        msg = "The server took too long to respond. It may be waking up — "
+            "please wait 30 seconds and try again, or use ✍️ Manual Entry.";
+      } else {
+        msg = "Cannot reach server. Check your connection, or use ✍️ Manual Entry to add items manually.";
+      }
       setState(() {
-        _error      = "Cannot reach server. Check your connection and that the backend is running.";
+        _error      = msg;
         _isScanning = false;
       });
     }
@@ -1567,6 +1585,20 @@ class _ScannerScreenState extends State<ScannerScreen> {
               onPressed: _reset,
               child: const Text("Try Again"),
             ),
+            // If scanner is unavailable, show a direct shortcut to Manual Entry
+            if (_error != null && (_error!.contains("unavailable") || _error!.contains("Manual Entry"))) ...[
+              const SizedBox(height: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 40)),
+                onPressed: () {
+                  _reset();
+                  setState(() => _useManual = true);
+                },
+                child: const Text("✍️ Switch to Manual Entry", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
           ]),
         ),
       ],

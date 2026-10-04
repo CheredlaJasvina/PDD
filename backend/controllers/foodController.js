@@ -326,7 +326,7 @@ Required JSON structure:
         console.error("Python Model classification error:", stderr || error.message);
         return res.status(500).json({
           success: false,
-          message: "AI Visual Scanner is unavailable. No Groq API key is configured and the local Python classifier could not run. To use the scanner please either add a GROQ_API_KEY to the backend .env file, or install Python with Pillow and (optionally) PyTorch: pip install Pillow torch torchvision"
+          message: "AI Visual Scanner is temporarily unavailable. Please use Manual Entry to add your food item."
         });
       }
 
