@@ -2,7 +2,6 @@ const FoodItem = require('../models/FoodItem');
 const UserPreference = require('../models/UserPreference');
 const dbStatus = require('../config/db');
 const fallbackDb = require('../models/fallbackDb');
-const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -150,35 +149,60 @@ exports.getInventory = async (req, res) => {
   }
 };
 
-// Scan food item (Groq Vision API with local python fallback)
+// Scan food item (Groq Vision API with base64 inline image)
 exports.scanFoodItem = async (req, res) => {
   try {
     const db = getDB(req);
-    const prefs = await db.getPreferences();
+    await db.getPreferences();
 
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Scan Rejected: No image file uploaded. Please upload a crop photograph."
+        message: "Scan Rejected: No image file uploaded. Please upload a food photograph."
       });
     }
 
     const imagePath = req.file.path;
 
-    // ── Groq Vision API (primary path) ────────────────────────────────────
-    // qwen/qwen3.8-27b only accepts public image URLs (not base64 inline data).
-    // We serve the uploaded file via /uploads/<filename> on this same server
-    // and pass that URL to Groq. The file is deleted immediately after.
-    if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'YOUR_GROQ_API_KEY') {
-      const { Groq } = require('groq-sdk');
-      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    // Helper: clean up temp file
+    const cleanupFile = () => {
+      try { if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath); } catch (_) {}
+    };
 
-      // Build the public URL for the uploaded temp file
-      const filename   = path.basename(imagePath);
-      const backendHost = process.env.BACKEND_URL || 'https://pdd-9fqv.onrender.com';
-      const publicImageUrl = `${backendHost}/uploads/${filename}`;
+    // Helper: build item data from Groq result
+    const buildItemData = (result, modelUsed) => {
+      const shelfLifeDays = result.shelfLifeDays || (
+        result.category === 'fruits' ? 7 :
+        result.category === 'vegetables' ? 5 :
+        result.category === 'non-veg' ? 2 : 3
+      );
+      return {
+        name:              result.name,
+        category:          result.category,
+        status:            result.status,
+        state:             'Tracked',
+        addedDate:         new Date(),
+        predictedSpoilageDate: new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000),
+        originalFreshness: result.originalFreshness || 90,
+        imageUrl:          getFoodImageUrl(result.name, result.category),
+        isCooked:          result.category === 'cooked food',
+        dietaryTags:       ['vegan', 'vegetarian', 'gluten-free', 'dairy-free'],
+        nutrition: {
+          calories:    result.nutrition?.calories    || 100,
+          protein:     result.nutrition?.protein     || 1,
+          carbs:       result.nutrition?.carbs       || 10,
+          fat:         result.nutrition?.fat         || 0,
+          ingredients: result.name,
+          vitamins:    result.nutrition?.vitamins    || ['Vitamin C'],
+          healthNotes: result.nutrition?.healthNotes || `Freshly analysed ${result.name}.`
+        },
+        storageGuidance: result.storageGuidance || 'Store appropriately.',
+        safetyAdvisory:  result.safetyAdvisory  || 'Safe to eat.',
+        _model:          modelUsed
+      };
+    };
 
-      const FOOD_PROMPT = `You are a food freshness analysis AI. Look at this food image carefully and return a JSON object.
+    const FOOD_PROMPT = `You are a food freshness analysis AI. Look at this food image carefully and return a JSON object.
 
 Rules:
 - Return ONLY valid JSON — no markdown, no explanation.
@@ -210,48 +234,41 @@ Required JSON structure:
   "safetyAdvisory": "Safe to eat raw or cooked. Wash thoroughly before use."
 }`;
 
-      const buildPayload = (model) => ({
-        model,
-        temperature: 0.1,
-        max_completion_tokens: 1024,
-        response_format: { type: 'json_object' },
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: FOOD_PROMPT },
-            { type: 'image_url', image_url: { url: publicImageUrl } }
-          ]
-        }]
-      });
+    // ── Groq Vision API ───────────────────────────────────────────────────
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey && groqKey !== 'YOUR_GROQ_API_KEY') {
+      try {
+        const { Groq } = require('groq-sdk');
+        const groq = new Groq({ apiKey: groqKey });
 
-      const tryGroqModel = async (model) => {
-        const completion = await groq.chat.completions.create(buildPayload(model));
+        // Read file and encode as base64 data URL — no public URL needed,
+        // works reliably on Render's ephemeral filesystem
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64Image = imageBuffer.toString('base64');
+        const ext = path.extname(imagePath).toLowerCase();
+        const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+        const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
+        const completion = await groq.chat.completions.create({
+          model: 'qwen/qwen3.8-27b',
+          temperature: 0.1,
+          max_completion_tokens: 1024,
+          response_format: { type: 'json_object' },
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: FOOD_PROMPT },
+              { type: 'image_url', image_url: { url: dataUrl } }
+            ]
+          }]
+        });
+
+        cleanupFile();
+
         const raw = completion.choices[0].message.content || '';
         const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-        return JSON.parse(jsonStr);
-      };
+        const result = JSON.parse(jsonStr);
 
-      let result = null;
-      let groqModelUsed = null;
-
-      // qwen/qwen3.8-27b is the only confirmed working vision model on this account.
-      // Keep a second entry for future-proofing; errors are caught individually.
-      const VISION_MODELS = ['qwen/qwen3.8-27b'];
-
-      for (const model of VISION_MODELS) {
-        try {
-          result = await tryGroqModel(model);
-          groqModelUsed = model;
-          break;
-        } catch (modelErr) {
-          console.error(`Groq model ${model} failed:`, modelErr.message || modelErr);
-        }
-      }
-
-      // Always delete the temp file after Groq is done (success or failure)
-      try { if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath); } catch (_) {}
-
-      if (result) {
         if (!result.success) {
           return res.status(400).json({
             success: false,
@@ -259,153 +276,23 @@ Required JSON structure:
           });
         }
 
-        const shelfLifeDays = result.shelfLifeDays || (
-          result.category === 'fruits' ? 7 :
-          result.category === 'vegetables' ? 5 :
-          result.category === 'non-veg' ? 2 : 3
-        );
-        const addedDate = new Date();
-        const predictedSpoilageDate = new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000);
-        const imageUrl = getFoodImageUrl(result.name, result.category);
+        return res.json({ success: true, scannedItems: [buildItemData(result, 'qwen/qwen3.8-27b')] });
 
-        const newItemData = {
-          name:             result.name,
-          category:         result.category,
-          status:           result.status,
-          state:            'Tracked',
-          addedDate,
-          predictedSpoilageDate,
-          originalFreshness: result.originalFreshness || 90,
-          imageUrl,
-          isCooked:         result.category === 'cooked food',
-          dietaryTags:      ['vegan', 'vegetarian', 'gluten-free', 'dairy-free'],
-          nutrition: {
-            calories:    (result.nutrition?.calories)    || 100,
-            protein:     (result.nutrition?.protein)     || 1,
-            carbs:       (result.nutrition?.carbs)       || 10,
-            fat:         (result.nutrition?.fat)         || 0,
-            ingredients:  result.name,
-            vitamins:    (result.nutrition?.vitamins)    || ['Vitamin C'],
-            healthNotes: (result.nutrition?.healthNotes) || `Freshly analysed ${result.name}.`
-          },
-          storageGuidance: result.storageGuidance || 'Store appropriately.',
-          safetyAdvisory:  result.safetyAdvisory  || 'Safe to eat.',
-          _model:          groqModelUsed
-        };
-
-        return res.json({ success: true, scannedItems: [newItemData] });
-      }
-
-      console.error('Groq vision failed — falling back to Python classifier.');
-    }
-
-    // --- FALLBACK TO LOCAL PYTHON CLASSIFIER ---
-    const scriptPath = path.join(__dirname, '..', 'scripts', 'classify_food.py');
-
-    /**
-     * Try running the Python classifier.
-     * On Windows / some Linux setups the binary is "python3"; on others it's "python".
-     * We try "python" first; if it exits with an error we retry with "python3".
-     * If both fail we return a clear, actionable error message.
-     */
-    const runPythonClassifier = (cmd, callback) => {
-      exec(`${cmd} "${scriptPath}" "${imagePath}"`, callback);
-    };
-
-    const handleClassifierResult = async (error, stdout, stderr) => {
-      // Clean up local temp file to avoid clutter
-      try {
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
-        }
-      } catch (cleanupErr) {
-        console.error("Temp file cleanup error:", cleanupErr);
-      }
-
-      if (error) {
-        console.error("Python Model classification error:", stderr || error.message);
+      } catch (groqErr) {
+        console.error('Groq vision error:', groqErr.message || groqErr);
+        cleanupFile();
         return res.status(500).json({
           success: false,
-          message: "AI Visual Scanner is temporarily unavailable. Please use Manual Entry to add your food item."
+          message: "AI Scanner encountered an error. Please try again or use Manual Entry."
         });
       }
+    }
 
-      try {
-        const trimOutput = stdout.trim();
-        const startIdx = trimOutput.indexOf('{');
-        const endIdx = trimOutput.lastIndexOf('}');
-        
-        if (startIdx === -1 || endIdx === -1 || startIdx > endIdx) {
-          throw new Error("No JSON substring found in Python model outputs.");
-        }
-        
-        const jsonString = trimOutput.substring(startIdx, endIdx + 1);
-        const result = JSON.parse(jsonString);
-
-        if (!result.success) {
-          return res.status(400).json({
-            success: false,
-            message: result.message || "Visual analysis rejected: Non-food item detected."
-          });
-        }
-
-        // Shelf life is determined dynamically based on the category
-        const shelfLifeDays = result.category === 'fruits' ? 7 : (result.category === 'vegetables' ? 5 : 3);
-        const addedDate = new Date();
-        const predictedSpoilageDate = new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000);
-
-        // Specific image lookup based on food name
-        const imageUrl = getFoodImageUrl(result.name, result.category);
-
-        // Prepopulate detailed nutrition profiles matching the python analysis results
-        const mockNutrition = {
-          calories: result.category === 'fruits' ? 95 : (result.category === 'vegetables' ? 35 : (result.category === 'cooked food' ? 320 : 180)),
-          protein: result.category === 'fruits' ? 0.8 : (result.category === 'vegetables' ? 2.5 : (result.category === 'cooked food' ? 12 : 8)),
-          carbs: result.category === 'fruits' ? 25 : (result.category === 'vegetables' ? 7 : (result.category === 'cooked food' ? 45 : 12)),
-          fat: result.category === 'fruits' ? 0.3 : (result.category === 'vegetables' ? 0.2 : (result.category === 'cooked food' ? 10 : 6)),
-          ingredients: result.name,
-          vitamins: result.category === 'fruits' ? ["Vitamin C", "Potassium"] : ["Vitamin A", "Vitamin K", "Iron"],
-          healthNotes: `Analyzed item: ${result.name}. High in vitamins and natural organic contents.`
-        };
-
-        const newItemData = {
-          name: result.name,
-          category: result.category,
-          status: result.status,
-          state: 'Tracked',
-          addedDate,
-          predictedSpoilageDate,
-          originalFreshness: result.originalFreshness,
-          imageUrl,
-          isCooked: result.category === 'cooked food',
-          dietaryTags: ["vegan", "vegetarian", "gluten-free", "dairy-free"],
-          nutrition: mockNutrition,
-          storageGuidance: result.storageGuidance,
-          safetyAdvisory: result.safetyAdvisory
-        };
-
-        res.json({
-          success: true,
-          scannedItems: [newItemData]
-        });
-
-      } catch (parseError) {
-        console.error("JSON parse error from Python:", parseError, stdout);
-        res.status(500).json({
-          success: false,
-          message: "Failed to parse classification model outputs."
-        });
-      }
-    };
-
-    // Try "python" first; if that fails, retry with "python3"
-    runPythonClassifier('python', (err, stdout, stderr) => {
-      if (err) {
-        // "python" not found or crashed — try "python3" (common on Linux/macOS)
-        runPythonClassifier('python3', handleClassifierResult);
-      } else {
-        handleClassifierResult(null, stdout, stderr);
-      }
+    // ── No API key configured ─────────────────────────────────────────────
+    cleanupFile();
+    return res.status(503).json({
+      success: false,
+      message: "AI Visual Scanner is temporarily unavailable. Please use Manual Entry to add your food item."
     });
 
   } catch (error) {
