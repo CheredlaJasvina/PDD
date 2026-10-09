@@ -51,14 +51,7 @@ exports.signup = async (req, res) => {
     const result = await db.register(req.body);
     
     if (result.success) {
-      const { email } = req.body;
-      const code = fallbackDb.generateOTP(email);
-      try {
-        await sendOtpEmail(email, code);
-      } catch (mailError) {
-        console.error(`Mail sending failed during signup for ${email}`, mailError);
-      }
-
+      // No OTP step — user goes straight into the app
       res.json({
         success: true,
         token: "mock-jwt-token-988-freshness",

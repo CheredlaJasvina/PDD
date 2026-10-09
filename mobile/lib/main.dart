@@ -648,7 +648,7 @@ class LandingAuthScreen extends StatefulWidget {
 }
 
 class _LandingAuthScreenState extends State<LandingAuthScreen> {
-  String _state = "landing"; // landing, login, signup, forgot, otp
+  String _state = "landing"; // landing, login, signup, forgot
   
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -728,20 +728,34 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       ).timeout(const Duration(seconds: 15));
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {
-        setState(() {
-          _success = "Verification code sent to your email address.";
-          _state = "otp";
-        });
+        // Go straight into the app — no OTP step
+        widget.onLoginSuccess({
+          "email": _emailCtrl.text.trim(),
+          "name": name,
+          "dietaryPreferences": [],
+          "audienceMode": "Regular",
+          "servings": 2,
+          "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
+          "healthScore": 100,
+          "streakCount": 1,
+          "unlockedBadges": ["Fresh Starter"]
+        }, data["token"] ?? "mock-token");
       } else {
         setState(() => _error = data["message"] ?? "Registration failed. Please try again.");
       }
     } catch (e) {
-      // Server unreachable — register locally and allow OTP bypass with code 8844
-      setState(() {
-        _success = "Account created in offline mode. Use OTP code 8844 to verify.";
-        _state = "otp";
-        _otpCtrl.text = "8844";
-      });
+      // Server unreachable — go straight in with local account
+      widget.onLoginSuccess({
+        "email": _emailCtrl.text.trim(),
+        "name": name,
+        "dietaryPreferences": [],
+        "audienceMode": "Regular",
+        "servings": 2,
+        "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
+        "healthScore": 100,
+        "streakCount": 1,
+        "unlockedBadges": ["Fresh Starter"]
+      }, "mock-token");
     }
   }
 
@@ -881,7 +895,7 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_state == "login" ? "Sign In" : (_state == "signup" ? "Create Account" : (_state == "otp" ? "OTP Verification" : "Recovery")), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(_state == "login" ? "Sign In" : (_state == "signup" ? "Create Account" : "Recovery"), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
               
               if (_error != null)
@@ -956,24 +970,6 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                       ],
                     ),
                   ),
-                ),
-              ],
-
-              if (_state == "otp") ...[
-                Text(_success ?? "Please enter the 4-digit code sent to your email.", style: const TextStyle(color: Colors.orange, fontSize: 12)),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _otpCtrl,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 22, letterSpacing: 10),
-                  decoration: const InputDecoration(labelText: "Verification Code", border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50)),
-                  onPressed: _submitOtp,
-                  child: const Text("Verify & Login", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
 
