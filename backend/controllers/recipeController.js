@@ -104,11 +104,11 @@ const getCacheKey = (items, mode, servings) => {
   return `${names}::${mode}::${servings}`;
 };
 
-const generateRecipesWithAI = async (items, mode, servings, dietaryPrefs) => {
-  // Check cache first
+const generateRecipesWithAI = async (items, mode, servings, dietaryPrefs, bustCache = false) => {
+  // Check cache first — skip if bust flag is set
   const cacheKey = getCacheKey(items, mode, servings);
   const cached = recipeCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+  if (!bustCache && cached && Date.now() - cached.ts < CACHE_TTL_MS) {
     return cached.recipes;
   }
 
@@ -186,7 +186,9 @@ exports.getSmartSuggestions = async (req, res) => {
     const mode = req.query.mode || prefs.audienceMode || 'Regular';
     const dietaryPrefs = prefs.dietaryPreferences || [];
 
-    // Filter: raw, uncooked, unspoiled, tracked, not a packaged snack brand
+    // Filter: raw, uncooked, unspoiled, tracked, not a packaged snack brand,
+    // and has MORE than 1 day left (items expiring within 8 hours / same day
+    // are too urgent to cook — show alert instead of recipe)
     const cookableItems = inventory
       .filter(item => {
         if (item.isCooked || item.category === 'cooked food' || item.category === 'Cooked Food') return false;
@@ -199,7 +201,13 @@ exports.getSmartSuggestions = async (req, res) => {
         let pct = item.originalFreshness;
         if (elapsed >= totalDuration) pct = 0;
         else if (elapsed > 0) pct = Math.max(0, Math.round(item.originalFreshness * (1 - elapsed / totalDuration)));
-        return pct > 10;
+        if (pct <= 10) return false;
+
+        // Exclude items expiring within 1 day (≤ 24 hours) — too urgent to cook
+        const daysLeft = (new Date(item.predictedSpoilageDate) - new Date()) / (1000 * 60 * 60 * 24);
+        if (daysLeft <= 1) return false;
+
+        return true;
       })
       .map(item => ({
         name: item.name,
@@ -216,7 +224,8 @@ exports.getSmartSuggestions = async (req, res) => {
         success: true,
         servings,
         audienceMode: mode,
-        recipes: []
+        recipes: [],
+        message: 'No cookable items found. Items expiring within 1 day are shown as alerts, not recipes.'
       });
     }
 
@@ -225,7 +234,8 @@ exports.getSmartSuggestions = async (req, res) => {
 
     if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'YOUR_GROQ_API_KEY') {
       try {
-        aiRecipes = await generateRecipesWithAI(cookableItems, mode, servings, dietaryPrefs);
+        const bustCache = req.query.bust === '1';
+        aiRecipes = await generateRecipesWithAI(cookableItems, mode, servings, dietaryPrefs, bustCache);
       } catch (aiErr) {
         console.error('AI recipe generation failed, using fallback:', aiErr.message);
         usedFallback = true;

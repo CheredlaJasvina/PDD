@@ -2174,8 +2174,10 @@ class _RecipesScreenState extends State<RecipesScreen> {
   @override
   void didUpdateWidget(covariant RecipesScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Re-fetch when servings, mode OR inventory changes (new item scanned/wasted)
     if (oldWidget.preferences["servings"] != widget.preferences["servings"] ||
-        oldWidget.preferences["audienceMode"] != widget.preferences["audienceMode"]) {
+        oldWidget.preferences["audienceMode"] != widget.preferences["audienceMode"] ||
+        oldWidget.inventory.length != widget.inventory.length) {
       _fetchRecipes();
     }
   }
@@ -2187,8 +2189,11 @@ class _RecipesScreenState extends State<RecipesScreen> {
 
     try {
       final String email = widget.preferences["email"] as String? ?? "";
+      final int servings = widget.preferences["servings"] ?? 2;
+      final String mode = widget.preferences["audienceMode"] ?? "Regular";
+      // bust=1 forces the backend to skip its 10-min cache and regenerate fresh recipes
       final res = await http.get(
-        Uri.parse("${widget.backendUrl}/recipes"),
+        Uri.parse("${widget.backendUrl}/recipes?servings=$servings&mode=$mode&bust=1"),
         headers: {
           "Content-Type": "application/json",
           "x-user-email": email,
