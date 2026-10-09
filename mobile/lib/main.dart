@@ -653,7 +653,6 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
-  final _otpCtrl = TextEditingController();
 
   String? _error;
   String? _success;
@@ -770,62 +769,13 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       final Map<String, dynamic> data = jsonDecode(res.body);
       if (res.statusCode == 200 && data["success"] == true) {
         setState(() {
-          _success = data["message"] ?? "Verification code sent to your email.";
-          _state = "otp";
+          _success = "Recovery code sent to your email. Please check your inbox.";
         });
       } else {
-        setState(() => _error = data["message"] ?? "Failed to send recovery OTP.");
+        setState(() => _error = data["message"] ?? "Failed to send recovery code.");
       }
     } catch (e) {
       setState(() => _error = "Cannot reach server. Check your internet connection.");
-    }
-  }
-
-  Future<void> _submitOtp() async {
-    setState(() => _error = null);
-    if (_otpCtrl.text.length != 4) {
-      setState(() => _error = "Verification code must be exactly 4 digits.");
-      return;
-    }
-    try {
-      final res = await http.post(
-        Uri.parse("${widget.backendUrl}/auth/verify-otp"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": _emailCtrl.text.trim(), "code": _otpCtrl.text})
-      ).timeout(const Duration(seconds: 15));
-      final Map<String, dynamic> data = jsonDecode(res.body);
-      if (res.statusCode == 200 && data["success"] == true) {
-        widget.onLoginSuccess({
-          "email": _emailCtrl.text,
-          "name": _nameCtrl.text.isEmpty ? "New User" : _nameCtrl.text,
-          "dietaryPreferences": [],
-          "audienceMode": "Regular",
-          "servings": 2,
-          "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
-          "healthScore": 100,
-          "streakCount": 1,
-          "unlockedBadges": ["Fresh Starter"]
-        }, "mock-token");
-      } else {
-        setState(() => _error = data["message"] ?? "Invalid verification code.");
-      }
-    } catch (e) {
-      // Server unreachable — allow bypass with the offline OTP code
-      if (_otpCtrl.text == "8844" || _otpCtrl.text == "1234") {
-        widget.onLoginSuccess({
-          "email": _emailCtrl.text,
-          "name": _nameCtrl.text.isEmpty ? "New User" : _nameCtrl.text,
-          "dietaryPreferences": [],
-          "audienceMode": "Regular",
-          "servings": 2,
-          "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
-          "healthScore": 100,
-          "streakCount": 1,
-          "unlockedBadges": ["Fresh Starter"]
-        }, "mock-token");
-      } else {
-        setState(() => _error = "Cannot connect to server. Check your network.");
-      }
     }
   }
 
@@ -974,14 +924,21 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
               ],
 
               if (_state == "forgot") ...[
+                if (_success != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                    child: Text(_success!, style: const TextStyle(color: Color(0xFF00E676), fontSize: 11)),
+                  ),
                 TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: "Registered Email", border: OutlineInputBorder())),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50)),
                   onPressed: _submitForgotPassword,
-                  child: const Text("Send Recovery PIN", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text("Send Recovery Code", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                TextButton(onPressed: () => setState(() => _state = "login"), child: const Text("Back to Login", style: TextStyle(color: Colors.grey))),
+                TextButton(onPressed: () => setState(() { _state = "login"; _error = null; _success = null; }), child: const Text("Back to Login", style: TextStyle(color: Colors.grey))),
               ]
             ],
           ),
