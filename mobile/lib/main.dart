@@ -657,8 +657,38 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
   String? _error;
   String? _success;
 
+  // ── Password strength validator ──────────────────────────────────────────
+  String? _validatePassword(String pw) {
+    if (pw.isEmpty)         return "Password is required.";
+    if (pw.length < 8)      return "Password must be at least 8 characters long.";
+    if (!RegExp(r'[A-Z]').hasMatch(pw))
+                            return "Password must contain at least one uppercase letter (A-Z).";
+    if (!RegExp(r'[0-9]').hasMatch(pw))
+                            return "Password must contain at least one digit (0-9).";
+    if (!RegExp(r'[!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~]').hasMatch(pw))
+                            return "Password must contain at least one special character (e.g. @, #, !, \$).";
+    return null;
+  }
+
   Future<void> _submitLogin() async {
     setState(() => _error = null);
+
+    // Field checks
+    if (_emailCtrl.text.trim().isEmpty) {
+      setState(() => _error = "Email address is required.");
+      return;
+    }
+    if (_passCtrl.text.isEmpty) {
+      setState(() => _error = "Password is required.");
+      return;
+    }
+    // Password strength on login too
+    final pwErr = _validatePassword(_passCtrl.text);
+    if (pwErr != null) {
+      setState(() => _error = pwErr);
+      return;
+    }
+
     try {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/login"),
@@ -720,21 +750,9 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
     }
 
     // Password strength validation
-    final pass = _passCtrl.text;
-    if (pass.length < 8) {
-      setState(() => _error = "Password must be at least 8 characters long.");
-      return;
-    }
-    if (!RegExp(r'[A-Z]').hasMatch(pass)) {
-      setState(() => _error = "Password must contain at least one uppercase letter (A-Z).");
-      return;
-    }
-    if (!RegExp(r'[0-9]').hasMatch(pass)) {
-      setState(() => _error = "Password must contain at least one digit (0-9).");
-      return;
-    }
-    if (!RegExp(r'[!@#\$%^&*()_+\-=\[\]{};:"\\|,.<>/?]').hasMatch(pass)) {
-      setState(() => _error = "Password must contain at least one special character (e.g. @, #, \$, !).");
+    final pwErr = _validatePassword(_passCtrl.text);
+    if (pwErr != null) {
+      setState(() => _error = pwErr);
       return;
     }
 
@@ -914,9 +932,33 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                 const SizedBox(height: 12),
                 TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(labelText: "Create Password", border: OutlineInputBorder())),
                 const SizedBox(height: 4),
-                const Text(
-                  "Min 8 chars · 1 uppercase · 1 digit · 1 special character (@, #, \$, ! etc.)",
-                  style: TextStyle(color: Colors.grey, fontSize: 10, height: 1.4),
+                // Live password strength indicators
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _passCtrl,
+                  builder: (context, value, _) {
+                    final pw = value.text;
+                    final rules = [
+                      {'label': 'At least 8 characters',          'ok': pw.length >= 8},
+                      {'label': 'One uppercase letter (A–Z)',      'ok': RegExp(r'[A-Z]').hasMatch(pw)},
+                      {'label': 'One digit (0–9)',                 'ok': RegExp(r'[0-9]').hasMatch(pw)},
+                      {'label': 'One special character (@,#,!)', 'ok': RegExp(r'[!@#$%^&*()\-_=+\[\]{};:,.<>/?\\|`~]').hasMatch(pw)},
+                    ];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: rules.map((r) => Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Row(children: [
+                          Text(r['ok'] as bool ? '✅' : '❌', style: const TextStyle(fontSize: 11)),
+                          const SizedBox(width: 5),
+                          Text(r['label'] as String,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: r['ok'] as bool ? const Color(0xFF00E676) : Colors.grey,
+                            )),
+                        ]),
+                      )).toList(),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
