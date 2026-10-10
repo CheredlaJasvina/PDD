@@ -54,6 +54,24 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    // Password strength: min 8 chars, at least 1 uppercase, 1 digit, 1 special char
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters long.');
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setErrorMsg('Password must contain at least one uppercase letter (A-Z).');
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setErrorMsg('Password must contain at least one digit (0-9).');
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      setErrorMsg('Password must contain at least one special character (e.g. @, #, $, !).');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/signup', {
@@ -241,6 +259,9 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
               <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 600 }}>Password:</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
                 style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.75rem', borderRadius: '8px' }} />
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.4rem', lineHeight: 1.4 }}>
+                Min 8 chars · 1 uppercase · 1 digit · 1 special character (@, #, $, ! etc.)
+              </p>
             </div>
             <button type="submit" className="btn-primary" style={{ width: '100%', padding: '0.8rem', marginTop: '0.5rem' }} disabled={isSubmitting}>
               {isSubmitting ? 'Creating Account...' : 'Create Account'}

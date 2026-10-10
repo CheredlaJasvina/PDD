@@ -719,6 +719,25 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       return;
     }
 
+    // Password strength validation
+    final pass = _passCtrl.text;
+    if (pass.length < 8) {
+      setState(() => _error = "Password must be at least 8 characters long.");
+      return;
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(pass)) {
+      setState(() => _error = "Password must contain at least one uppercase letter (A-Z).");
+      return;
+    }
+    if (!RegExp(r'[0-9]').hasMatch(pass)) {
+      setState(() => _error = "Password must contain at least one digit (0-9).");
+      return;
+    }
+    if (!RegExp(r'[!@#\$%^&*()_+\-=\[\]{};:"\\|,.<>/?]').hasMatch(pass)) {
+      setState(() => _error = "Password must contain at least one special character (e.g. @, #, \$, !).");
+      return;
+    }
+
     try {
       final res = await http.post(
         Uri.parse("${widget.backendUrl}/auth/signup"),
@@ -894,6 +913,11 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                 TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: "Email address", border: OutlineInputBorder())),
                 const SizedBox(height: 12),
                 TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(labelText: "Create Password", border: OutlineInputBorder())),
+                const SizedBox(height: 4),
+                const Text(
+                  "Min 8 chars · 1 uppercase · 1 digit · 1 special character (@, #, \$, ! etc.)",
+                  style: TextStyle(color: Colors.grey, fontSize: 10, height: 1.4),
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50)),
