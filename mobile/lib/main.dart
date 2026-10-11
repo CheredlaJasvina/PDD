@@ -87,7 +87,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       "icon": "🌿",
       "screens": [
         {"id": "eco-tracker", "name": "Eco & Carbon Tracker", "icon": "🍏"},
-        {"id": "eco-donation", "name": "Food Donation Registry", "icon": "🎁"},
         {"id": "eco-waste", "name": "Bio-waste Optimizer", "icon": "🪱"}
       ]
     },
@@ -457,13 +456,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return eco_screen.EcoImpactScreen(
           backendUrl: _backendUrl,
           email: email,
-        );
-
-      // ── Food Donation Registry — route to CommunityCatalogScreen ─────────
-      case "eco-donation":
-        return CommunityCatalogScreen(
-          backendUrl: _backendUrl,
-          userName: _loggedInUser!["name"] as String? ?? "User",
         );
 
       // ── Co-op Household (existing screen – kept) ─────────────────────────

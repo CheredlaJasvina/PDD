@@ -50,7 +50,6 @@ const sidebarCategories: SidebarCategory[] = [
     icon: "🌿",
     screens: [
       { id: "eco-tracker", name: "Eco & Carbon Tracker", icon: "🍏" },
-      { id: "eco-donation", name: "Food Donation Registry", icon: "🎁" },
       { id: "eco-waste", name: "Bio-waste Optimizer", icon: "🪱" }
     ]
   },
