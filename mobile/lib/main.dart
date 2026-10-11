@@ -459,6 +459,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           email: email,
         );
 
+      // ── Food Donation Registry — route to CommunityCatalogScreen ─────────
+      case "eco-donation":
+        return CommunityCatalogScreen(
+          backendUrl: _backendUrl,
+          userName: _loggedInUser!["name"] as String? ?? "User",
+        );
+
       // ── Co-op Household (existing screen – kept) ─────────────────────────
       case "household":
         return CoOpHouseholdScreen(

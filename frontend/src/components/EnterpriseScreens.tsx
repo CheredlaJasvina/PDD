@@ -171,6 +171,10 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   const [isSpiceAutoSet, setIsSpiceAutoSet] = useState(false);
 
   useEffect(() => {
+    if (screenId === 'eco-donation') fetchDonations();
+  }, [screenId]);
+
+  useEffect(() => {
     if (inventory && inventory.length > 0) {
       const itemsWithSpice = inventory.filter((item: any) => item.spiceLevel !== undefined && item.spiceLevel > 0);
       if (itemsWithSpice.length > 0) {
@@ -201,13 +205,74 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     { rank: 4, name: preferences.name || "You", score: `${preferences.healthScore || 100} XP`, current: true }
   ];
 
-  // 11. Donation Form
+  // 11. Donation Form + live board
   const [donateName, setDonateName] = useState("");
   const [donateQty, setDonateQty] = useState("1 kg");
-  const handleRegisterDonation = () => {
-    if (!donateName) return alert("Enter item name");
-    alert(`Registered ${donateQty} of ${donateName} to neighborhood surplus market!`);
-    setDonateName("");
+  const [donateDays, setDonateDays] = useState(2);
+  const [donationList, setDonationList] = useState<any[]>([]);
+  const [donateLoading, setDonateLoading] = useState(false);
+  const [donatePosting, setDonatePosting] = useState(false);
+
+  const fetchDonations = async () => {
+    setDonateLoading(true);
+    try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      const res = await fetch('https://pdd-9fqv.onrender.com/api/donations', {
+        headers: { 'x-user-email': email }
+      });
+      const data = await res.json();
+      if (data.success) setDonationList(data.donations || []);
+    } catch {
+      setDonationList([
+        { _id: 'd-1', donor: 'C. Jasvina', name: 'Red Tomatoes', quantity: '3 pcs', daysLeft: 2, distance: '0.2 km', status: 'Available' },
+        { _id: 'd-2', donor: 'David K.', name: 'Wheat Bread', quantity: '1 pack', daysLeft: 1, distance: '1.5 km', status: 'Requested' }
+      ]);
+    } finally {
+      setDonateLoading(false);
+    }
+  };
+
+  const handleRegisterDonation = async () => {
+    if (!donateName.trim()) return;
+    setDonatePosting(true);
+    try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      await fetch('https://pdd-9fqv.onrender.com/api/donations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': email },
+        body: JSON.stringify({ name: donateName.trim(), quantity: donateQty, daysLeft: donateDays })
+      });
+      setDonateName('');
+      setDonateQty('1 kg');
+      setDonateDays(2);
+      await fetchDonations();
+    } catch {
+      // Optimistic fallback
+      setDonationList(prev => [{
+        _id: `d-${Date.now()}`, donor: 'You', name: donateName.trim(),
+        quantity: donateQty, daysLeft: donateDays, distance: '0.1 km', status: 'Available'
+      }, ...prev]);
+      setDonateName('');
+    } finally {
+      setDonatePosting(false);
+    }
+  };
+
+  const handleClaimDonation = async (id: string) => {
+    try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      await fetch(`https://pdd-9fqv.onrender.com/api/donations/${id}/request`, {
+        method: 'PUT', headers: { 'x-user-email': email }
+      });
+      await fetchDonations();
+    } catch {
+      setDonationList(prev => prev.map(d =>
+        d._id === id ? { ...d, status: d.status === 'Available' ? 'Requested' : 'Available' } : d
+      ));
+    }
   };
 
   // 13. Bio-waste optimizer
@@ -900,19 +965,97 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
       case 'eco-donation':
         return (
           <div>
-            <h3>🎁 surplus food donation registry</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Share fresh foods with local community catalogs.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.25rem' }}>Food Item Name</label>
-                <input type="text" placeholder="e.g. Tomatoes" value={donateName} onChange={e => setDonateName(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }} />
+            <h2 style={{ marginBottom: '0.5rem' }}>🎁 Food Donation Registry</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+              Share surplus food with your local community before it goes to waste.
+            </p>
+
+            {/* ── Post Form ── */}
+            <div className="glass-card" style={{ marginBottom: '2rem', borderColor: 'var(--color-fresh)' }}>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>📦 Register Surplus Item</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', marginBottom: '0.35rem', fontWeight: 600 }}>Food Item Name</label>
+                  <input type="text" placeholder="e.g. Red Tomatoes, Bananas, Milk..." value={donateName}
+                    onChange={e => setDonateName(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff', fontSize: '0.9rem' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', marginBottom: '0.35rem', fontWeight: 600 }}>Quantity</label>
+                    <select value={donateQty} onChange={e => setDonateQty(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }}>
+                      {['0.5 kg', '1 kg', '2 kg', '5 kg', '1 bag', '1 pack', '2 pcs', '5 pcs'].map(q => (
+                        <option key={q} value={q}>{q}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', marginBottom: '0.35rem', fontWeight: 600 }}>Days Left to Spoil</label>
+                    <select value={donateDays} onChange={e => setDonateDays(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }}>
+                      {[1, 2, 3, 5, 7].map(d => (
+                        <option key={d} value={d}>{d} day{d > 1 ? 's' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <button className="btn-primary"
+                  style={{ padding: '0.7rem', fontWeight: 700, opacity: donatePosting ? 0.7 : 1 }}
+                  onClick={handleRegisterDonation} disabled={donatePosting || !donateName.trim()}>
+                  {donatePosting ? '⏳ Posting...' : '✅ Register Surplus Item'}
+                </button>
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.25rem' }}>Quantity</label>
-                <input type="text" placeholder="e.g. 1.5 kg" value={donateQty} onChange={e => setDonateQty(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: '#fff' }} />
-              </div>
-              <button className="btn-primary" onClick={handleRegisterDonation}>Register surplus item</button>
             </div>
+
+            {/* ── Live Board ── */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1rem' }}>🏘️ Available in Your Neighbourhood</h3>
+              <button className="btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+                onClick={fetchDonations} disabled={donateLoading}>
+                {donateLoading ? '⏳' : '🔄 Refresh'}
+              </button>
+            </div>
+
+            {donateLoading ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                <div style={{ border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid var(--color-fresh)', borderRadius: '50%', width: '32px', height: '32px', animation: 'spin 1s linear infinite', margin: '0 auto 0.75rem' }} />
+                Loading donations...
+              </div>
+            ) : donationList.length === 0 ? (
+              <div className="glass-card" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '1.1rem' }}>No donations listed yet.</p>
+                <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>Be the first to post surplus food above!</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {donationList.map((don: any) => {
+                  const isClaimed = don.status === 'Requested';
+                  const urgency = don.daysLeft <= 1 ? 'var(--color-spoiled)' : don.daysLeft <= 2 ? 'var(--color-warning)' : 'var(--color-fresh)';
+                  return (
+                    <div key={don._id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', opacity: isClaimed ? 0.65 : 1, borderColor: isClaimed ? 'var(--glass-border)' : urgency }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                          <strong style={{ fontSize: '0.95rem' }}>{don.name}</strong>
+                          <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '12px', background: isClaimed ? 'rgba(255,255,255,0.05)' : `${urgency}20`, border: `1px solid ${urgency}`, color: urgency, fontWeight: 700 }}>
+                            {isClaimed ? '✓ Requested' : `${don.daysLeft}d left`}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+                          📦 {don.quantity} &nbsp;·&nbsp; 📍 {don.distance} &nbsp;·&nbsp; 👤 {don.donor || 'Community'}
+                        </p>
+                      </div>
+                      <button
+                        className={isClaimed ? 'btn-secondary' : 'btn-primary'}
+                        style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', flexShrink: 0, marginLeft: '1rem', fontWeight: 700 }}
+                        onClick={() => handleClaimDonation(don._id)} disabled={isClaimed}>
+                        {isClaimed ? 'Claimed' : '🤝 Claim'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
 
