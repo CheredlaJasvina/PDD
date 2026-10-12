@@ -19,19 +19,22 @@ const MILESTONE_META: Record<string, {
   threshold: number;
   unit: string;
   getProgress: (metrics: EcoMetrics) => number;
+  progressLabel: (current: number, threshold: number) => string;
   tip: string;
 }> = {
   'CO2 Savior 🌿': {
     threshold: 5,
     unit: 'kg CO₂',
-    getProgress: (m) => m.co2SavedKg,
-    tip: 'Mark food items as "Eaten" or "Used" in your inventory. Each item saves ~0.4 kg CO₂.',
+    getProgress: (m) => Math.min(m.co2SavedKg, 5),
+    progressLabel: (current, threshold) => `${current.toFixed(1)} / ${threshold} kg CO₂`,
+    tip: 'Mark food items as "Eaten" or "Used" in your inventory. Each item saves ~0.4 kg CO₂ (~13 items needed).',
   },
   'Zero Waste Hero 💎': {
-    threshold: 100, // treated as a % goal — we show wastage % inverted
-    unit: '% waste-free days',
-    getProgress: (m) => Math.max(0, 100 - (m.comparisonStats?.userSavingPct ?? 100)),
-    tip: 'Avoid marking items as "Wasted" for a full month. Scan items early and use them before they spoil.',
+    threshold: 500,
+    unit: '₹ saved',
+    getProgress: (m) => Math.min(m.moneySaved, 500),
+    progressLabel: (current, threshold) => `₹${current.toFixed(0)} / ₹${threshold} saved`,
+    tip: 'Consume food before it spoils — every item marked "Eaten" or "Used" adds ₹4.5 to your savings. Reach ₹500 to unlock.',
   },
 };
 
@@ -92,10 +95,10 @@ export const EcoImpact: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
               {milestones.map((m, idx) => {
                 const meta = MILESTONE_META[m.title];
-                const current = meta && metrics ? Math.min(meta.getProgress(metrics), meta.threshold) : 0;
+                const current = meta && metrics ? meta.getProgress(metrics) : 0;
                 const pct = meta ? Math.min(100, Math.round((current / meta.threshold) * 100)) : (m.unlocked ? 100 : 0);
                 const remaining = meta ? Math.max(0, meta.threshold - current) : 0;
-                const itemsNeeded = meta?.unit === 'kg CO₂' ? Math.ceil(remaining / 0.4) : null;
+                const itemsNeeded = meta?.unit === 'kg CO₂' ? Math.ceil(remaining / 0.4) : Math.ceil(remaining / 4.5);
 
                 return (
                   <div key={idx} style={{
@@ -131,9 +134,7 @@ export const EcoImpact: React.FC = () => {
                           color: '#ffb300', border: '1px solid rgba(255,179,0,0.3)',
                           whiteSpace: 'nowrap'
                         }}>
-                          {meta.unit === 'kg CO₂'
-                            ? `${current.toFixed(1)} / ${meta.threshold} kg`
-                            : `${pct}%`}
+                          {meta.progressLabel(current, meta.threshold)}
                         </span>
                       )}
                       {m.unlocked && (
@@ -186,13 +187,11 @@ export const EcoImpact: React.FC = () => {
                             <span style={{ color: '#fff', fontWeight: 600 }}>
                               {meta.unit === 'kg CO₂'
                                 ? `${remaining.toFixed(1)} kg CO₂ still needed`
-                                : `Goal: keep wastage ≤ 5% for 30 days`}
+                                : `₹${remaining.toFixed(0)} more savings needed`}
                             </span>
-                            {itemsNeeded !== null && (
-                              <span style={{ marginLeft: '0.4rem' }}>
-                                — that's about <strong style={{ color: '#ffb300' }}>{itemsNeeded} more item{itemsNeeded !== 1 ? 's' : ''}</strong> eaten or used
-                              </span>
-                            )}
+                            <span style={{ marginLeft: '0.4rem' }}>
+                              — about <strong style={{ color: '#ffb300' }}>{itemsNeeded} more item{itemsNeeded !== 1 ? 's' : ''}</strong> eaten or used
+                            </span>
                           </div>
                         )}
 

@@ -130,7 +130,7 @@ let userEcoMetrics = {
     foodHealthLevel: "Level 3 waste warden",
     ecoMilestones: [
       { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: true },
-      { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
+      { title: "Zero Waste Hero 💎", desc: "Save ₹500 by consuming food before it spoils.", unlocked: false }
     ],
     comparisonStats: { communityAvgKg: 15.2, userSavingPct: 63 }
   }
@@ -145,7 +145,7 @@ const getEcoMetricsForUser = (email) => {
       foodHealthLevel: "Level 1 fresh starter",
       ecoMilestones: [
         { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: false },
-        { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
+        { title: "Zero Waste Hero 💎", desc: "Save ₹500 by consuming food before it spoils.", unlocked: false }
       ],
       comparisonStats: { communityAvgKg: 15.2, userSavingPct: 0 }
     };
@@ -389,6 +389,14 @@ module.exports = {
           co2Milestone.unlocked = true;
           if (!user.unlockedBadges.includes('CO2 Savior')) {
             user.unlockedBadges.push('CO2 Savior');
+          }
+        }
+        // Unlock Zero Waste Hero badge when user saves ₹500 (= ~111 items consumed)
+        const zeroWasteMilestone = eco.ecoMilestones.find(m => m.title === 'Zero Waste Hero 💎');
+        if (zeroWasteMilestone && !zeroWasteMilestone.unlocked && eco.moneySaved >= 500) {
+          zeroWasteMilestone.unlocked = true;
+          if (!user.unlockedBadges.includes('Zero Waste Hero')) {
+            user.unlockedBadges.push('Zero Waste Hero');
           }
         }
         if (user.streakCount >= 7 && !user.unlockedBadges.includes('Consistency King')) {
