@@ -129,7 +129,7 @@ let userEcoMetrics = {
     moneySaved: 140.0,
     foodHealthLevel: "Level 3 waste warden",
     ecoMilestones: [
-      { title: "CO2 Savior 🌿", desc: "Saved 20kg of carbon emissions.", unlocked: true },
+      { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: true },
       { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
     ],
     comparisonStats: { communityAvgKg: 15.2, userSavingPct: 63 }
@@ -144,7 +144,7 @@ const getEcoMetricsForUser = (email) => {
       moneySaved: 0.0,
       foodHealthLevel: "Level 1 fresh starter",
       ecoMilestones: [
-        { title: "CO2 Savior 🌿", desc: "Saved 20kg of carbon emissions.", unlocked: false },
+        { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: false },
         { title: "Zero Waste Hero 💎", desc: "Keep wastage below 5% for one month.", unlocked: false }
       ],
       comparisonStats: { communityAvgKg: 15.2, userSavingPct: 0 }
@@ -383,6 +383,14 @@ module.exports = {
         const eco = getEcoMetricsForUser(user.email);
         eco.co2SavedKg += 0.4;
         eco.moneySaved += 4.5;
+        // Unlock CO2 Savior badge when user crosses 5kg saved
+        const co2Milestone = eco.ecoMilestones.find(m => m.title === 'CO2 Savior 🌿');
+        if (co2Milestone && !co2Milestone.unlocked && eco.co2SavedKg >= 5) {
+          co2Milestone.unlocked = true;
+          if (!user.unlockedBadges.includes('CO2 Savior')) {
+            user.unlockedBadges.push('CO2 Savior');
+          }
+        }
         if (user.streakCount >= 7 && !user.unlockedBadges.includes('Consistency King')) {
           user.unlockedBadges.push('Consistency King');
         }
