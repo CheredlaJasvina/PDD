@@ -166,41 +166,9 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     }
   };
 
-  // 7. Spice Customizer
-  // Seed from saved preference; fall back to 5 if never set
-  const [spiceLevel, setSpiceLevel] = useState<number>(preferences.spiceLevel ?? 5);
-  const [isSpiceAutoSet, setIsSpiceAutoSet] = useState(false);
-
-  // Helper: update local state AND persist to user preferences
-  const applySpiceLevel = (level: number) => {
-    setSpiceLevel(level);
-    onUpdatePreferences({ spiceLevel: level });
-  };
-
   useEffect(() => {
     if (screenId === 'eco-donation') fetchDonations();
   }, [screenId]);
-
-  // Keep local state in sync when preferences change externally (e.g. from ProfileSettings)
-  useEffect(() => {
-    if (preferences.spiceLevel !== undefined) {
-      setSpiceLevel(preferences.spiceLevel);
-    }
-  }, [preferences.spiceLevel]);
-
-  useEffect(() => {
-    // Only auto-detect from inventory if the user has never explicitly saved a spice preference
-    if (preferences.spiceLevel !== undefined) return;
-    if (inventory && inventory.length > 0) {
-      const itemsWithSpice = inventory.filter((item: any) => item.spiceLevel !== undefined && item.spiceLevel > 0);
-      if (itemsWithSpice.length > 0) {
-        const totalSpice = itemsWithSpice.reduce((sum: number, item: any) => sum + item.spiceLevel, 0);
-        const avgSpice = Math.round(totalSpice / itemsWithSpice.length);
-        applySpiceLevel(avgSpice);
-        setIsSpiceAutoSet(true);
-      }
-    }
-  }, [inventory]);
 
   // 8. Allergen list
   const [allergens, setAllergens] = useState<string[]>(preferences.dietaryPreferences || []);
@@ -836,91 +804,6 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
                 ))}
               </div>
             )}
-          </div>
-        );
-
-      case 'recipes-spice':
-        const spiceProfile = spiceLevel <= 2 ? { label: 'Mild', emoji: '🌿', color: '#00c853' }
-          : spiceLevel <= 4 ? { label: 'Low Heat', emoji: '🌶️', color: '#69f0ae' }
-          : spiceLevel <= 6 ? { label: 'Medium Spiced', emoji: '🌶️🌶️', color: '#ffb300' }
-          : spiceLevel <= 8 ? { label: 'Hot', emoji: '🌶️🌶️🌶️', color: '#ff6d00' }
-          : { label: 'Extra Hot (Vindaloo)', emoji: '🔥🌶️🔥', color: '#ff1744' };
-
-        // Sort inventory items by spice level descending to show in list
-        const spicyItems = [...inventory]
-          .filter((item: any) => item.spiceLevel !== undefined && item.spiceLevel > 0)
-          .sort((a: any, b: any) => b.spiceLevel - a.spiceLevel);
-
-        return (
-          <div>
-            <h3>🌶️ Spice Level Customizer</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-              Spice intensity is auto-detected from your scanned items. Fine-tune below.
-            </p>
-
-            {isSpiceAutoSet ? (
-              <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(0, 230, 118, 0.08)', border: '1px solid var(--color-fresh)', borderRadius: '10px', fontSize: '0.85rem' }}>
-                ✨ <strong>Auto-adjusted</strong> from your inventory
-                {spicyItems.length > 0 && (
-                  <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                    {spicyItems.slice(0, 3).map((item: any, i: number) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        <span>{item.name}</span>
-                        <span>{'🌶️'.repeat(Math.min(item.spiceLevel, 5))}</span>
-                      </div>
-                    ))}
-                    {spicyItems.length > 1 && (
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                        Average spice of {spicyItems.length} item{spicyItems.length > 1 ? 's' : ''} = level {spiceLevel}/10
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{ marginBottom: '1.25rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                💡 No spice data from inventory yet. Set manually or scan items with spice levels.
-              </div>
-            )}
-
-            {/* Visual spice gauge */}
-            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{spiceProfile.emoji}</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: spiceProfile.color }}>{spiceProfile.label}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Intensity {spiceLevel}/10</div>
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.75rem', color: 'var(--text-muted)' }}>Fine-tune intensity:</label>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={spiceLevel}
-                onChange={e => { applySpiceLevel(Number(e.target.value)); setIsSpiceAutoSet(true); }}
-                style={{ width: '100%', accentColor: spiceProfile.color }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                <span>🌿 Mild</span><span>🌶️ Medium</span><span>🔥 Extra Hot</span>
-              </div>
-            </div>
-
-            {/* Quick preset buttons */}
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {[{l:1,n:'None'},{l:3,n:'Mild'},{l:5,n:'Medium'},{l:7,n:'Hot'},{l:10,n:'Vindaloo'}].map(p => (
-                <button key={p.l} className="btn-secondary"
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem',
-                    background: spiceLevel === p.l ? 'rgba(0,230,118,0.1)' : 'transparent',
-                    borderColor: spiceLevel === p.l ? 'var(--color-fresh)' : 'var(--glass-border)' }}
-                  onClick={() => { applySpiceLevel(p.l); setIsSpiceAutoSet(true); }}>
-                  {p.n}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              🍽️ Recipes shown in the <strong>Smart Recipe Assistant</strong> will filter spicy dishes accordingly.
-            </div>
           </div>
         );
 

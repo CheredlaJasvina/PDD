@@ -207,16 +207,6 @@ export const Recipes: React.FC<RecipesProps> = ({
                 <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem' }}>(Level {userSpiceLevel}/10) — recipes above this intensity are hidden</span>
               </span>
             </div>
-            <button
-              className="btn-secondary"
-              style={{ fontSize: '0.78rem', padding: '0.3rem 0.75rem', borderColor: 'rgba(255,179,0,0.4)', color: 'var(--color-warning)', whiteSpace: 'nowrap' }}
-              onClick={() => {/* navigation handled by parent */
-                // Emit a custom event the parent App.tsx can listen to, or just note it's in the sidebar
-              }}
-              title="Go to Spice Customizer to change"
-            >
-              🌶️ Adjust in Spice Customizer
-            </button>
           </div>
         );
       })()}
