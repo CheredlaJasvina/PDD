@@ -171,11 +171,30 @@ exports.scanFoodItem = async (req, res) => {
 
     // Helper: build item data from Groq result
     const buildItemData = (result, modelUsed) => {
-      const shelfLifeDays = result.shelfLifeDays || (
-        result.category === 'fruits' ? 7 :
-        result.category === 'vegetables' ? 5 :
-        result.category === 'non-veg' ? 2 : 3
-      );
+      const isCooked = result.category === 'cooked food';
+
+      // Cooked food safe consumption window is MAX 1 day at room temp (6-8 hrs ideally).
+      // Override whatever Groq returns for shelfLifeDays if it's cooked food, because
+      // Groq tends to give refrigerated shelf life (3-4 days) instead of safe-eat window.
+      let shelfLifeDays = isCooked
+        ? 1
+        : (result.shelfLifeDays || (
+            result.category === 'fruits' ? 7 :
+            result.category === 'vegetables' ? 5 :
+            result.category === 'non-veg' ? 2 : 3
+          ));
+
+      // Also correct storageGuidance if Groq still says "3-4 days" / "2-3 days" for cooked food
+      let storageGuidance = result.storageGuidance || 'Store appropriately.';
+      if (isCooked) {
+        const hasBadAdvice = /\b([2-9]|1[0-9])\s*[-–]\s*([2-9]|1[0-9])\s*days?\b/i.test(storageGuidance)
+          || /\b[3-9]\s*days?\b/i.test(storageGuidance)
+          || /\b2\s*days?\b/i.test(storageGuidance);
+        if (hasBadAdvice) {
+          storageGuidance = `Consume within 6-8 hours at room temperature. If refrigerating, store in an airtight container and consume within 1 day. Reheat until steaming hot (75°C+).`;
+        }
+      }
+
       return {
         name:              result.name,
         category:          result.category,
@@ -185,7 +204,7 @@ exports.scanFoodItem = async (req, res) => {
         predictedSpoilageDate: new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000),
         originalFreshness: result.originalFreshness || 90,
         imageUrl:          getFoodImageUrl(result.name, result.category),
-        isCooked:          result.category === 'cooked food',
+        isCooked,
         dietaryTags:       ['vegan', 'vegetarian', 'gluten-free', 'dairy-free'],
         nutrition: {
           calories:    result.nutrition?.calories    || 100,
@@ -196,8 +215,10 @@ exports.scanFoodItem = async (req, res) => {
           vitamins:    result.nutrition?.vitamins    || ['Vitamin C'],
           healthNotes: result.nutrition?.healthNotes || `Freshly analysed ${result.name}.`
         },
-        storageGuidance: result.storageGuidance || 'Store appropriately.',
-        safetyAdvisory:  result.safetyAdvisory  || 'Safe to eat.',
+        storageGuidance,
+        safetyAdvisory:  isCooked
+          ? (result.safetyAdvisory || 'Cooked food spoils quickly. Do not leave out for more than 2 hours. When in doubt, throw it out.')
+          : (result.safetyAdvisory || 'Safe to eat.'),
         _model:          modelUsed
       };
     };
@@ -207,31 +228,36 @@ exports.scanFoodItem = async (req, res) => {
 Rules:
 - Return ONLY valid JSON — no markdown, no explanation.
 - "success" must be true if the image contains food, false otherwise.
-- Identify the EXACT food (e.g. "Carrot", "Red Apple", "Broccoli") not just "vegetable".
+- Identify the EXACT food (e.g. "Carrot", "Red Apple", "Briyani") not just "vegetable".
 - "category" must be one of: fruits | vegetables | cooked food | packaged food | liquid | non-veg
 - "status" must be one of: Fresh | Slightly Spoiled | Spoiled
 - "originalFreshness" is a number 5-100 (100 = perfectly fresh, 5 = fully rotten)
-- "shelfLifeDays" is estimated days remaining before spoilage
+- "shelfLifeDays" is the SAFE CONSUMPTION window at room temperature (NOT refrigerated shelf life):
+    * For category "cooked food" (rice, biryani, curry, dal, sabzi, pasta, pizza, chapati, roti, idli, dosa, sambar, any home-cooked meal):
+        - ALWAYS set "shelfLifeDays" to 1 (meaning consume within today / max 24 hours at room temp)
+        - storageGuidance MUST mention "consume within 6-8 hours at room temperature" or "within 1 day if refrigerated immediately"
+        - Do NOT say "3-4 days" or "2-3 days" for cooked food — that is refrigeration advice, not safe consumption time
+    * For other categories use normal shelf-life estimates (fruits: 5-14 days, vegetables: 3-21 days, etc.)
 
 Required JSON structure:
 {
   "success": true,
   "message": "Food identified successfully",
-  "name": "Carrot",
-  "category": "vegetables",
+  "name": "Chicken Biryani",
+  "category": "cooked food",
   "status": "Fresh",
   "originalFreshness": 92,
-  "shelfLifeDays": 14,
+  "shelfLifeDays": 1,
   "nutrition": {
-    "calories": 41,
-    "protein": 0.9,
-    "carbs": 9.6,
-    "fat": 0.2,
-    "vitamins": ["Vitamin A", "Vitamin K"],
-    "healthNotes": "High in beta-carotene, supports vision and immune health."
+    "calories": 290,
+    "protein": 18,
+    "carbs": 35,
+    "fat": 8,
+    "vitamins": ["Vitamin B12", "Iron"],
+    "healthNotes": "High protein meal. Consume fresh for best safety."
   },
-  "storageGuidance": "Refrigerate in water with tops removed. Keeps up to 3 weeks.",
-  "safetyAdvisory": "Safe to eat raw or cooked. Wash thoroughly before use."
+  "storageGuidance": "Consume within 6-8 hours at room temperature. If refrigerating, store in an airtight container and consume within 1 day. Reheat until steaming hot (75°C+).",
+  "safetyAdvisory": "Cooked food spoils quickly. Do not leave out for more than 2 hours. When in doubt, throw it out."
 }`;
 
     // ── Groq Vision API ───────────────────────────────────────────────────

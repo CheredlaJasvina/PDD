@@ -26,6 +26,32 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
   String? _success;
   bool _loading = false;
 
+  // Live password strength — updated as user types on signup
+  bool _pwLen      = false; // 8+ chars
+  bool _pwUpper    = false; // at least one uppercase
+  bool _pwDigit    = false; // at least one digit
+  bool _pwSpecial  = false; // at least one special character
+
+  void _onPasswordChanged(String val) {
+    setState(() {
+      _pwLen     = val.length >= 8;
+      _pwUpper   = val.contains(RegExp(r'[A-Z]'));
+      _pwDigit   = val.contains(RegExp(r'[0-9]'));
+      _pwSpecial = val.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]'));
+    });
+  }
+
+  /// Returns null if password passes all 4 rules, otherwise returns error message.
+  String? _validatePassword(String pass) {
+    if (pass.length < 8)                                          return 'Password must be at least 8 characters.';
+    if (!pass.contains(RegExp(r'[A-Z]')))                        return 'Password must contain at least one uppercase letter.';
+    if (!pass.contains(RegExp(r'[0-9]')))                        return 'Password must contain at least one number.';
+    if (!pass.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]'))) {
+      return 'Password must contain at least one special character (!@#\$%^&* etc.).';
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     _emailCtrl.dispose(); _passCtrl.dispose();
@@ -33,7 +59,15 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
     super.dispose();
   }
 
-  void _go(String v) => setState(() { _view = v; _error = null; _success = null; });
+  void _go(String v) => setState(() {
+    _view = v;
+    _error = null;
+    _success = null;
+    // Reset strength indicators when leaving signup
+    if (v != 'signup') {
+      _pwLen = false; _pwUpper = false; _pwDigit = false; _pwSpecial = false;
+    }
+  });
 
   // Longer timeout — Render free-tier cold starts take up to 50s
   static const _timeout = Duration(seconds: 60);
@@ -81,10 +115,11 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       setState(() => _error = 'Name must contain letters only (no numbers or symbols).'); return;
     }
     if (email.isEmpty) { setState(() => _error = 'Email address is required.'); return; }
-    if (!RegExp(r'^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
-      setState(() => _error = 'Please enter a valid email address.'); return;
+    if (!RegExp(r'^[\w\.\+\-]+@[\w\-]+\.(com|in|org)$', caseSensitive: false).hasMatch(email)) {
+      setState(() => _error = 'Email must end with .com, .in, or .org (e.g. name@example.com)'); return;
     }
-    if (pass.length < 6) { setState(() => _error = 'Password must be at least 6 characters.'); return; }
+    final pwError = _validatePassword(pass);
+    if (pwError != null) { setState(() => _error = pwError); return; }
 
     setState(() { _loading = true; _error = null; });
     try {
@@ -114,6 +149,9 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
   Future<void> _forgot() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) { setState(() => _error = 'Please enter your registered email.'); return; }
+    if (!RegExp(r'^[\w\.\+\-]+@[\w\-]+\.(com|in|org)$', caseSensitive: false).hasMatch(email)) {
+      setState(() => _error = 'Email must end with .com, .in, or .org'); return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
       final res = await http.post(
@@ -328,7 +366,24 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
                 const SizedBox(height: 12),
                 _field(_emailCtrl, 'Email address', icon: Icons.email_outlined),
                 const SizedBox(height: 12),
-                _field(_passCtrl, 'Create Password', obscure: true, icon: Icons.lock_outline),
+                // Password field with live strength tracking
+                TextField(
+                  controller: _passCtrl,
+                  obscureText: true,
+                  onChanged: _onPasswordChanged,
+                  decoration: InputDecoration(
+                    labelText: 'Create Password',
+                    prefixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Live password strength indicators
+                _pwStrengthRow(),
                 const SizedBox(height: 20),
                 _btn('Register Account', _signup),
                 _linkRich('Have an account? ', 'Login', () => _go('login')),
@@ -371,6 +426,54 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
       ),
     );
   }
+
+  // Password strength indicator grid shown live while typing on signup
+  Widget _pwStrengthRow() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Password requirements',
+              style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(child: _pwRule(_pwLen,     '8+ characters')),
+            Expanded(child: _pwRule(_pwUpper,   'Uppercase letter')),
+          ]),
+          const SizedBox(height: 4),
+          Row(children: [
+            Expanded(child: _pwRule(_pwDigit,   'One number')),
+            Expanded(child: _pwRule(_pwSpecial, 'Special character')),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _pwRule(bool met, String label) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        met ? Icons.check_circle : Icons.radio_button_unchecked,
+        size: 13,
+        color: met ? const Color(0xFF00E676) : Colors.grey,
+      ),
+      const SizedBox(width: 5),
+      Flexible(
+        child: Text(label,
+            style: TextStyle(
+              fontSize: 11,
+              color: met ? const Color(0xFF00E676) : Colors.grey,
+            )),
+      ),
+    ],
+  );
 
   Widget _banner(String msg, Color color, {bool isSuccess = false}) => Container(
     width: double.infinity, padding: const EdgeInsets.all(12),

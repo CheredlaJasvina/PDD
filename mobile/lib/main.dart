@@ -1289,6 +1289,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   // Manual form
   final _nameCtrl = TextEditingController();
+  final _lifeCtrl = TextEditingController(text: "5"); // dedicated controller so programmatic updates show
   String _cat      = "fruits";
   int    _life     = 5;
   bool   _isCooked = false;
@@ -1330,10 +1331,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
     "chicken": {"category": "packaged food", "shelfLife": 3, "calories": 165, "isCooked": false},
     "beef": {"category": "packaged food", "shelfLife": 3, "calories": 250, "isCooked": false},
     "fish": {"category": "packaged food", "shelfLife": 2, "calories": 206, "isCooked": false},
-    "rice": {"category": "cooked food", "shelfLife": 4, "calories": 130, "isCooked": true},
-    "pasta": {"category": "cooked food", "shelfLife": 4, "calories": 131, "isCooked": true},
-    "soup": {"category": "cooked food", "shelfLife": 3, "calories": 50, "isCooked": true},
-    "pizza": {"category": "cooked food", "shelfLife": 3, "calories": 266, "isCooked": true}
+    "rice": {"category": "cooked food", "shelfLife": 1, "calories": 130, "isCooked": true},
+    "pasta": {"category": "cooked food", "shelfLife": 1, "calories": 131, "isCooked": true},
+    "soup": {"category": "cooked food", "shelfLife": 1, "calories": 50, "isCooked": true},
+    "pizza": {"category": "cooked food", "shelfLife": 1, "calories": 266, "isCooked": true}
   };
 
   void _onNameChanged(String val) {
@@ -1345,6 +1346,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         _life = match["shelfLife"] as int;
         _cals = match["calories"] as int;
         _isCooked = match["isCooked"] as bool;
+        _lifeCtrl.text = "$_life";
       });
       return;
     }
@@ -1359,6 +1361,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         _life = match["shelfLife"] as int;
         _cals = match["calories"] as int;
         _isCooked = match["isCooked"] as bool;
+        _lifeCtrl.text = "$_life";
       });
     }
   }
@@ -1366,6 +1369,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _lifeCtrl.dispose();
     super.dispose();
   }
 
@@ -1796,8 +1800,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
         Expanded(child: TextField(
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: "Shelf-life (days)", border: OutlineInputBorder()),
-          onChanged: (v) => _life = int.tryParse(v) ?? 5,
-          controller: TextEditingController(text: "$_life"),
+          controller: _lifeCtrl,
+          onChanged: (v) => _life = int.tryParse(v) ?? 1,
         )),
         const SizedBox(width: 12),
         Expanded(child: TextField(
@@ -1813,7 +1817,16 @@ class _ScannerScreenState extends State<ScannerScreen> {
         title: const Text("Already cooked / ready to eat?", style: TextStyle(fontSize: 13)),
         value: _isCooked,
         activeColor: const Color(0xFF00E676),
-        onChanged: (v) => setState(() => _isCooked = v!),
+        onChanged: (v) {
+          setState(() {
+            _isCooked = v!;
+            // Cooked food spoils in hours — cap shelf life at 1 day
+            if (_isCooked && _life > 1) {
+              _life = 1;
+              _lifeCtrl.text = "1";
+            }
+          });
+        },
         contentPadding: EdgeInsets.zero,
       ),
       const SizedBox(height: 12),
