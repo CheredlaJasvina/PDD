@@ -77,7 +77,22 @@ export const Recipes: React.FC<RecipesProps> = ({
     return parseFloat(((baseQty / baseServings) * members).toFixed(2));
   };
 
-  // Client-side filtering: exclude recipes using spoiled items or cooked foods in the active inventory
+  // Derive a numeric spice level from the user preference (default 5 = medium)
+  const userSpiceLevel = preferences.spiceLevel ?? 5;
+
+  // Map chiliLevel string → rough numeric equivalent for comparison
+  const chiliToNumber = (chili: string): number => {
+    switch ((chili || '').toLowerCase()) {
+      case 'none':  return 1;
+      case 'low':   return 3;
+      case 'medium':return 5;
+      case 'high':  return 8;
+      default:      return 5; // unknown → treat as medium
+    }
+  };
+
+  // Client-side filtering: exclude recipes using spoiled items, cooked foods, or
+  // recipes whose spice level is too far outside the user's preference.
   const activeRecipes = recipes.filter(r => {
     const matchingItem = inventory.find(item => 
       item.name.toLowerCase() === r.primaryIngredient.toLowerCase() ||
@@ -90,8 +105,25 @@ export const Recipes: React.FC<RecipesProps> = ({
       }
     }
     if (deletedRecipes.includes(r.title)) return false;
+
+    // Spice filter: hide recipes that are hotter than the user can tolerate
+    // (more than 3 levels above their preference) OR, when user wants very spicy
+    // food (≥8), hide completely bland ones (chiliToNumber ≤ 1) so results stay relevant.
+    const recipeSpice = chiliToNumber(r.chiliLevel);
+    if (recipeSpice - userSpiceLevel > 3) return false;   // too spicy for user
+    if (userSpiceLevel >= 8 && recipeSpice <= 1) return false; // too bland for user
+
     return true;
   });
+
+  // Helper: label for the recipe's spice vs user preference
+  const spiceMatchLabel = (chili: string): { text: string; color: string; emoji: string } | null => {
+    const recipeSpice = chiliToNumber(chili);
+    const diff = recipeSpice - userSpiceLevel;
+    if (diff > 1)  return { text: 'Hotter than your preference', color: '#ff6d00', emoji: '🌶️🌶️' };
+    if (diff < -2) return { text: 'Milder than your preference', color: '#69f0ae', emoji: '🌿' };
+    return null; // within comfortable range — no label needed
+  };
 
   const uniqueIngredients = Array.from(new Set(activeRecipes.map(r => r.primaryIngredient)));
 
@@ -157,6 +189,37 @@ export const Recipes: React.FC<RecipesProps> = ({
           </div>
         </div>
       )}
+
+      {/* Spice preference banner */}
+      {(() => {
+        const spiceLabel =
+          userSpiceLevel <= 2 ? { text: 'None / Bland', emoji: '🌿', color: '#00c853' }
+          : userSpiceLevel <= 4 ? { text: 'Mild', emoji: '🌶️', color: '#69f0ae' }
+          : userSpiceLevel <= 6 ? { text: 'Medium', emoji: '🌶️🌶️', color: '#ffb300' }
+          : userSpiceLevel <= 8 ? { text: 'Hot', emoji: '🌶️🌶️🌶️', color: '#ff6d00' }
+          : { text: 'Extra Hot (Vindaloo)', emoji: '🔥🌶️🔥', color: '#ff1744' };
+        return (
+          <div className="glass-card" style={{ marginBottom: '1.5rem', padding: '0.75rem 1.25rem', borderColor: 'rgba(255,179,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ fontSize: '1.1rem' }}>{spiceLabel.emoji}</span>
+              <span style={{ fontSize: '0.85rem' }}>
+                Spice filter: <strong style={{ color: spiceLabel.color }}>{spiceLabel.text}</strong>
+                <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem' }}>(Level {userSpiceLevel}/10) — recipes above this intensity are hidden</span>
+              </span>
+            </div>
+            <button
+              className="btn-secondary"
+              style={{ fontSize: '0.78rem', padding: '0.3rem 0.75rem', borderColor: 'rgba(255,179,0,0.4)', color: 'var(--color-warning)', whiteSpace: 'nowrap' }}
+              onClick={() => {/* navigation handled by parent */
+                // Emit a custom event the parent App.tsx can listen to, or just note it's in the sidebar
+              }}
+              title="Go to Spice Customizer to change"
+            >
+              🌶️ Adjust in Spice Customizer
+            </button>
+          </div>
+        );
+      })()}
 
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '4rem' }}>
@@ -290,12 +353,27 @@ export const Recipes: React.FC<RecipesProps> = ({
                         </span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                       {recipe.chiliLevel === 'high' && (
                         <span className="user-score-badge spoiled-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                           🌶️ Spicy Recipe
                         </span>
                       )}
+                      {(() => {
+                        const lbl = spiceMatchLabel(recipe.chiliLevel);
+                        return lbl ? (
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem',
+                            borderRadius: '12px',
+                            background: `${lbl.color}18`,
+                            color: lbl.color,
+                            border: `1px solid ${lbl.color}55`,
+                          }}>
+                            {lbl.emoji} {lbl.text}
+                          </span>
+                        ) : null;
+                      })()}
                       <button className="btn-secondary" style={{ padding: '0.5rem 1rem', borderColor: 'var(--color-fresh)', color: 'var(--color-fresh)' }} onClick={() => {
                         if (!likedRecipes.find(r => r.title === recipe.title)) {
                           setLikedRecipes(prev => [...prev, recipe]);

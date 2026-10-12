@@ -36,6 +36,7 @@ export interface User {
   audienceMode: 'Regular' | 'Kid-friendly' | 'Gourmet';
   servings: number;
   membersCount: number;
+  spiceLevel?: number; // 1–10; persisted from Spice Customizer
   notificationPref: {
     advanceNoticeDays: number;
     emailAlerts: boolean;

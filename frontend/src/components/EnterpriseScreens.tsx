@@ -167,20 +167,36 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   };
 
   // 7. Spice Customizer
-  const [spiceLevel, setSpiceLevel] = useState(5);
+  // Seed from saved preference; fall back to 5 if never set
+  const [spiceLevel, setSpiceLevel] = useState<number>(preferences.spiceLevel ?? 5);
   const [isSpiceAutoSet, setIsSpiceAutoSet] = useState(false);
+
+  // Helper: update local state AND persist to user preferences
+  const applySpiceLevel = (level: number) => {
+    setSpiceLevel(level);
+    onUpdatePreferences({ spiceLevel: level });
+  };
 
   useEffect(() => {
     if (screenId === 'eco-donation') fetchDonations();
   }, [screenId]);
 
+  // Keep local state in sync when preferences change externally (e.g. from ProfileSettings)
   useEffect(() => {
+    if (preferences.spiceLevel !== undefined) {
+      setSpiceLevel(preferences.spiceLevel);
+    }
+  }, [preferences.spiceLevel]);
+
+  useEffect(() => {
+    // Only auto-detect from inventory if the user has never explicitly saved a spice preference
+    if (preferences.spiceLevel !== undefined) return;
     if (inventory && inventory.length > 0) {
       const itemsWithSpice = inventory.filter((item: any) => item.spiceLevel !== undefined && item.spiceLevel > 0);
       if (itemsWithSpice.length > 0) {
         const totalSpice = itemsWithSpice.reduce((sum: number, item: any) => sum + item.spiceLevel, 0);
         const avgSpice = Math.round(totalSpice / itemsWithSpice.length);
-        setSpiceLevel(avgSpice);
+        applySpiceLevel(avgSpice);
         setIsSpiceAutoSet(true);
       }
     }
@@ -881,7 +897,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
                 min="1"
                 max="10"
                 value={spiceLevel}
-                onChange={e => { setSpiceLevel(Number(e.target.value)); setIsSpiceAutoSet(true); }}
+                onChange={e => { applySpiceLevel(Number(e.target.value)); setIsSpiceAutoSet(true); }}
                 style={{ width: '100%', accentColor: spiceProfile.color }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
@@ -896,7 +912,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
                   style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem',
                     background: spiceLevel === p.l ? 'rgba(0,230,118,0.1)' : 'transparent',
                     borderColor: spiceLevel === p.l ? 'var(--color-fresh)' : 'var(--glass-border)' }}
-                  onClick={() => { setSpiceLevel(p.l); setIsSpiceAutoSet(true); }}>
+                  onClick={() => { applySpiceLevel(p.l); setIsSpiceAutoSet(true); }}>
                   {p.n}
                 </button>
               ))}
