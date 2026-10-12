@@ -30,11 +30,11 @@ const MILESTONE_META: Record<string, {
     tip: 'Mark food items as "Eaten" or "Used" in your inventory. Each item saves ~0.4 kg CO₂ (~13 items needed).',
   },
   'Zero Waste Hero 💎': {
-    threshold: 500,
+    threshold: 100,
     unit: '₹ saved',
-    getProgress: (m) => Math.min(m.moneySaved, 500),
+    getProgress: (m) => Math.min(m.moneySaved, 100),
     progressLabel: (current, threshold) => `₹${current.toFixed(0)} / ₹${threshold} saved`,
-    tip: 'Consume food before it spoils — every item marked "Eaten" or "Used" adds ₹4.5 to your savings. Reach ₹500 to unlock.',
+    tip: 'Consume food before it spoils — every item marked "Eaten" or "Used" adds ₹4.5 to your savings. Reach ₹100 to unlock.',
   },
 };
 

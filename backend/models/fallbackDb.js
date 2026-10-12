@@ -130,7 +130,7 @@ let userEcoMetrics = {
     foodHealthLevel: "Level 3 waste warden",
     ecoMilestones: [
       { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: true },
-      { title: "Zero Waste Hero 💎", desc: "Save ₹500 by consuming food before it spoils.", unlocked: false }
+      { title: "Zero Waste Hero 💎", desc: "Save ₹100 by consuming food before it spoils.", unlocked: false }
     ],
     comparisonStats: { communityAvgKg: 15.2, userSavingPct: 63 }
   }
@@ -145,12 +145,18 @@ const getEcoMetricsForUser = (email) => {
       foodHealthLevel: "Level 1 fresh starter",
       ecoMilestones: [
         { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: false },
-        { title: "Zero Waste Hero 💎", desc: "Save ₹500 by consuming food before it spoils.", unlocked: false }
+        { title: "Zero Waste Hero 💎", desc: "Save ₹100 by consuming food before it spoils.", unlocked: false }
       ],
       comparisonStats: { communityAvgKg: 15.2, userSavingPct: 0 }
     };
   }
-  return userEcoMetrics[email];
+  const eco = userEcoMetrics[email];
+  // Auto-unlock milestones based on current metrics (runs every read so existing data is evaluated)
+  const co2M = eco.ecoMilestones.find(m => m.title === 'CO2 Savior 🌿');
+  if (co2M && !co2M.unlocked && eco.co2SavedKg >= 5) co2M.unlocked = true;
+  const zwM = eco.ecoMilestones.find(m => m.title === 'Zero Waste Hero 💎');
+  if (zwM && !zwM.unlocked && eco.moneySaved >= 100) zwM.unlocked = true;
+  return eco;
 };
 
 let userNotificationLogs = {
@@ -391,9 +397,9 @@ module.exports = {
             user.unlockedBadges.push('CO2 Savior');
           }
         }
-        // Unlock Zero Waste Hero badge when user saves ₹500 (= ~111 items consumed)
+        // Unlock Zero Waste Hero badge when user saves ₹100 (= ~23 items consumed)
         const zeroWasteMilestone = eco.ecoMilestones.find(m => m.title === 'Zero Waste Hero 💎');
-        if (zeroWasteMilestone && !zeroWasteMilestone.unlocked && eco.moneySaved >= 500) {
+        if (zeroWasteMilestone && !zeroWasteMilestone.unlocked && eco.moneySaved >= 100) {
           zeroWasteMilestone.unlocked = true;
           if (!user.unlockedBadges.includes('Zero Waste Hero')) {
             user.unlockedBadges.push('Zero Waste Hero');
