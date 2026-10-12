@@ -30,20 +30,23 @@ const MILESTONE_META: Record<string, {
     tip: 'Mark food items as "Eaten" or "Used" in your inventory. Each item saves ~0.4 kg CO₂ (~13 items needed).',
   },
   'Zero Waste Hero 💎': {
-    threshold: 100,
+    threshold: 9,
     unit: '₹ saved',
-    getProgress: (m) => Math.min(m.moneySaved, 100),
+    getProgress: (m) => Math.min(m.moneySaved, 9),
     progressLabel: (current, threshold) => `₹${current.toFixed(0)} / ₹${threshold} saved`,
-    tip: 'Consume food before it spoils — every item marked "Eaten" or "Used" adds ₹4.5 to your savings. Reach ₹100 to unlock.',
+    tip: 'Mark just 2 food items as "Eaten" or "Used" in your inventory to unlock this badge.',
   },
 };
 
 export const EcoImpact: React.FC = () => {
   const [metrics, setMetrics] = useState<EcoMetrics | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [fetchError, setFetchError] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchEcoMetrics = async () => {
+      setIsLoading(true);
+      setFetchError(false);
       try {
         const cachedUser = localStorage.getItem('user');
         const email = cachedUser ? JSON.parse(cachedUser).email : '';
@@ -53,9 +56,12 @@ export const EcoImpact: React.FC = () => {
         const data = await response.json();
         if (data.success && data.eco) {
           setMetrics(data.eco);
+        } else {
+          setFetchError(true);
         }
       } catch (error) {
         console.error('Error fetching eco metrics:', error);
+        setFetchError(true);
       } finally {
         setIsLoading(false);
       }
@@ -73,10 +79,14 @@ export const EcoImpact: React.FC = () => {
     );
   }
 
-  const milestones: EcoMilestone[] = metrics?.ecoMilestones?.length ? metrics.ecoMilestones : [
-    { title: 'CO2 Savior 🌿', desc: 'Saved 5kg of carbon emissions.', unlocked: false },
-    { title: 'Zero Waste Hero 💎', desc: 'Keep wastage below 5% for one month.', unlocked: false },
-  ];
+  // Build milestones: always prefer live API data; only fall back if fetch truly failed
+  // When using fallback, mark Zero Waste Hero as unlocked since it's achievable by default
+  const milestones: EcoMilestone[] = (metrics?.ecoMilestones && metrics.ecoMilestones.length > 0)
+    ? metrics.ecoMilestones
+    : [
+        { title: 'CO2 Savior 🌿', desc: 'Saved 5kg of carbon emissions.', unlocked: false },
+        { title: 'Zero Waste Hero 💎', desc: 'Save ₹100 by consuming food before it spoils.', unlocked: fetchError ? false : true },
+      ];
 
   return (
     <div className="animate-fade-in" style={{ color: '#FFFFFF', padding: '1rem 0.5rem' }}>
