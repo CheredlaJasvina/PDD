@@ -130,7 +130,7 @@ let userEcoMetrics = {
     foodHealthLevel: "Level 3 waste warden",
     ecoMilestones: [
       { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: true },
-      { title: "Zero Waste Hero 💎", desc: "Save ₹9 by consuming 2 food items.", unlocked: false }
+      { title: "Zero Waste Hero 💎", desc: "Save ₹9 by consuming 2 food items.", unlocked: true }
     ],
     comparisonStats: { communityAvgKg: 15.2, userSavingPct: 63 }
   }
@@ -141,11 +141,11 @@ const getEcoMetricsForUser = (email) => {
   if (!userEcoMetrics[email]) {
     userEcoMetrics[email] = {
       co2SavedKg: 0.0,
-      moneySaved: 0.0,
+      moneySaved: 9.0,
       foodHealthLevel: "Level 1 fresh starter",
       ecoMilestones: [
         { title: "CO2 Savior 🌿", desc: "Saved 5kg of carbon emissions.", unlocked: false },
-        { title: "Zero Waste Hero 💎", desc: "Save ₹9 by consuming 2 food items.", unlocked: false }
+        { title: "Zero Waste Hero 💎", desc: "Save ₹9 by consuming 2 food items.", unlocked: true }
       ],
       comparisonStats: { communityAvgKg: 15.2, userSavingPct: 0 }
     };
