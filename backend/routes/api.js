@@ -130,10 +130,79 @@ router.put('/donations/:id/request', (req, res) => {
   res.json({ success: true, post });
 });
 
-// ECO IMPACT METRICS
-router.get('/eco', (req, res) => {
+// ECO IMPACT METRICS — computed from real inventory data when MongoDB is connected
+router.get('/eco', async (req, res) => {
   const email = req.headers['x-user-email'];
-  res.json({ success: true, eco: fallbackDb.getEcoMetrics(email) });
+  const dbStatus = require('../config/db');
+
+  try {
+    if (dbStatus.getDbStatus() && email) {
+      const FoodItem = require('../models/FoodItem');
+
+      // All items ever tracked by this user
+      const allItems = await FoodItem.find({ owner: email }).lean();
+
+      // Eaten + Used items = items the user consumed before spoiling
+      const consumedItems = allItems.filter(i => i.state === 'Eaten' || i.state === 'Used');
+      const wastedItems   = allItems.filter(i => i.state === 'Wasted');
+      const totalActioned = consumedItems.length + wastedItems.length;
+
+      // Each consumed item saves ~0.4 kg CO2 and ~₹4.5
+      const co2SavedKg  = parseFloat((consumedItems.length * 0.4).toFixed(1));
+      const moneySaved  = parseFloat((consumedItems.length * 4.5).toFixed(1));
+
+      // Waste percentage (0–100)
+      const wastePct = totalActioned > 0
+        ? Math.round((wastedItems.length / totalActioned) * 100)
+        : 0;
+
+      // Food health level based on consumed count
+      const foodHealthLevel =
+        consumedItems.length >= 50 ? 'Level 5 eco champion' :
+        consumedItems.length >= 30 ? 'Level 4 green guardian' :
+        consumedItems.length >= 15 ? 'Level 3 waste warden' :
+        consumedItems.length >= 5  ? 'Level 2 fresh keeper' :
+                                     'Level 1 fresh starter';
+
+      // Milestones
+      const ecoMilestones = [
+        {
+          title: 'CO2 Savior 🌿',
+          desc: 'Saved 5kg of carbon emissions.',
+          unlocked: co2SavedKg >= 5   // ~13 items consumed
+        },
+        {
+          title: 'Zero Waste Hero 💎',
+          desc: 'Save ₹9 by consuming 2 food items.',
+          unlocked: moneySaved >= 9   // just 2 items consumed
+        }
+      ];
+
+      // Community comparison
+      const communityAvgKg = 15.2;
+      const userSavingPct  = co2SavedKg > 0
+        ? Math.min(100, Math.round((co2SavedKg / communityAvgKg) * 100))
+        : 0;
+
+      return res.json({
+        success: true,
+        eco: {
+          co2SavedKg,
+          moneySaved,
+          foodHealthLevel,
+          ecoMilestones,
+          comparisonStats: { communityAvgKg, userSavingPct }
+        }
+      });
+    }
+
+    // Fallback: in-memory store (used when MongoDB is unavailable)
+    res.json({ success: true, eco: fallbackDb.getEcoMetrics(email) });
+
+  } catch (err) {
+    console.error('Eco metrics error:', err.message);
+    res.json({ success: true, eco: fallbackDb.getEcoMetrics(email) });
+  }
 });
 
 // IN-APP NOTIFICATION LOGS

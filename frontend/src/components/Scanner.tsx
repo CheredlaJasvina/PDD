@@ -89,9 +89,14 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
   const handleSaveScannedItem = async (item: FoodItem) => {
     setIsSavingItem(true);
     try {
+      const cachedUser = localStorage.getItem('user');
+      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': email,
+        },
         body: JSON.stringify(item),
       });
       const data = await response.json();
