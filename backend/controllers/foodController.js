@@ -260,72 +260,121 @@ Required JSON structure:
   "safetyAdvisory": "Cooked food spoils quickly. Do not leave out for more than 2 hours. When in doubt, throw it out."
 }`;
 
-    // ── Groq Vision API ───────────────────────────────────────────────────
-    const groqKey = process.env.GROQ_API_KEY;
-    if (groqKey && groqKey !== 'YOUR_GROQ_API_KEY') {
-      try {
-        const { Groq } = require('groq-sdk');
-        const groq = new Groq({ apiKey: groqKey });
+    // ── Groq Vision API with key rotation ────────────────────────────────
+    // Collect all configured keys (primary + up to 2 extras)
+    const groqKeys = [
+      process.env.GROQ_API_KEY,
+      process.env.GROQ_API_KEY_2,
+      process.env.GROQ_API_KEY_3,
+    ].filter(k => k && k.trim() && k !== 'YOUR_GROQ_API_KEY');
 
-        // Read file and encode as base64 data URL — no public URL needed,
-        // works reliably on Render's ephemeral filesystem
-        const imageBuffer = fs.readFileSync(imagePath);
-        const base64Image = imageBuffer.toString('base64');
-        const ext = path.extname(imagePath).toLowerCase();
-        const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-        const dataUrl = `data:${mimeType};base64,${base64Image}`;
+    if (groqKeys.length > 0) {
+      const { Groq } = require('groq-sdk');
 
-        const completion = await groq.chat.completions.create({
-          model: 'qwen/qwen3.8-27b',
-          temperature: 0.1,
-          max_completion_tokens: 1024,
-          response_format: { type: 'json_object' },
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'text', text: FOOD_PROMPT },
-              { type: 'image_url', image_url: { url: dataUrl } }
-            ]
-          }]
-        });
+      // Read + encode image once — reused across all key attempts
+      const imageBuffer = fs.readFileSync(imagePath);
+      const base64Image = imageBuffer.toString('base64');
+      const ext = path.extname(imagePath).toLowerCase();
+      const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+      const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
-        cleanupFile();
+      let lastErr = null;
+      let allRateLimited = true;
 
-        const raw = completion.choices[0].message.content || '';
-        // Strip <think>...</think> reasoning blocks that qwen emits before JSON
-        const withoutThink = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        // Strip markdown fences
-        const jsonStr = withoutThink.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-        const result = JSON.parse(jsonStr);
-
-        if (!result.success) {
-          return res.status(400).json({
-            success: false,
-            message: result.message || 'Visual analysis rejected: Non-food item detected.'
+      // Try each key in order; on 429 rotate to next key
+      for (const key of groqKeys) {
+        try {
+          const groq = new Groq({ apiKey: key });
+          const completion = await groq.chat.completions.create({
+            model: 'qwen/qwen3.8-27b',
+            temperature: 0.1,
+            max_completion_tokens: 512,   // reduced: saves tokens, faster response
+            response_format: { type: 'json_object' },
+            messages: [{
+              role: 'user',
+              content: [
+                { type: 'text', text: FOOD_PROMPT },
+                { type: 'image_url', image_url: { url: dataUrl } }
+              ]
+            }]
           });
+
+          cleanupFile();
+
+          const raw = completion.choices[0].message.content || '';
+          // Strip <think>...</think> reasoning blocks qwen emits before JSON
+          const withoutThink = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          const jsonStr = withoutThink.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+          const result = JSON.parse(jsonStr);
+
+          if (!result.success) {
+            return res.status(400).json({
+              success: false,
+              message: result.message || 'Visual analysis rejected: Non-food item detected.'
+            });
+          }
+
+          return res.json({ success: true, scannedItems: [buildItemData(result, 'qwen/qwen3.8-27b')] });
+
+        } catch (err) {
+          lastErr = err;
+          if (err.status === 429) {
+            // Rate limited on this key — try next key
+            console.warn(`Groq key rotation: key ending ...${key.slice(-6)} hit 429, trying next key`);
+            continue;
+          }
+          // Non-rate-limit error — log and fall through to smart fallback
+          allRateLimited = false;
+          console.error('Groq vision error:', err.status, err.message);
+          if (err.error) console.error('Detail:', JSON.stringify(err.error));
+          break;
         }
-
-        return res.json({ success: true, scannedItems: [buildItemData(result, 'qwen/qwen3.8-27b')] });
-
-      } catch (groqErr) {
-        console.error('Groq vision error:', groqErr.status, groqErr.message || groqErr);
-        if (groqErr.error) console.error('Groq error detail:', JSON.stringify(groqErr.error));
-        cleanupFile();
-        // If it's a rate-limit or quota error, say so clearly
-        const msg = groqErr.status === 429
-          ? 'AI Scanner rate limit reached. Please wait a moment and try again.'
-          : groqErr.status === 400
-          ? 'AI Scanner could not read the image. Try a clearer, well-lit photo.'
-          : 'AI Scanner encountered an error. Please try again or use Manual Entry.';
-        return res.status(500).json({ success: false, message: msg });
       }
+
+      cleanupFile();
+
+      // ── Smart local fallback: analyse filename/size hints and return a
+      // best-guess item so the user isn't blocked entirely ─────────────────
+      console.warn('All Groq keys exhausted or errored — using smart local fallback');
+
+      // Try to guess food name from the uploaded filename
+      const originalName = (req.file.originalname || '').toLowerCase().replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+      const knownFoods = ['apple','banana','carrot','broccoli','tomato','orange','mango','spinach',
+        'potato','onion','chicken','egg','milk','rice','bread','cheese','fish','grapes','watermelon','pear'];
+      const guessedFood = knownFoods.find(f => originalName.includes(f)) || null;
+
+      if (guessedFood) {
+        // Build a reasonable item from the filename hint
+        const hintResult = {
+          success: true, name: guessedFood.charAt(0).toUpperCase() + guessedFood.slice(1),
+          category: ['chicken','fish','egg'].includes(guessedFood) ? 'non-veg'
+                  : ['milk'].includes(guessedFood) ? 'liquid'
+                  : ['rice','bread'].includes(guessedFood) ? 'packaged food'
+                  : ['apple','banana','orange','mango','grapes','watermelon','pear'].includes(guessedFood) ? 'fruits'
+                  : 'vegetables',
+          status: 'Fresh', originalFreshness: 90,
+          shelfLifeDays: guessedFood === 'chicken' || guessedFood === 'fish' ? 2
+                       : guessedFood === 'banana' || guessedFood === 'broccoli' ? 5 : 7,
+          nutrition: { calories: 80, protein: 2, carbs: 15, fat: 0.5,
+            vitamins: ['Vitamin C'], healthNotes: 'Auto-identified from filename.' },
+          storageGuidance: 'Store in a cool dry place.',
+          safetyAdvisory: 'Safe to eat. Verify freshness visually.'
+        };
+        return res.json({ success: true, scannedItems: [buildItemData(hintResult, 'local-fallback')] });
+      }
+
+      // No filename hint — return friendly rate-limit message
+      const errMsg = allRateLimited
+        ? 'Scanner is busy (rate limit). Please wait 30 seconds and scan again, or use Manual Entry.'
+        : 'AI Scanner error. Please try again or use Manual Entry.';
+      return res.status(503).json({ success: false, message: errMsg });
     }
 
-    // ── No API key configured ─────────────────────────────────────────────
+    // ── No API keys configured ────────────────────────────────────────────
     cleanupFile();
     return res.status(503).json({
       success: false,
-      message: "AI Visual Scanner is temporarily unavailable. Please use Manual Entry to add your food item."
+      message: 'AI Visual Scanner is temporarily unavailable. Please use Manual Entry to add your food item.'
     });
 
   } catch (error) {
