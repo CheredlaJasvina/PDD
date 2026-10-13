@@ -292,7 +292,10 @@ Required JSON structure:
         cleanupFile();
 
         const raw = completion.choices[0].message.content || '';
-        const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        // Strip <think>...</think> reasoning blocks that qwen emits before JSON
+        const withoutThink = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        // Strip markdown fences
+        const jsonStr = withoutThink.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
         const result = JSON.parse(jsonStr);
 
         if (!result.success) {
@@ -305,12 +308,16 @@ Required JSON structure:
         return res.json({ success: true, scannedItems: [buildItemData(result, 'qwen/qwen3.8-27b')] });
 
       } catch (groqErr) {
-        console.error('Groq vision error:', groqErr.message || groqErr);
+        console.error('Groq vision error:', groqErr.status, groqErr.message || groqErr);
+        if (groqErr.error) console.error('Groq error detail:', JSON.stringify(groqErr.error));
         cleanupFile();
-        return res.status(500).json({
-          success: false,
-          message: "AI Scanner encountered an error. Please try again or use Manual Entry."
-        });
+        // If it's a rate-limit or quota error, say so clearly
+        const msg = groqErr.status === 429
+          ? 'AI Scanner rate limit reached. Please wait a moment and try again.'
+          : groqErr.status === 400
+          ? 'AI Scanner could not read the image. Try a clearer, well-lit photo.'
+          : 'AI Scanner encountered an error. Please try again or use Manual Entry.';
+        return res.status(500).json({ success: false, message: msg });
       }
     }
 
