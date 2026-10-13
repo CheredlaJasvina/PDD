@@ -3,40 +3,30 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
-// Global Fetch Interceptor to attach x-user-email header automatically
+// Global Fetch Interceptor — automatically attaches x-user-email to every /api/ call
 const originalFetch = window.fetch;
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   let url = '';
+  if (typeof input === 'string') url = input;
+  else if (input instanceof URL) url = input.toString();
+  else if (input && typeof input === 'object' && 'url' in input) url = (input as any).url;
 
-  if (typeof input === 'string') {
-    url = input;
-  } else if (input instanceof URL) {
-    url = input.toString();
-  } else if (input && typeof input === 'object' && 'url' in input) {
-    url = (input as any).url;
-  }
+  // Attach x-user-email to all calls to our backend
+  if (url.includes('pdd-9fqv.onrender.com/api') || url.includes('/api/')) {
+    const cachedUser = localStorage.getItem('user');
+    let email = '';
+    try { if (cachedUser) email = JSON.parse(cachedUser).email; } catch (_) {}
 
-  if (url.includes('https://pdd-9fqv.onrender.com/api')) {
-    // URL is already using srv-da5dcaqjobas73ebumk0.onrender.com, do nothing or handle mapping if needed
-  }
-
-  const cachedUser = localStorage.getItem('user');
-  let email = '';
-  if (cachedUser) {
-    try {
-      email = JSON.parse(cachedUser).email;
-    } catch (e) {}
-  }
-
-  if (email && (url.includes('srv-da5dcaqjobas73ebumk0.onrender.com/api') || url.includes('/api/'))) {
-    init = init || {};
-    init.headers = init.headers || {};
-    if (init.headers instanceof Headers) {
-      init.headers.set('x-user-email', email);
-    } else if (Array.isArray(init.headers)) {
-      init.headers.push(['x-user-email', email]);
-    } else {
-      (init.headers as Record<string, string>)['x-user-email'] = email;
+    if (email) {
+      init = init || {};
+      if (init.headers instanceof Headers) {
+        if (!init.headers.has('x-user-email')) init.headers.set('x-user-email', email);
+      } else if (Array.isArray(init.headers)) {
+        if (!init.headers.find(([k]) => k === 'x-user-email'))
+          init.headers.push(['x-user-email', email]);
+      } else {
+        init.headers = { 'x-user-email': email, ...(init.headers as Record<string, string> || {}) };
+      }
     }
   }
 
