@@ -91,12 +91,12 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
+      const token = localStorage.getItem('auth_token');
+      const authHeaders: Record<string, string> = { 'Content-Type': 'application/json', 'x-user-email': email };
+      if (token) authHeaders['Authorization'] = `Bearer ${token}`;
       const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': email,
-        },
+        headers: authHeaders,
         body: JSON.stringify(item),
       });
       const data = await response.json();
@@ -244,8 +244,15 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       const formData = new FormData();
       formData.append('image', file);
 
+      const token = localStorage.getItem('auth_token');
+      const cachedUser = localStorage.getItem('user');
+      const scanEmail = cachedUser ? JSON.parse(cachedUser).email : '';
+      const scanAuthHeaders: Record<string, string> = { 'x-user-email': scanEmail };
+      if (token) scanAuthHeaders['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/scan`, {
         method: 'POST',
+        headers: scanAuthHeaders,
         body: formData,
       });
 

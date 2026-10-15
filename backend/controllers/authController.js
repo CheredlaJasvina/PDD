@@ -222,7 +222,7 @@ exports.sendOtp = async (req, res) => {
       await sendOtpEmail(email, code);
       res.json({ success: true, message: `OTP sent successfully to ${email}` });
     } catch (mailError) {
-      console.error(`Mail sending failed, but OTP generated: ${code}`, mailError);
+      console.error('Mail sending failed for OTP request:', mailError.message || mailError);
       res.json({
         success: true,
         message: `OTP sent to ${email}. If not received, please check your spam folder or try again.`

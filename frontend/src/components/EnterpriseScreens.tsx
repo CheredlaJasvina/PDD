@@ -197,13 +197,20 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
   const [donateLoading, setDonateLoading] = useState(false);
   const [donatePosting, setDonatePosting] = useState(false);
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const cachedUser = localStorage.getItem('user');
+    const email = cachedUser ? JSON.parse(cachedUser).email : '';
+    const token = localStorage.getItem('auth_token');
+    const headers: Record<string, string> = { 'x-user-email': email };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
   const fetchDonations = async () => {
     setDonateLoading(true);
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const res = await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
-        headers: { 'x-user-email': email }
+        headers: getAuthHeaders()
       });
       const data = await res.json();
       if (data.success) setDonationList(data.donations || []);
@@ -221,11 +228,9 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     if (!donateName.trim()) return;
     setDonatePosting(true);
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-email': email },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ name: donateName.trim(), quantity: donateQty, daysLeft: donateDays })
       });
       setDonateName('');
@@ -246,10 +251,8 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
 
   const handleClaimDonation = async (id: string) => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       await fetch(`${import.meta.env.VITE_API_URL}/donations/${id}/request`, {
-        method: 'PUT', headers: { 'x-user-email': email }
+        method: 'PUT', headers: getAuthHeaders()
       });
       await fetchDonations();
     } catch {

@@ -25,8 +25,11 @@ export const Recipes: React.FC<RecipesProps> = ({
     setError(null);
     try {
       const email = preferences ? preferences.email : '';
+      const token = localStorage.getItem('auth_token');
+      const recipeHeaders: Record<string, string> = { 'x-user-email': email };
+      if (token) recipeHeaders['Authorization'] = `Bearer ${token}`;
       const response = await fetch(`${import.meta.env.VITE_API_URL}/recipes?servings=${preferences.servings}&mode=${preferences.audienceMode}`, {
-        headers: { 'x-user-email': email }
+        headers: recipeHeaders
       });
       const data = await response.json();
       if (data.success) {

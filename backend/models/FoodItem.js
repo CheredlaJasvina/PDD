@@ -25,6 +25,9 @@ const FoodItemSchema = new mongoose.Schema({
   dietaryTags: { type: [String], default: [] },
   nutrition: {
     calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    fat: { type: Number, default: 0 },
     ingredients: { type: String, default: '' },
     vitamins: { type: [String], default: [] },
     healthNotes: { type: String, default: '' }

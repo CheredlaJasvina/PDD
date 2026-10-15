@@ -50,8 +50,11 @@ export const EcoImpact: React.FC = () => {
       try {
         const cachedUser = localStorage.getItem('user');
         const email = cachedUser ? JSON.parse(cachedUser).email : '';
+        const token = localStorage.getItem('auth_token');
+        const authHeaders: Record<string, string> = { 'x-user-email': email };
+        if (token) authHeaders['Authorization'] = `Bearer ${token}`;
         const response = await fetch(`${import.meta.env.VITE_API_URL}/eco`, {
-          headers: { 'x-user-email': email }
+          headers: authHeaders
         });
         const data = await response.json();
         if (data.success && data.eco) {

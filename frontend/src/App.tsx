@@ -111,12 +111,21 @@ function App() {
     setTheme(prev => prev === 'light' ? 'emerald-aurora' : 'light');
   };
 
+  // Build auth headers — always includes x-user-email for backward compat
+  // and Authorization: Bearer <token> when a JWT is stored.
+  const getAuthHeaders = (): Record<string, string> => {
+    const cachedUser = localStorage.getItem('user');
+    const email = cachedUser ? JSON.parse(cachedUser).email : '';
+    const token = localStorage.getItem('auth_token');
+    const headers: Record<string, string> = { 'x-user-email': email };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
   const fetchInventory = async () => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory`, {
-        headers: { 'x-user-email': email }
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       setInventory(data);
@@ -129,10 +138,8 @@ function App() {
   // so wasted counts must come from the dedicated waste-summary endpoint.
   const fetchWasteSummary = async () => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/waste-summary`, {
-        headers: { 'x-user-email': email }
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (data.success) setWasteSummary(data);
@@ -143,10 +150,8 @@ function App() {
 
   const fetchCurrentUser = async () => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-        headers: { 'x-user-email': email }
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (data.success && data.user) {
@@ -180,8 +185,9 @@ function App() {
     bootstrapSession();
   }, []);
 
-  const handleLoginSuccess = (user: User, _token: string) => {
+  const handleLoginSuccess = (user: User, token: string) => {
     localStorage.setItem('user', JSON.stringify(user));
+    if (token) localStorage.setItem('auth_token', token);
     setLoggedInUser(user);
     fetchInventory();
     fetchWasteSummary();
@@ -189,16 +195,15 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, { 
         method: 'POST',
-        headers: { 'x-user-email': email }
+        headers: getAuthHeaders()
       });
     } catch (err) {
       console.error('Logout request failed:', err);
     }
     localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
     setLoggedInUser(null);
     setActiveTab('dashboard');
   };
@@ -206,13 +211,11 @@ function App() {
   // Update item consumed/wasted state
   const handleUpdateItemState = async (id: string, state: 'Used' | 'Eaten' | 'Wasted') => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory/${id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': email
+          ...getAuthHeaders()
         },
         body: JSON.stringify({ state })
       });
@@ -230,11 +233,9 @@ function App() {
   // Delete item permanently
   const handleDeleteItem = async (id: string) => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-email': email }
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (data.success) {
@@ -255,13 +256,11 @@ function App() {
   // Add manual item fallback
   const handleAddManual = async (manualData: any) => {
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/manual`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': email
+          ...getAuthHeaders()
         },
         body: JSON.stringify({
           ...manualData,
@@ -289,13 +288,11 @@ function App() {
     localStorage.setItem('user', JSON.stringify(updatedUser));
 
     try {
-      const cachedUser = localStorage.getItem('user');
-      const email = cachedUser ? JSON.parse(cachedUser).email : '';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/profile`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': email
+          ...getAuthHeaders()
         },
         body: JSON.stringify(updatedUser)
       });

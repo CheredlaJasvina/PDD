@@ -19,10 +19,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({ inventory = [] }) => {
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      
+      const token = localStorage.getItem('auth_token');
+      const authHeaders: Record<string, string> = { 'x-user-email': email };
+      if (token) authHeaders['Authorization'] = `Bearer ${token}`;
+
       const [analyticsRes, wasteRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/analytics`, { headers: { 'x-user-email': email } }),
-        fetch(`${import.meta.env.VITE_API_URL}/waste-summary`, { headers: { 'x-user-email': email } })
+        fetch(`${import.meta.env.VITE_API_URL}/analytics`, { headers: authHeaders }),
+        fetch(`${import.meta.env.VITE_API_URL}/waste-summary`, { headers: authHeaders })
       ]);
       const analyticsData = await analyticsRes.json();
       const wasteData = await wasteRes.json();

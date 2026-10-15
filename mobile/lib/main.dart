@@ -154,12 +154,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _fetchSession();
   }
 
+  String? _authToken;
+
   Map<String, String> _getHeaders() {
     final email = _loggedInUser != null ? _loggedInUser!["email"] as String? ?? "" : "";
-    return {
+    final headers = <String, String>{
       "Content-Type": "application/json",
       "x-user-email": email,
     };
+    if (_authToken != null && _authToken!.isNotEmpty) {
+      headers["Authorization"] = "Bearer $_authToken";
+    }
+    return headers;
   }
 
   Future<void> _fetchSession() async {
@@ -194,14 +200,27 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return;
       }
 
+      // Restore the auth token if one was saved
+      final savedToken = prefs.getString("auth_token");
+      if (savedToken != null && savedToken.isNotEmpty) {
+        setState(() => _authToken = savedToken);
+      }
+
       // Show the cached user immediately while we verify with the server
       setState(() { _loggedInUser = cachedUser; });
 
       // Verify the saved session is still valid on the server
       try {
+        final sessionHeaders = <String, String>{
+          "Content-Type": "application/json",
+          "x-user-email": cachedEmail,
+        };
+        if (_authToken != null && _authToken!.isNotEmpty) {
+          sessionHeaders["Authorization"] = "Bearer $_authToken";
+        }
         final sessionRes = await http.get(
           Uri.parse("$_backendUrl/auth/me"),
-          headers: {"Content-Type": "application/json", "x-user-email": cachedEmail},
+          headers: sessionHeaders,
         ).timeout(const Duration(seconds: 45));
 
         final Map<String, dynamic> sessionData = jsonDecode(sessionRes.body);
@@ -358,10 +377,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() {
       _loggedInUser = user;
       _activeRoute = "dashboard";
+      if (token.isNotEmpty && token != "mock-token") {
+        _authToken = token;
+      }
     });
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("logged_in_user", jsonEncode(user));
+      if (token.isNotEmpty && token != "mock-token") {
+        await prefs.setString("auth_token", token);
+      }
     } catch (_) {}
     _fetchInventory();
   }
@@ -748,23 +773,22 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
           "healthScore": 100,
           "streakCount": 1,
           "unlockedBadges": ["Fresh Starter"]
-        }, data["token"] ?? "mock-token");
+        }, data["token"] ?? "");
       } else {
         setState(() => _error = data["message"] ?? "Registration failed. Please try again.");
       }
     } catch (e) {
-      // Server unreachable — go straight in with local account
-      widget.onLoginSuccess({
-        "email": _emailCtrl.text.trim(),
-        "name": name,
-        "dietaryPreferences": [],
-        "audienceMode": "Regular",
-        "servings": 2,
-        "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
-        "healthScore": 100,
-        "streakCount": 1,
-        "unlockedBadges": ["Fresh Starter"]
-      }, "mock-token");
+      // Server unreachable — do NOT log the user in without server confirmation.
+      // An account that was never persisted to the database would create a
+      // ghost session where all inventory saves fail silently.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot reach server. Please check your connection and try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

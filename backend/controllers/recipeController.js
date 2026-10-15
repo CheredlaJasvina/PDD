@@ -43,52 +43,53 @@ const isNonCookable = (name) => {
 
 // ── Build the Groq prompt ─────────────────────────────────────────────────────
 const buildPrompt = (items, mode, servings, dietaryPrefs) => {
-  const ingredientList = items.map(i => `${i.name} (${i.category}, ${i.daysToExpiry} days left)`).join(', ');
+  const count = items.length;
+  // List each item on its own line so the AI clearly sees one item = one recipe
+  const ingredientList = items
+    .map((i, idx) => `  ${idx + 1}. ${i.name} (${i.category}, ${i.daysToExpiry} days left)`)
+    .join('\n');
   const dietNote = dietaryPrefs && dietaryPrefs.length > 0
     ? `User dietary preferences: ${dietaryPrefs.join(', ')}.`
     : '';
 
   const modeInstructions = {
-    'Regular':      'Generate practical, everyday home-cook recipes. Clear steps, common ingredients.',
-    'Kid-friendly': 'Generate mild, fun, child-approved recipes. No spicy ingredients. Use simple steps a parent can explain to a child. Add a fun fact or activity tip for kids in the advice field.',
-    'Gourmet':      'Generate elevated, restaurant-quality recipes. Use sophisticated techniques, premium ingredient swaps, and plating tips. The advice field should include a chef-level finishing touch.'
+    'Regular':      'Practical, everyday home-cook recipes. Clear steps, common ingredients.',
+    'Kid-friendly': 'Mild, fun, child-approved recipes. No spicy ingredients. Simple steps a parent can explain to a child. Add a fun fact or activity tip for kids in the advice field.',
+    'Gourmet':      'Elevated, restaurant-quality recipes. Sophisticated techniques, premium ingredient swaps, and plating tips. The advice field should include a chef-level finishing touch.'
   };
 
-  return `You are an expert chef AI assistant. Generate exactly 3 unique recipes using the user's available ingredients.
+  return `You are an expert chef AI assistant. The user has ${count} food item${count > 1 ? 's' : ''} in their inventory. Generate EXACTLY ${count} unique recipe${count > 1 ? 's' : ''} — ONE recipe per ingredient listed below.
 
-Available ingredients: ${ingredientList}
+Available ingredients (one recipe required for each):
+${ingredientList}
+
 Audience mode: ${mode} — ${modeInstructions[mode] || modeInstructions['Regular']}
-Servings: ${servings}
+Servings per recipe: ${servings}
 ${dietNote}
 
 Rules:
-- Each recipe MUST use at least one ingredient from the available list as the primary star.
-- Recipes must be genuinely different from each other (not all stir-fries or all soups).
+- Generate EXACTLY ${count} recipes — one for each numbered ingredient above, in the same order.
+- Each recipe's "primaryIngredient" MUST be the EXACT name of its corresponding ingredient.
+- Every recipe must be a DIFFERENT dish type (no two stir-fries, no two soups, etc.).
 - Tailor ALL content (title, description, steps, advice) specifically to the "${mode}" mode.
-- The "primaryIngredient" field must be the EXACT name of the item from the available list.
-- chiliLevel must be "high" only if the recipe is genuinely spicy; otherwise "none".
-- For Kid-friendly: absolutely no spicy ingredients, no alcohol, make steps fun and simple.
+- chiliLevel must be "high" only if genuinely spicy; otherwise "none".
+- For Kid-friendly: no spicy ingredients, no alcohol, fun and simple steps.
 - For Gourmet: use professional culinary terms, suggest premium substitutions.
-- steps should have 4–6 clear, numbered cooking steps.
-- advice should be 1–2 sentences specific to the audience mode.
+- Each recipe needs 4–6 clear cooking steps.
+- advice: 1–2 sentences specific to the audience mode.
 
-Return ONLY a valid JSON object — no markdown, no explanation — with this exact structure:
+Return ONLY a valid JSON object — no markdown, no explanation:
 {
   "recipes": [
     {
       "title": "Recipe Name",
-      "primaryIngredient": "Exact ingredient name from the list",
-      "description": "1-2 sentence description of the dish",
+      "primaryIngredient": "Exact ingredient name",
+      "description": "1-2 sentence description",
       "servings": ${servings},
-      "ingredients": [
-        { "name": "ingredient name", "qty": 1.5, "unit": "cups" }
-      ],
-      "steps": [
-        "Step 1: ...",
-        "Step 2: ..."
-      ],
+      "ingredients": [{ "name": "ingredient", "qty": 1.5, "unit": "cups" }],
+      "steps": ["Step 1: ...", "Step 2: ..."],
       "chiliLevel": "none",
-      "advice": "Audience-specific tip for ${mode} mode"
+      "advice": "Audience-specific tip"
     }
   ]
 }`;

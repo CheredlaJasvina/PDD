@@ -18,9 +18,20 @@ export const CoOpHousehold: React.FC = () => {
   const [choreAssignee, setChoreAssignee] = useState('C. Jasvina');
   const [isLoading, setIsLoading] = useState(true);
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const cachedUser = localStorage.getItem('user');
+    const email = cachedUser ? JSON.parse(cachedUser).email : '';
+    const token = localStorage.getItem('auth_token');
+    const headers: Record<string, string> = { 'x-user-email': email };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
   const fetchHousehold = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/household`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/household`, {
+        headers: getAuthHeaders()
+      });
       const data = await response.json();
       if (data.success) {
         setHousehold(data.household);
@@ -42,7 +53,7 @@ export const CoOpHousehold: React.FC = () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/household/join`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ code: joinCode })
       });
       const data = await response.json();
@@ -61,7 +72,7 @@ export const CoOpHousehold: React.FC = () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/household/chores`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ task: newChore, assignee: choreAssignee })
       });
       const data = await response.json();
@@ -77,7 +88,8 @@ export const CoOpHousehold: React.FC = () => {
   const handleToggleChore = async (id: string) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/household/chores/${id}/toggle`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (data.success) {
