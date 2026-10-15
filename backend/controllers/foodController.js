@@ -266,7 +266,7 @@ Required JSON structure:
       process.env.GROQ_API_KEY,
       process.env.GROQ_API_KEY_2,
       process.env.GROQ_API_KEY_3,
-    ].filter(k => k && k.trim() && k !== 'YOUR_GROQ_API_KEY');
+    ].filter(k => k && k.trim() && k !== 'YOUR_GROQ_API_KEY').map(k => k.trim());
 
     if (groqKeys.length > 0) {
       const { Groq } = require('groq-sdk');
@@ -449,6 +449,22 @@ exports.updateItemState = async (req, res) => {
     const updated = await db.findByIdAndUpdate(id, { state });
     if (!updated) {
       return res.status(404).json({ error: "Item not found" });
+    }
+
+    // Create a notification when an item is marked as Wasted
+    if (state === 'Wasted' && dbStatus.getDbStatus()) {
+      try {
+        const Notification = require('../models/Notification');
+        const email = getActiveUserEmail(req);
+        const itemName = updated.name || 'A food item';
+        await new Notification({
+          owner: email,
+          type: 'waste',
+          message: `"${itemName}" was marked as Wasted.`
+        }).save();
+      } catch (notifErr) {
+        console.error('Failed to create waste notification:', notifErr.message);
+      }
     }
 
     res.json({ success: true, item: updated });

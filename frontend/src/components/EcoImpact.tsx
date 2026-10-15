@@ -50,7 +50,7 @@ export const EcoImpact: React.FC = () => {
       try {
         const cachedUser = localStorage.getItem('user');
         const email = cachedUser ? JSON.parse(cachedUser).email : '';
-        const response = await fetch('https://pdd-9fqv.onrender.com/api/eco', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/eco`, {
           headers: { 'x-user-email': email }
         });
         const data = await response.json();

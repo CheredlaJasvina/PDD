@@ -701,36 +701,10 @@ class _LandingAuthScreenState extends State<LandingAuthScreen> {
         setState(() => _error = data["message"] ?? "Invalid email or password.");
       }
     } catch (e) {
-      // Network unreachable — try the two demo seed accounts as offline fallback
-      if (_emailCtrl.text.trim() == "jasvina@foodfreshness.com" && _passCtrl.text == "password123") {
-        widget.onLoginSuccess({
-          "email": "jasvina@foodfreshness.com",
-          "name": "C. Jasvina",
-          "dietaryPreferences": ["vegetarian"],
-          "audienceMode": "Regular",
-          "servings": 2,
-          "membersCount": 2,
-          "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
-          "healthScore": 88,
-          "streakCount": 5,
-          "unlockedBadges": ["Fresh Starter", "Waste Warrior"]
-        }, "mock-token");
-      } else if (_emailCtrl.text.trim() == "ram@gmail.com" && _passCtrl.text == "Ram@1234") {
-        widget.onLoginSuccess({
-          "email": "ram@gmail.com",
-          "name": "Ram",
-          "dietaryPreferences": ["vegetarian"],
-          "audienceMode": "Regular",
-          "servings": 2,
-          "membersCount": 2,
-          "notificationPref": {"advanceNoticeDays": 2, "emailAlerts": true, "inAppAlerts": true},
-          "healthScore": 100,
-          "streakCount": 1,
-          "unlockedBadges": ["Fresh Starter"]
-        }, "mock-token");
-      } else {
-        setState(() => _error = "Cannot reach server. Check your internet connection and try again.");
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot reach server. Please check your connection.')),
+      );
+      return;
     }
   }
 

@@ -4,7 +4,7 @@ const FoodItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { 
     type: String, 
-    enum: ['fruits', 'vegetables', 'cooked food', 'packaged food'], 
+    enum: ['fruits', 'vegetables', 'cooked food', 'packaged food', 'non-veg', 'liquid'], 
     required: true 
   },
   status: { 

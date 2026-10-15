@@ -25,7 +25,7 @@ export const Recipes: React.FC<RecipesProps> = ({
     setError(null);
     try {
       const email = preferences ? preferences.email : '';
-      const response = await fetch(`https://pdd-9fqv.onrender.com/api/recipes?servings=${preferences.servings}&mode=${preferences.audienceMode}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/recipes?servings=${preferences.servings}&mode=${preferences.audienceMode}`, {
         headers: { 'x-user-email': email }
       });
       const data = await response.json();

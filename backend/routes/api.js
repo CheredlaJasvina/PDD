@@ -8,15 +8,22 @@ const recipeController = require('../controllers/recipeController');
 const analyticsController = require('../controllers/analyticsController');
 const authController = require('../controllers/authController');
 const fallbackDb = require('../models/fallbackDb');
+const dbStatus = require('../config/db');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// User Session Authentication
+// ── Public Auth routes (no auth required) ────────────────────────────────────
 router.post('/auth/login', authController.login);
 router.post('/auth/signup', authController.signup);
+router.post('/auth/send-otp', authController.sendOtp);
+router.post('/auth/verify-otp', authController.verifyOtp);
+
+// ── Apply auth middleware to all routes below this point ─────────────────────
+router.use(authMiddleware);
+
+// ── Auth (protected) ─────────────────────────────────────────────────────────
 router.get('/auth/me', authController.getCurrentUser);
 router.post('/auth/logout', authController.logout);
 router.put('/auth/profile', authController.updateProfile);
-router.post('/auth/send-otp', authController.sendOtp);
-router.post('/auth/verify-otp', authController.verifyOtp);
 
 // Food Inventory Management
 router.get('/inventory', foodController.getInventory);
@@ -33,14 +40,11 @@ router.get('/recipes', recipeController.getSmartSuggestions);
 router.get('/analytics', analyticsController.getWastageAnalytics);
 
 // Waste Summary: per-item weekly/monthly waste tracking + buy-less advice
-// Uses MongoDB when connected (same as analyticsController), falls back to in-memory
 router.get('/waste-summary', async (req, res) => {
   try {
     const email = req.headers['x-user-email'];
-    const dbStatus = require('../config/db');
 
     if (dbStatus.getDbStatus()) {
-      // MongoDB is connected — query it directly so numbers match the inventory
       const FoodItem = require('../models/FoodItem');
       const UserPreference = require('../models/UserPreference');
 
@@ -88,7 +92,6 @@ router.get('/waste-summary', async (req, res) => {
       });
     }
 
-    // Fallback: in-memory store (used when MongoDB is unavailable)
     const summary = fallbackDb.getWasteSummary(email);
     res.json({ success: true, ...summary });
   } catch (err) {
@@ -101,62 +104,174 @@ router.get('/settings', foodController.getSettings);
 router.put('/settings', foodController.updateSettings);
 
 // CO-OP HOUSEHOLD SHARING ROUTES
-router.get('/household', (req, res) => {
-  res.json({ success: true, household: fallbackDb.getHousehold() });
+router.get('/household', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    if (dbStatus.getDbStatus() && email) {
+      const Household = require('../models/Household');
+      const household = await Household.findOne({
+        $or: [{ owner: email }, { 'members.email': email }]
+      });
+      if (household) {
+        return res.json({ success: true, household });
+      }
+    }
+    res.json({ success: true, household: fallbackDb.getHousehold() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-router.post('/household/join', (req, res) => {
-  const result = fallbackDb.joinHousehold(req.body.code);
-  res.json(result);
+
+router.post('/household/join', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    const { code, name } = req.body;
+    if (dbStatus.getDbStatus() && email) {
+      const Household = require('../models/Household');
+      const household = await Household.findOne({ code });
+      if (!household) {
+        return res.status(404).json({ success: false, message: 'Household code not found.' });
+      }
+      const alreadyMember = household.members.some(m => m.email === email);
+      if (!alreadyMember) {
+        household.members.push({ name: name || email, email, role: 'member' });
+        household.logs.push({ action: 'joined', member: name || email });
+        await household.save();
+      }
+      return res.json({ success: true, household });
+    }
+    const result = fallbackDb.joinHousehold(code);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-router.post('/household/chores', (req, res) => {
-  const chore = fallbackDb.addChore(req.body.task, req.body.assignee);
-  res.json({ success: true, chore });
+
+router.post('/household/chores', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    const { task, assignee } = req.body;
+    if (dbStatus.getDbStatus() && email) {
+      const Household = require('../models/Household');
+      let household = await Household.findOne({ owner: email });
+      if (!household) {
+        // Create a household for this user if none exists
+        household = await new Household({
+          code: 'FRIDGE-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+          owner: email,
+          members: [{ name: email, email, role: 'owner' }]
+        }).save();
+      }
+      const chore = { title: task, assignedTo: assignee || email };
+      household.chores.push(chore);
+      await household.save();
+      return res.json({ success: true, chore: household.chores[household.chores.length - 1] });
+    }
+    const chore = fallbackDb.addChore(task, assignee);
+    res.json({ success: true, chore });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-router.put('/household/chores/:id/toggle', (req, res) => {
-  const chore = fallbackDb.toggleChore(req.params.id);
-  res.json({ success: true, chore });
+
+router.put('/household/chores/:id/toggle', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    const choreId = req.params.id;
+    if (dbStatus.getDbStatus() && email) {
+      const Household = require('../models/Household');
+      const household = await Household.findOne({ owner: email });
+      if (household) {
+        const chore = household.chores.id(choreId);
+        if (chore) {
+          chore.completed = !chore.completed;
+          await household.save();
+          return res.json({ success: true, chore });
+        }
+      }
+    }
+    const chore = fallbackDb.toggleChore(choreId);
+    res.json({ success: true, chore });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // NEIGHBOR DONATION ROUTES
-router.get('/donations', (req, res) => {
-  res.json({ success: true, donations: fallbackDb.getDonations() });
-});
-router.post('/donations', (req, res) => {
-  const post = fallbackDb.addDonationPost(req.body.name, req.body.quantity, req.body.daysLeft);
-  res.json({ success: true, post });
-});
-router.put('/donations/:id/request', (req, res) => {
-  const post = fallbackDb.requestDonationItem(req.params.id);
-  res.json({ success: true, post });
+router.get('/donations', async (req, res) => {
+  try {
+    if (dbStatus.getDbStatus()) {
+      const Donation = require('../models/Donation');
+      const donations = await Donation.find().sort({ createdAt: -1 });
+      return res.json({ success: true, donations });
+    }
+    res.json({ success: true, donations: fallbackDb.getDonations() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ECO IMPACT METRICS — computed from real inventory data when MongoDB is connected
+router.post('/donations', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    if (dbStatus.getDbStatus()) {
+      const Donation = require('../models/Donation');
+      const post = await new Donation({
+        owner: email,
+        foodName: req.body.name,
+        quantity: req.body.quantity,
+        expiresIn: req.body.daysLeft,
+        location: req.body.location || ''
+      }).save();
+      return res.json({ success: true, post });
+    }
+    const post = fallbackDb.addDonationPost(req.body.name, req.body.quantity, req.body.daysLeft);
+    res.json({ success: true, post });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/donations/:id/request', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    const { id } = req.params;
+    if (dbStatus.getDbStatus()) {
+      const Donation = require('../models/Donation');
+      const post = await Donation.findByIdAndUpdate(
+        id,
+        { status: 'requested', requestedBy: email },
+        { new: true }
+      );
+      return res.json({ success: true, post });
+    }
+    const post = fallbackDb.requestDonationItem(id);
+    res.json({ success: true, post });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ECO IMPACT METRICS
 router.get('/eco', async (req, res) => {
   const email = req.headers['x-user-email'];
-  const dbStatus = require('../config/db');
 
   try {
     if (dbStatus.getDbStatus() && email) {
       const FoodItem = require('../models/FoodItem');
 
-      // All items ever tracked by this user
       const allItems = await FoodItem.find({ owner: email }).lean();
-
-      // Eaten + Used items = items the user consumed before spoiling
       const consumedItems = allItems.filter(i => i.state === 'Eaten' || i.state === 'Used');
       const wastedItems   = allItems.filter(i => i.state === 'Wasted');
       const totalActioned = consumedItems.length + wastedItems.length;
 
-      // Each consumed item saves ~0.4 kg CO2 and ~₹4.5
       const co2SavedKg  = parseFloat((consumedItems.length * 0.4).toFixed(1));
       const moneySaved  = parseFloat((consumedItems.length * 4.5).toFixed(1));
 
-      // Waste percentage (0–100)
       const wastePct = totalActioned > 0
         ? Math.round((wastedItems.length / totalActioned) * 100)
         : 0;
 
-      // Food health level based on consumed count
       const foodHealthLevel =
         consumedItems.length >= 50 ? 'Level 5 eco champion' :
         consumedItems.length >= 30 ? 'Level 4 green guardian' :
@@ -164,21 +279,11 @@ router.get('/eco', async (req, res) => {
         consumedItems.length >= 5  ? 'Level 2 fresh keeper' :
                                      'Level 1 fresh starter';
 
-      // Milestones
       const ecoMilestones = [
-        {
-          title: 'CO2 Savior 🌿',
-          desc: 'Saved 5kg of carbon emissions.',
-          unlocked: co2SavedKg >= 5   // ~13 items consumed
-        },
-        {
-          title: 'Zero Waste Hero 💎',
-          desc: 'Save ₹9 by consuming 2 food items.',
-          unlocked: moneySaved >= 9   // just 2 items consumed
-        }
+        { title: 'CO2 Savior 🌿', desc: 'Saved 5kg of carbon emissions.', unlocked: co2SavedKg >= 5 },
+        { title: 'Zero Waste Hero 💎', desc: 'Save ₹9 by consuming 2 food items.', unlocked: moneySaved >= 9 }
       ];
 
-      // Community comparison
       const communityAvgKg = 15.2;
       const userSavingPct  = co2SavedKg > 0
         ? Math.min(100, Math.round((co2SavedKg / communityAvgKg) * 100))
@@ -186,19 +291,11 @@ router.get('/eco', async (req, res) => {
 
       return res.json({
         success: true,
-        eco: {
-          co2SavedKg,
-          moneySaved,
-          foodHealthLevel,
-          ecoMilestones,
-          comparisonStats: { communityAvgKg, userSavingPct }
-        }
+        eco: { co2SavedKg, moneySaved, foodHealthLevel, ecoMilestones, comparisonStats: { communityAvgKg, userSavingPct } }
       });
     }
 
-    // Fallback: in-memory store (used when MongoDB is unavailable)
     res.json({ success: true, eco: fallbackDb.getEcoMetrics(email) });
-
   } catch (err) {
     console.error('Eco metrics error:', err.message);
     res.json({ success: true, eco: fallbackDb.getEcoMetrics(email) });
@@ -206,14 +303,34 @@ router.get('/eco', async (req, res) => {
 });
 
 // IN-APP NOTIFICATION LOGS
-router.get('/notifications', (req, res) => {
-  const email = req.headers['x-user-email'];
-  res.json({ success: true, notifications: fallbackDb.getNotifications(email) });
+router.get('/notifications', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    if (dbStatus.getDbStatus() && email) {
+      const Notification = require('../models/Notification');
+      const notifications = await Notification.find({ owner: email }).sort({ createdAt: -1 });
+      return res.json({ success: true, notifications });
+    }
+    res.json({ success: true, notifications: fallbackDb.getNotifications(email) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-router.post('/notifications/read', (req, res) => {
-  const email = req.headers['x-user-email'];
-  const notifications = fallbackDb.markNotificationsRead(email);
-  res.json({ success: true, notifications });
+
+router.post('/notifications/read', async (req, res) => {
+  try {
+    const email = req.headers['x-user-email'];
+    if (dbStatus.getDbStatus() && email) {
+      const Notification = require('../models/Notification');
+      await Notification.updateMany({ owner: email, read: false }, { read: true });
+      const notifications = await Notification.find({ owner: email }).sort({ createdAt: -1 });
+      return res.json({ success: true, notifications });
+    }
+    const notifications = fallbackDb.markNotificationsRead(email);
+    res.json({ success: true, notifications });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // FOOD CATALOG DATABASE SEARCH

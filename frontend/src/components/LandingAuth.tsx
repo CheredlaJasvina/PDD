@@ -41,7 +41,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password })
@@ -82,7 +82,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/signup', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password, name: cleanName })
@@ -120,7 +120,7 @@ export const LandingAuth: React.FC<LandingAuthProps> = ({ onLoginSuccess }) => {
     if (!email.trim()) { setErrorMsg('Email address is required.'); return; }
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/auth/send-otp', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() })

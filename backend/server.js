@@ -8,7 +8,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Enable CORS so the React app and mobile emulator can request resources
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+  .split(',')
+  .map(o => o.trim());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-user-email', 'Authorization'],
+  credentials: true
+}));
 
 // Parse JSON request payloads
 app.use(express.json());

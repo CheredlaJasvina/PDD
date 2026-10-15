@@ -202,7 +202,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const res = await fetch('https://pdd-9fqv.onrender.com/api/donations', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
         headers: { 'x-user-email': email }
       });
       const data = await res.json();
@@ -223,7 +223,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      await fetch('https://pdd-9fqv.onrender.com/api/donations', {
+      await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-email': email },
         body: JSON.stringify({ name: donateName.trim(), quantity: donateQty, daysLeft: donateDays })
@@ -248,7 +248,7 @@ export const EnterpriseScreen: React.FC<EnterpriseScreenProps> = ({
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      await fetch(`https://pdd-9fqv.onrender.com/api/donations/${id}/request`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/donations/${id}/request`, {
         method: 'PUT', headers: { 'x-user-email': email }
       });
       await fetchDonations();

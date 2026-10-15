@@ -21,8 +21,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ inventory = [] }) => {
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
       
       const [analyticsRes, wasteRes] = await Promise.all([
-        fetch('https://pdd-9fqv.onrender.com/api/analytics', { headers: { 'x-user-email': email } }),
-        fetch('https://pdd-9fqv.onrender.com/api/waste-summary', { headers: { 'x-user-email': email } })
+        fetch(`${import.meta.env.VITE_API_URL}/analytics`, { headers: { 'x-user-email': email } }),
+        fetch(`${import.meta.env.VITE_API_URL}/waste-summary`, { headers: { 'x-user-email': email } })
       ]);
       const analyticsData = await analyticsRes.json();
       const wasteData = await wasteRes.json();

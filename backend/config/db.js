@@ -13,19 +13,18 @@ async function connectDB() {
     isConnected = true;
     console.log('MongoDB successfully connected!');
 
-    // Seed initial clean sample items if empty or has duplicated test items
+    // Seed initial clean sample items if collection is empty
     const FoodItem = require('../models/FoodItem');
     const count = await FoodItem.countDocuments();
-    const applesCount = await FoodItem.countDocuments({ name: "Fresh Gala Apples" });
-    if (count === 0 || applesCount > 3) {
-      console.log('Resetting and seeding clean initial inventory items...');
-      await FoodItem.deleteMany({});
+    if (count === 0) {
+      console.log('Seeding clean initial inventory items...');
       await FoodItem.create([
         {
           name: "Fresh Gala Apples",
           category: "fruits",
           status: "Fresh",
           state: "Tracked",
+          owner: "system@freshradar.app",
           addedDate: new Date(Date.now() - 24 * 60 * 60 * 1000), 
           predictedSpoilageDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), 
           originalFreshness: 95,
@@ -42,6 +41,7 @@ async function connectDB() {
           category: "packaged food",
           status: "Slightly Spoiled",
           state: "Tracked",
+          owner: "system@freshradar.app",
           addedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 
           predictedSpoilageDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), 
           originalFreshness: 75,
@@ -58,6 +58,7 @@ async function connectDB() {
           category: "cooked food",
           status: "Spoiled",
           state: "Tracked",
+          owner: "system@freshradar.app",
           addedDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), 
           predictedSpoilageDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), 
           originalFreshness: 15,

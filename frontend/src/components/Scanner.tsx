@@ -91,7 +91,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
     try {
       const cachedUser = localStorage.getItem('user');
       const email = cachedUser ? JSON.parse(cachedUser).email : '';
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/inventory', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('https://pdd-9fqv.onrender.com/api/scan', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/scan`, {
         method: 'POST',
         body: formData,
       });
@@ -284,7 +284,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete, onAddManual })
       protein: Number(manualProtein),
       carbs: Number(manualCarbs),
       fat: Number(manualFat),
-      spiceLevel: manualSpiceLevel,
+      spiceLevel: ({ none: 0, low: 3, medium: 6, high: 9 } as Record<string, number>)[manualSpiceLevel] ?? 0,
     });
     setManualName('');
     setUseManual(false);
